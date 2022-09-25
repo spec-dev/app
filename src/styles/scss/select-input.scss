@@ -1,0 +1,97 @@
+.select-input__dropdown-icon {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-self: center;
+
+    svg {
+        height: 7px;
+        width: auto;
+        opacity: 0.5;
+        margin-right: 11px;
+        pointer-events: none;
+        position: relative;
+        top: 1px;
+    }
+}
+
+.spec__control {
+    min-height: unset !important;
+    background-color: adjust-color($backgroundLight, $alpha: -0.5) !important;
+    border: 1px solid adjust-color($gray, $alpha: -0.9) !important;
+    border-radius: 5px;
+    outline: none !important;
+    box-shadow: none !important;
+    color: $white;
+    width: 100%;
+    height: 100%;
+    padding-left: 13px;
+    font-size: 12px;
+    letter-spacing: 0.1px;
+    cursor: pointer !important;
+}
+
+.select-input {
+    .spec__value-container {
+        padding: 0 !important;
+    }
+
+    .spec__indicator-separator {
+        display: none;
+    }
+
+    .spec__single-value,
+    .spec__input-container,
+    .spec__input > * {
+        color: $white !important;
+    }
+
+    .spec__placeholder {
+        color: adjust-color($gray, $alpha: -0.2);
+    }
+
+    .spec__menu {
+        z-index: 9;
+        margin-top: 6px;
+        background-color: $backgroundLight;
+        border-radius: 4px !important;
+        // border: 1px solid adjust-color($gray, $alpha: -0.9);
+        box-shadow: 0 0 20px adjust-color($backgroundDark, $alpha: -0.4);
+    }
+
+    .spec__menu-list {
+        max-height: 120px;
+    }
+
+    .spec__option {
+        font-size: 12px;
+        height: 25px;
+        line-height: 25px;
+        padding: 0 10px;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.1s ease;
+
+        &.spec__option--is-focused {
+            background-color: adjust-color($backgroundMedium, $alpha: -0.75);
+            color: $lightGray;
+        }
+
+        &.spec__option--is-selected {
+            color: $tealAccent;
+            background-color: transparent;
+
+            &.spec__option--is-focused {
+                background-color: adjust-color($backgroundMedium, $alpha: -0.75);
+            }
+        }
+    }
+
+    .spec__menu-notice,
+    .spec__menu-notice--no-options {
+        font-size: 11px;
+        color: $gray;
+        letter-spacing: 0.1px;
+        opacity: 0.8;
+    }
+}

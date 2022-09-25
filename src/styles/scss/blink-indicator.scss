@@ -1,0 +1,70 @@
+$blink-indicator__center-diameter: 6px;
+$blink-indicator__shadow-diameter: 10px;
+$blink-indicator__diameter: 16px;
+$blink-indicator__duration: 1.8s;
+
+@keyframes blink-indicator-pulse-teal {
+    0% {
+        box-shadow: 0 0 0 0 $tealAccent;
+    }
+    100% {
+        box-shadow: 0 0 0 $blink-indicator__shadow-diameter rgba(0, 0, 0, 0);
+    }
+}
+
+@keyframes blink-indicator-pulse-blue {
+    0% {
+        box-shadow: 0 0 0 0 $blueAccent;
+    }
+    100% {
+        box-shadow: 0 0 0 $blink-indicator__shadow-diameter rgba(0, 0, 0, 0);
+    }
+}
+
+.blink-indicator {
+    position: absolute;
+    display: block;
+    z-index: 1;
+    box-shadow: none;
+    background-color: transparent;
+    transition: opacity .1s ease;
+
+    & > span {
+        display: block;
+        width: $blink-indicator__center-diameter;
+        height: $blink-indicator__center-diameter;
+        border-radius: calc(#{$blink-indicator__center-diameter} / 2);
+        background: $tealAccent;
+        position: relative;
+        z-index: 1;
+    }
+
+    &:after {
+        display: block;
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        top: 0;
+        left: 0;
+        animation: blink-indicator-pulse-teal $blink-indicator__duration infinite;
+    }
+
+    &.blink-indicator--blue {
+        & > span {
+            background: $blueAccent;
+        }
+
+        &:after {
+            animation: blink-indicator-pulse-blue $blink-indicator__duration infinite;
+        }
+    }
+}
+
+svg {
+    rect#newLiveColRect {
+        filter: drop-shadow( 4px 4px 4px rgba(0, 0, 0, .5));
+        animation: blink-indicator-pulse-teal $blink-indicator__duration infinite;
+    }
+}

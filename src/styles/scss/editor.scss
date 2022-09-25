@@ -1,0 +1,177 @@
+@keyframes custom-cursor{
+    0%{ opacity: 0 }
+    20%{ opacity: 0 }
+    40%{ opacity: 1 }
+    60%{ opacity: 1 }
+    80%{ opacity: 0 }
+    100%{ opacity: 0 }
+}
+
+.default { color: #eee; }
+.keyword { color: $purpleAccent; }
+.string { color: $blueAccent; }
+.number { color: #dfd2af; }
+.comment { color: $gray; }
+.date { color: adjust-color($lightGray, $alpha: -0.3); }
+.type { color: $tealAccent; }
+.function-call { color: #97C8FF; }
+.line {
+    white-space: nowrap;
+
+    .tab {
+        width: 28px;
+        display: inline-block;
+    }
+
+    br {
+        width: 0px;
+        height: 0;
+    }
+    color: $white;
+
+
+    span {
+        font-family: CodeRegular;
+        font-size: 12px;
+        line-height: 20px;
+    }
+}
+
+.editor {
+    .editor__v-scroll,
+    .interface {
+        scrollbar-width: thin;
+
+        &::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            border-radius: 4px;
+            transition: all 1s ease;
+        }
+
+        &:hover {
+            scrollbar-color: adjust-color($white, $alpha: -0.95) transparent;
+
+            &::-webkit-scrollbar-thumb {
+                background-color: adjust-color($white, $alpha: -0.95);
+            }
+        }
+
+        span {
+            font-family: CodeRegular;
+            font-size: 12px;
+            line-height: 20px;
+        }
+    }
+}
+
+.editor__v-scroll {
+    height: 100%;
+    width: 100%;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: transparent;
+        border-radius: 4px;
+        transition: all 1s ease;
+    }
+
+    &:hover {
+        scrollbar-color: adjust-color($white, $alpha: -0.95) transparent;
+
+        &::-webkit-scrollbar-thumb {
+            background-color: adjust-color($white, $alpha: -0.95);
+        }
+    }
+
+    span {
+        font-family: CodeRegular;
+        font-size: 12px;
+        line-height: 20px;
+    }
+
+    .cursor {
+        position: relative;
+    }
+
+    .cursor:before {
+        position: absolute;
+        content: '|';
+        top: -5px;
+        left: -5px;
+        height: 22px;
+        line-height: 22px;
+        font-family: CodeRegular;
+        font-size: 14px;
+        animation: custom-cursor 1.2s infinite;
+    }
+}
+
+.editor__line-numbers {
+    padding: 30px;
+    padding-top: 31px;
+    padding-left: 3px;
+    padding-right: 24px;
+    line-height: 21.1px;
+    font-size: 12px;
+    font-family: CodeRegular;
+    color: $white;
+    opacity: 0.17;
+    text-align: right;
+}
+
+.editor__h-scroll {
+    overflow-x: scroll;
+    padding: 30px 0;
+    position: relative;
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: transparent;
+        border-radius: 4px;
+        transition: all 1s ease;
+    }
+
+    &:hover {
+        scrollbar-color: adjust-color($white, $alpha: -0.95) transparent;
+
+        &::-webkit-scrollbar-thumb {
+            background-color: adjust-color($white, $alpha: -0.95);
+        }
+    }
+}
+
+.monaco-editor * {
+    font-family: inherit;
+}

@@ -1,0 +1,177 @@
+.tables-panel {
+    padding: 24px;
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.tables-panel__liner {
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - #{$sidePanelBottomButtonHeight});
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.tables-panel__section {
+    display: block;
+    width: 100%;
+
+    &:not(:first-child) {
+        margin-top: 24px;
+    }
+
+    &.tables-panel__section--schema {
+        padding-bottom: 24px;
+        border-bottom: 1px solid $dashSectionOutlineColor;
+    }
+}
+
+.tables-panel__section-title {
+    padding-left: 11px;
+    font-size: 10px;
+    color: $gray;
+    letter-spacing: 0.22px;
+    display: block;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    opacity: 0.8;
+}
+
+.tables-panel__section-body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+#schemaDropdown {
+    width: 100%;
+    background-color: $backgroundMedium;
+    border-radius: 4px;
+    border: 1px solid adjust-color($gray, $alpha: -0.9);
+    height: 29px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-self: flex-start;
+    position: relative;
+
+    span:first-child {
+        display: inline-block;
+        padding-left: 11px;
+        font-size: 12px;
+        letter-spacing: 0.11px;
+        color: $white;
+        position: relative;
+        top: -1px;
+        opacity: 0.9;
+    }
+
+    span:last-child {
+        position: absolute;
+        top: 0;
+        right: 11px;
+        height: 100%;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            height: 14px;
+            width: auto;
+            opacity: 0.5;
+        }
+    }
+}
+
+.tables-panel__table-item {
+    display: flex;
+    width: 100%;
+    height: 32px;
+    margin: 2px 0;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 11px;
+    border-radius: 4px;
+    background-color: transparent;
+    transition: all 0.15s ease;
+    opacity: 1;
+    cursor: pointer;
+
+    &.tables-panel__table-item--hide {
+        display: none;
+    }
+
+    &:first-child {
+        margin-top: 0;
+    }
+
+    span {
+        color: adjust-color($lightGray, $alpha: -0.2);
+        font-size: 13.5px;
+        letter-spacing: 0.11px;
+        transition: all 0.15s ease;
+    }
+
+    &:not(.tables-panel__table-item--selected):hover {
+        background-color: adjust-color($backgroundMedium, $alpha: -0.4);
+    }
+
+    &.tables-panel__table-item--selected {
+        background-color: $backgroundMedium;
+
+        span {
+            color: $white;
+        }
+    }
+}
+
+.tables-panel__new-table-button {
+    position: absolute;
+    display: flex;
+    bottom: 0;
+    width: 100%;
+    height: $sidePanelBottomButtonHeight;
+    left: 0;
+    border-top: 1px solid $dashSectionOutlineColor;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    & > span:first-child {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        background-color: transparent;
+        transition: background-color 0.15s ease;
+        width: 100%;
+        height: 100%;    
+        
+        &:hover {
+            background-color: adjust-color($backgroundMedium, $alpha: -0.5);
+        }
+    
+        & > span:first-child {
+            font-size: 18px;
+            color: $white;
+            margin-left: -10px;
+            position: relative;
+            top: -1px;
+        }
+    
+        & > span:last-child {
+            color: $white;
+            font-size: 14px;
+            margin-left: 9px;
+        }
+    }
+
+}

@@ -1,0 +1,105 @@
+.new-table-dropdown {
+    width: 320px;
+    background-color: $backgroundMedium;
+    z-index: 9;
+    position: absolute;
+    left: 0px;
+    bottom: calc(100% + 10px);
+    border-radius: 6px;
+    box-shadow: 0 0 40px $boxShadowColor;
+    padding: 4px 0;
+}
+
+.new-table-dropdown__liner {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.new-table-dropdown__option {
+    width: 100%;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    background-color: transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+
+    &.new-table-dropdown__option--live {
+        & > div:first-child {
+            svg {
+                .table-icon__bg {
+                    fill: adjust-color($tealAccent, $alpha: -0.93);
+                }
+
+                .table-icon__cell {
+                    fill: adjust-color($tealAccent, $alpha: -0.1);
+                }
+            }
+        }
+
+        & > div:last-child {
+            & > span:first-child {
+                color: $tealAccent;
+            }
+        }
+    }
+
+    &:hover {
+        background-color: adjust-color($backgroundLight, $alpha: -0.8);
+    }
+
+    &:not(:last-child) {
+        border-bottom: 1px solid adjust-color($gray, $alpha: -0.92);
+    }
+
+    & > div:first-child {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 35px;
+        width: 35px;
+        min-width: 35px;
+        border-radius: 5px;
+
+        svg {
+            height: 35px;
+            width: auto;
+
+            .table-icon__bg {
+                fill: $backgroundLight;
+            }
+
+            .table-icon__cell {
+                fill: adjust-color($lightGray, $alpha: -0.3);
+            }
+        }
+    }
+
+    & > div:last-child {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        padding-left: 15px;
+
+        span:first-child {
+            display: inline-block;
+            font-size: 13px;
+            color: $white;
+            margin-bottom: 5px;
+            letter-spacing: 0.1px;
+        }
+
+        span:last-child {
+            display: inline-block;
+            font-size: 11px;
+            color: $gray;
+            letter-spacing: 0.1px;
+        }
+    }
+}

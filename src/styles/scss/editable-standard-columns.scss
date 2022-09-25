@@ -1,0 +1,347 @@
+.editable-standard-columns {
+    display: block;
+    margin-top: 35px;
+    width: 100%;
+
+    button {
+        background-color: transparent;
+        border: none;
+        text-align: left;
+    }
+}
+
+.editable-standard-columns__liner {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.editable-standard-columns__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+    width: 100%;
+
+    span {
+        display: inline-block;
+        font-size: 11px;
+        letter-spacing: 0.16px;
+        color: $gray;
+        width: calc(#{$newLiveColInputWidth} + #{$newLiveColInputGutter});
+    }
+}
+
+.editable-standard-columns__col-inputs {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.editable-standard-columns__col-input {
+    display: flex;
+    height: 61px;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    border-bottom: 1px solid adjust-color($gray, $alpha: -0.95);
+
+    &:first-child {
+        border-top: 1px solid adjust-color($gray, $alpha: -0.95);
+    }
+}
+
+.editable-standard-columns__col-input-field {
+    width: $newLiveColInputWidth;
+    height: 35px;
+    position: relative;
+
+    &.editable-standard-columns__col-input-field--col-name,
+    &.editable-standard-columns__col-input-field--data-source {
+        input, select {
+            font-family: CodeRegular;
+        }
+    }
+
+    &.editable-standard-columns__col-input-field--data-source {
+        position: relative;
+
+        &:before {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            width: 9px;
+            height: 7px;
+            background-image: url('../../svgs/into-arrow.svg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-top: 1px;
+            left: 9px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.9;
+        }
+    }
+
+    input,
+    .input {
+        background-color: adjust-color($backgroundLight, $alpha: -0.5);
+        border: 1px solid adjust-color($gray, $alpha: -0.9);
+        border-radius: 5px;
+        outline: none !important;
+        box-shadow: none !important;
+        color: $white;
+        width: 100%;
+        height: 100%;
+        padding-left: 13px;
+        font-size: 12px;
+        letter-spacing: 0.1px;
+    }
+
+    input + span {
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 25px;
+        width: 25px;
+        border: 1px solid adjust-color($gray, $alpha: -0.8);
+        border-radius: 4px;
+        background-color: $backgroundLight;
+        color: $tealAccent;
+
+        svg {
+            height: 13px;
+            width: auto;
+        }
+    }
+
+    &.editable-standard-columns__col-input-field--col-name-wallet_id {
+        input + span {
+            // color: $lightGray;
+
+            svg {
+                fill: currentColor;
+                height: 10px;
+            }
+        }
+    }
+
+    .input {
+        line-height: 33px;
+        font-size: 12.5px;
+        position: relative;
+        cursor: pointer;
+
+        &:hover {
+            &:after {
+                color: $lightGray;
+            }
+        }
+
+        &:after {
+            position: absolute;
+            content: 'f(x)';
+            font-family: CodeRegular;
+            color: adjust-color($gray, $alpha: -0.25);
+            transition: color 0.15s ease;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-47%);
+            font-size: 11px;
+            letter-spacing: -1px;
+        }
+    }
+
+    // Disabled "Formatter" input
+    &.editable-standard-columns__col-input-field--disabled {
+        opacity: 0.4;
+
+        .input {
+            cursor: default;
+            color: adjust-color($gray, $alpha: -0.2);
+
+            &:hover:after {
+                color: adjust-color($gray, $alpha: -0.25);
+            }
+        }
+    }
+
+    &:focus:not(.editable-standard-columns__col-input-field--disabled) {
+        .input {
+            &:after {
+                color: $lightGray;
+            }
+        }
+    }
+
+    &.editable-standard-columns__col-input-field--formatter {
+        .input {
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+    }
+
+    &.editable-standard-columns__col-formatter-field--key-val,
+    &.editable-standard-columns__col-formatter-field--custom-function {
+        .input {
+            font-size: 12px;
+            letter-spacing: 0.1px;
+            font-family: CodeRegular;
+            color: $white;
+        }
+    }
+
+    &.editable-standard-columns__col-input-field--data-type {
+        position: relative;
+
+        .spec__control {
+            padding-left: 20px;
+        }
+
+        &:before {
+            content: '';
+            display: inline-block;
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background-image: url('../../svgs/hashtag.svg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: 50% 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin-top: 1px;
+            left: 9px;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.75;
+        }
+    }
+
+    &.select-input {
+        .spec__option {
+            font-size: 13px;
+            color: adjust-color($lightGray, $alpha: -0.2);
+            height: 26px;
+            line-height: 26px;
+        }
+
+        .spec__control {
+            height: 35px;
+        }
+
+        .spec__value-container {
+            padding-left: 7px !important;
+        }
+
+        .spec__single-value,
+        .spec__placeholder {
+            font-size: 13px;
+            letter-spacing: 0.1px;
+        }
+    }
+
+    input {
+        &::placeholder {
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+
+        &::-webkit-input-placeholder {
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+
+        &::-moz-placeholder {
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+    }
+
+    &:first-child,
+    &:nth-child(2) {
+        margin-right: $newLiveColInputGutter;
+    }
+}
+
+.editable-standard-columns__col-input-icon-button {
+    height: $newLiveColIconButtonSideLength;
+    width: $newLiveColIconButtonSideLength;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    color: $gray;
+    cursor: pointer;
+    justify-self: flex-end;
+    transition: all 0.08s ease;
+
+    svg {
+        transition: all 0.08s ease;
+    }
+
+    &:hover {
+        color: $white;
+    }
+
+    &.editable-standard-columns__col-input-icon-button--settings {
+        margin-right: $newLiveColIconButtonGutter;
+        margin-left: $newLiveColIconButtonLeftSpacing;
+
+        svg {
+            height: 16.5px;
+            width: auto;
+        }
+    }
+
+    &.editable-standard-columns__col-input-icon-button--remove {
+
+        svg {
+            width: 20px;
+            height: auto;
+        }
+    }
+}
+
+.editable-standard-columns__action-buttons {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-start;
+
+    button {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        background-color: transparent;
+        border: 1px solid adjust-color($gray, $alpha: -0.8);
+        border-radius: 5px;
+        color: adjust-color($white, $alpha: -0.1);
+        height: 30px;
+        padding: 0 11px 1px;
+        cursor: pointer;
+
+        span:first-child {
+            font-size: 13px;
+        }
+
+        span:last-child {
+            font-size: 11.5px;
+            margin-left: 5px;
+            letter-spacing: 0.11px;
+        }
+    }
+}

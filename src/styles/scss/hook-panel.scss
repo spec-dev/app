@@ -1,0 +1,370 @@
+.hook-panel {
+    display: block;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+// ==============
+// HEADER
+// ==============
+
+.hook-panel__header {
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: $sliderPanelHeaderHeight;
+    padding: 0 26px;
+    border-bottom: 1px solid adjust-color($gray, $alpha: -0.9);
+}
+
+.hook-panel__header-liner {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hook-panel__header-title {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    color: $white;
+    letter-spacing: 0.21px;
+
+    span:first-child {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        fill: $tealAccent;
+        height: 13px;
+        width: 13px;
+        margin-right: 12px;
+
+        svg {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            top: 1px;
+            fill: $tealAccent;
+        }
+    }
+}
+
+.hook-panel__hook-input {
+    height: 100%;
+    width: 100%;
+
+    input {
+        background-color: transparent;
+        border: 1px solid adjust-color($gray, $alpha: -0.9);
+        border-radius: 5px;
+        outline: none !important;
+        box-shadow: none !important;
+        color: $white;
+        width: 100%;
+        height: 100%;
+        padding-left: 13px;
+        font-size: 13.5px;
+        letter-spacing: 0.1px;
+    }
+
+    input {
+        &::placeholder {
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+
+        &::-webkit-input-placeholder {
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+
+        &::-moz-placeholder {
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+    }
+
+    &.select-input {
+        .spec__single-value,
+        .spec__placeholder,
+        .spec__input-container,
+        .spec__option,
+        .spec__input > * {
+            font-family: Regular;
+        }
+
+        .spec__option {
+            font-size: 13px;
+            color: adjust-color($lightGray, $alpha: -0.1);
+            height: 35px;
+            line-height: 35px;
+            padding-left: 17px !important;
+        }
+
+        .spec__control {
+            height: 48px;
+            background-color: transparent !important;
+            border: none !important;
+            padding-left: 36px;
+            padding-right: 18px;
+        }
+
+        .spec__menu {
+            margin-left: 8px;
+            width: calc(100% - 16px);
+            margin-top: 0;
+        }
+
+        .spec__value-container {
+            padding-left: 0px !important;
+        }
+
+        .spec__single-value,
+        .spec__placeholder {
+            font-size: 13.5px;
+            letter-spacing: 0.1px;
+        }
+    }
+}
+
+// ==============
+// FOOTER
+// ==============
+
+.hook-panel__footer {
+    position: absolute;
+    display: block;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: $sliderPanelFooterHeight;
+    padding: 0 26px;
+    border-top: 1px solid adjust-color($gray, $alpha: -0.9);
+}
+
+.hook-panel__footer-liner {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hook-panel__footer-button {
+    height: 31px;
+    padding: 0 14px;
+    min-width: 71px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    border: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.07s ease, background-color 0.15s ease, color 0.15s ease, border 0.15s ease;
+    font-size: 13px;
+    letter-spacing: 0.22px;
+    cursor: pointer;
+
+    // Back/Cancel
+    &:first-child {
+        background-color: adjust-color($backgroundLight, $alpha: -0.5);
+        color: adjust-color($white, $alpha: -0.1);
+
+        &:hover {
+            background-color: adjust-color($backgroundLight, $alpha: -0.2);
+            color: $white;
+        }
+    }
+
+    // Create
+    &:last-child {
+        color: $tealAccent;
+        border: 1px solid adjust-color($tealAccent, $alpha: -0.4);
+        background-color: transparent;
+
+        &:hover,
+        &:focus {
+            background-color: adjust-color($tealAccent, $alpha: -0.1);
+            color: $white;
+            border: 1px solid transparent;
+        }
+    }
+
+    &.hook-panel__footer-button--shown {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+// ==============
+// SECTION
+// ==============
+
+.hook-panel__section {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: $sliderPanelHeaderHeight;
+    bottom: $sliderPanelFooterHeight;
+    display: block;
+    color: white;
+}
+
+.hook-panel__subheader {
+    display: block;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    border-bottom: 1px solid adjust-color($gray, $alpha: -0.9);
+    top: $sliderPanelHeaderHeight;
+    position: absolute;
+    left: 0;
+    right: 0;
+
+    & > span:first-child {
+        height: 14px;
+        width: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            width: 14px;
+            height: 14px;
+            fill: $lightGray;
+            opacity: 0.9;
+            position: absolute;
+            left: 27px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+    }
+
+    .hook-panel__tf {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        font-family: CodeRegular;
+        font-size: 12px;
+        color: $lightGray;
+        opacity: 0.9;
+
+        span:first-child {
+            color: $lightGray;
+        }
+
+        span:nth-child(2) {
+            margin: 0 8px;
+        }
+    }
+
+    & > span:last-child {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 16px;
+        width: 16px;
+
+        svg {
+            width: 16px;
+            height: auto;
+            fill: $lightGray;
+            opacity: 0.7;
+        }
+    }
+}
+
+.hook-panel__body {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    top: calc(#{$sliderPanelHeaderHeight} + 50px);
+    bottom: $sliderPanelFooterHeight;
+    display: block;
+
+    .editor__h-scroll {
+        width: 100%;
+    }
+}
+
+.hook-panel__editor {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-top: 15px;
+    position: absolute;
+    bottom: 15px;
+    left: 10px;
+    right: 30px;
+    top: 15px;
+
+    .view-lines {
+        .view-line:nth-child(3) {
+            & > span {
+                & > span:nth-child(4) {
+                    color: #97C8FF;
+                }
+            }
+        }
+    }
+}
+
+.hook-panel__code {
+    margin-top: 0px;
+    margin-left: 20px;
+    display: block;
+}
+
+.hook-panel__header-status {
+    position: absolute;
+    top: 20px;
+    right: 22px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border-radius: 12.5px;
+    color: $blueAccent;
+    font-size: 11px;
+    transition: all 0.25s ease;
+    letter-spacing: 0.1px;
+    opacity: 1;
+    border: none;
+    height: 24px;
+    background-color: adjust-color($blueAccent, $alpha: -0.95);
+    font-size: 10px;
+    text-transform: uppercase;
+
+    .hook-panel__header-status-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 7px;
+        margin-left: -2px;
+
+        svg {
+            width: 9px;
+            height: auto;
+
+            .stroke {
+                stroke: $blueAccent;
+            }
+        }
+    }
+}

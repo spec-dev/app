@@ -1,0 +1,50 @@
+.svg-spinner {
+    height: 30px;
+    width: 30px;
+}
+
+@keyframes chasing-tail-svg-animation {
+    0% {
+        transform: rotateZ(0deg);
+    }
+
+    100% {
+        transform: rotateZ(360deg)
+    }
+}
+
+@keyframes chasing-tail-circle-animation {
+    0%,
+    25% {
+        stroke-dashoffset: 280;
+        transform: rotate(0);
+    }
+
+    50%,
+    75% {
+        stroke-dashoffset: 75;
+        transform: rotate(45deg);
+    }
+
+    100% {
+        stroke-dashoffset: 280;
+        transform: rotate(360deg);
+    }
+}
+
+.svg-spinner--chasing-tail {
+    animation: 1.7s linear infinite chasing-tail-svg-animation;
+    max-width: 100px;
+
+    circle {
+        animation: 1.19s ease-in-out infinite both chasing-tail-circle-animation;
+        display: block;
+        fill: transparent;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-dasharray: 283;
+        stroke-dashoffset: 280;
+        stroke-width: 10px;
+        transform-origin: 50% 50%;
+    }
+}

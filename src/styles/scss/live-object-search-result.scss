@@ -1,0 +1,126 @@
+.live-object-search-result {
+    display: block;
+    width: calc(100%);
+    padding: 25px $sliderPanelPadding;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    background-color: transparent;
+
+    &:hover {
+        background-color: adjust-color($backgroundLight, $alpha: -0.78);
+    }
+
+    &:first-child,
+    &:first-child:hover {
+        background-color: adjust-color($backgroundLight, $alpha: -0.7);
+    }
+
+    &:after {
+        position: absolute;
+        bottom: 0;
+        left: 27px;
+        right: 27px;
+        height: 1px;
+        content: '';
+        background-color: adjust-color($gray, $alpha: -0.95);
+    }
+}
+
+.live-object-search-result__liner {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.live-object-search-result__left {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    flex: 1;
+}
+
+.live-object-search-result__icon {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    border-radius: 6px;
+}
+
+.live-object-search-result__main {
+    padding-left: 19px;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    flex: 1;
+}
+
+.live-object-search-result__name {
+    padding-left: 1px;
+    font-family: Medium;
+    color: $white;
+    letter-spacing: 0.3px;
+    font-size: 14px;
+    display: inline-block;
+    margin-bottom: 7px;
+}
+
+.live-object-search-result__desc {
+    color: adjust-color(#D2D2E6, $alpha: -0.3);
+    font-family: Regular;
+    letter-spacing: 0.11px;
+    font-size: 12px;
+    display: inline-block;
+    max-width: 80%;
+    padding-right: 0px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.live-object-search-result__right {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.live-object-search-result__author {
+    font-size: 12px;
+    letter-spacing: 0.1px;
+    display: inline-block;
+    color: $gray;
+    margin-bottom: 16px;
+}
+
+.live-object-search-result__likes {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+
+    span:first-child {
+        font-size: 12px;
+        letter-spacing: 0.1px;
+        display: inline-block;
+        color: $gray;
+    }
+
+    span:last-child {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 15px;
+        height: auto;
+        margin-left: 6px;
+
+        svg {
+            width: 100%;
+            height: auto;
+            fill: $gray;
+        }
+    }
+}

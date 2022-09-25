@@ -1,0 +1,70 @@
+//=====================
+// Colors
+//=====================
+$white: #fff;
+$notWhite: #E2E6ED;
+$backgroundDark: #0e0d24;
+$backgroundMedium: #181631;
+$backgroundLight: #2A2A4A;
+$black: #060617;
+$blueAccent: #0dcefd;
+$tealAccent: #00ded7;
+$greenAccent: #00ffd3;
+$purpleAccent: #6874FF;
+$gray: #727A92;
+$lightGray: #D2D2E6;
+$sectionLineColor: $backgroundMedium;
+$boxShadowColor: #0b0b20;
+
+//=====================
+// Transition timing
+//=====================
+$defaultTiming: cubic-bezier(.16,1,.3,1);
+$modalDuration: 0.17s;
+$modalTiming: cubic-bezier(.28,.35,.35,1);
+
+//=====================
+// Dashboard
+//=====================
+$sideNavWidth: 60px;
+$sideNavButtonSideLength: 40px;
+$sidePanelWidth: 250px;
+$dashHeaderHeight: 60px;
+$sidePanelBottomButtonHeight: 66px;
+$dashSectionOutlineColor: #1A1A31;
+
+//=====================
+// Tables
+//=====================
+$tablesSectionHeaderHeight: 105px;
+$tablesSectionFooterHeight: 31px;
+$tableRowHeight: 36px;
+$tableNewColumnWidth: 105px;
+
+//=====================
+// Panels
+//=====================
+$sliderPanelHeaderHeight: 64px;
+$sliderPanelPadding: 30px;
+$sliderPanelFooterHeight: 60px;
+$typeOverviewGutterSpacing: 26px;
+$typeOverviewDocsWidth: calc(((100% - #{$typeOverviewGutterSpacing}) * .47));
+$typeOverviewInterfaceWidth: calc(((100% - #{$typeOverviewGutterSpacing}) * .51) - 4px);
+$newLiveColIconButtonSideLength: 22px;
+$newLiveColIconButtonGutter: 12px;
+$newLiveColIconButtonLeftSpacing: 19px;
+$newLiveColInputGutter: 13px;
+$newLiveColArrowWidth: 20%;
+$newLiveColInputWidth: calc((100% - #{$newLiveColIconButtonSideLength} - #{$newLiveColIconButtonGutter} - #{$newLiveColIconButtonLeftSpacing} - #{$newLiveColArrowWidth}) / 2);
+$newLiveRelIconButtonLeftSpacing: 20px;
+$newLiveRelInputRatio: .43;
+$newLiveRelFieldWidth: 33%;
+$newLiveRelLinkWidth: 100px;
+$newLiveRelInputWidth: calc(100% - #{$newLiveRelFieldWidth} - #{$newLiveRelLinkWidth});
+$newLiveRelInputGutterRatio: .14;
+$newLiveRelInputGutterWidth: calc((100% - (2 * #{$newLiveColIconButtonSideLength}) - #{$newLiveColIconButtonGutter} - #{$newLiveRelIconButtonLeftSpacing}) * #{$newLiveRelInputGutterRatio});
+
+//=====================
+// Docs
+//=====================
+$docsSidePadding: 42px;

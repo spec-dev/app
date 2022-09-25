@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="163px" height="18px" viewBox="0 0 163 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Spec landing page</title>
+    <g id="Exports" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <line x1="99.5" y1="0.5" x2="99.5" y2="17.5" id="Line-2" stroke-opacity="0.621885927" stroke="#17172F" stroke-linecap="square"></line>
+        <text id="v1.0.0" font-family="AvenirNext-Regular, Avenir Next" font-size="12" font-weight="normal" letter-spacing="0.1" fill="#727A92">
+            <tspan x="114" y="13">v1.0.0</tspan>
+        </text>
+        <polyline id="Path" stroke-opacity="0.578288899" stroke="#727A92" transform="translate(159.500000, 9.000000) rotate(90.000000) translate(-159.500000, -9.000000) " points="158 6 161 9 158 12"></polyline>
+        <text id="Listing-{}" font-family="SFMono-Regular, SF Mono" font-size="14" font-weight="normal" fill="#FFFFFF">
+            <tspan x="0" y="14">Listing {}</tspan>
+        </text>
+    </g>
+</svg>

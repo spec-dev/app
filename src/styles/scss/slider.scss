@@ -1,0 +1,58 @@
+.slider {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.slider__backdrop {
+    display: block;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    position: absolute;
+    background-color: adjust-color(#0B0B20, $alpha: -0.25);
+    z-index: 1;
+    pointer-events: initial;
+}
+
+.slider__panel {
+    display: block;
+    top: 0;
+    bottom: 0;
+    left: 100%;
+    width: 50%;
+    position: absolute;
+    background-color: $backgroundMedium;
+    border-left: 1px solid adjust-color($gray, $alpha: -0.84);
+    z-index: 2;
+    pointer-events: initial;
+}
+
+.slider__panel-liner {
+    display: block;
+    width: 94%;
+    height: 100%;
+    position: relative;
+}
+
+#newLiveColumnSlider,
+#newLiveTableSlider,
+#transformSlider,
+#functionSlider {
+    z-index: 100;
+}
+
+#selectLiveColumnFormatterSlider,
+#transformObjectSlider,
+#hookSlider,
+#newTable-selectLiveColumnFormatterSlider {
+    z-index: 101;
+
+    .slider__panel {
+        width: 38%;
+    }
+}
