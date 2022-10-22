@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { cn, getPCN } from '../../utils/classes'
 import { paths, sections, docsSubSections, liveObjectsSubSections } from '../../utils/nav'
 import TablesPanel from '../tables/TablesPanel'
@@ -21,6 +21,8 @@ import DocsPanel from '../docs/DocsPanel'
 import DocsBody from '../docs/DocsBody'
 import LiveObjectsPanel from '../live-objects/LiveObjectsPanel'
 import LiveObjectsBody from '../live-objects/LiveObjectsBody'
+import api from '../../utils/api'
+import { RealtimeClient } from '@supabase/realtime-js'
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -47,6 +49,9 @@ function DashboardPage(props) {
     const currentTableIndex = Math.max(currentSubSection ? orderedTableNames.indexOf(currentSubSection) : 0, 0)
     const currentTableName = orderedTableNames[currentTableIndex]
     const currentTable = getTable(currentTableName)
+
+    useEffect(async () => {
+    }, [])
 
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
@@ -176,7 +181,7 @@ function DashboardPage(props) {
     ), [currentTable, renderContentBodyComp, currentMod])
 
     return (
-        <div className={cn(className, currentMod === 'flow' ? pcn('--no-side-panel') : '')}>
+        <div className={className}>
             <div className={pcn('__liner')}>
                 { renderSideNav() }
                 { renderSidePanel() }

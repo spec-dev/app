@@ -11,7 +11,7 @@ const defaultRoutes = [
 
 const buildRouteSpec = () => ({
     routes: defaultRoutes,
-    fallback: `/project/vyuszitodaosuejfksrds/${sections.TABLES}/marketplaces`,
+    fallback: '/project/abc/tables',
 })
 
 function App() {
