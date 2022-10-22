@@ -239,6 +239,10 @@ $backfillFetchDuration: 2s;
     white-space: nowrap;
     position: relative;
     margin-left: 2px;
+    
+    & > span {
+        margin-top: -2px;
+    }
 
     &:after {
         position: absolute;
@@ -263,6 +267,7 @@ $backfillFetchDuration: 2s;
     text-overflow: ellipsis;
     overflow: hidden;
     opacity: 0.7;
+    margin-top: 2px;
 
     i {
         font-family: Regular;
@@ -382,6 +387,8 @@ $backfillFetchDuration: 2s;
 }
 
 .tables-body__filter-button {
+    margin-left: 1px;
+
     span:first-child {
         svg {
             width: 13px;
@@ -468,8 +475,10 @@ $backfillFetchDuration: 2s;
 .tables-body__header-right-liner {
     display: inline-flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: flex-end;
+    height: 100%;
+    padding-bottom: 20px;
 }
 
 .tables-body__header-right-top,

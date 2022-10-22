@@ -102,6 +102,8 @@ class MetaApiClient extends ApiClient {
     }
 
     tables = async params => await this.get('/tables', params)
+
+    query = async payload => await this.post('/query', payload)
 }
 
 const api = {

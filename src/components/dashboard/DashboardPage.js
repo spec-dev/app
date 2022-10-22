@@ -36,7 +36,6 @@ const getSidePanelHeaderTitle = section => {
 
 function DashboardPage(props) {
     const params = (props.match || {}).params || {}
-
     const projectId = useMemo(() => params.projectId, [params])
     const currentSection = useMemo(() => params.section || sections.TABLES, [params])
     const currentSubSection = useMemo(() => params.subSection || null, [params])
@@ -47,7 +46,8 @@ function DashboardPage(props) {
 
     const currentTable = useMemo(() => {
         if (currentSection !== sections.TABLES) return null
-        return tables?.find(t => t.name === currentSubSection) || null
+        if (!tables) return null
+        return tables.find(t => t.name === currentSubSection) || tables[0]
     }, [projectId, currentSection, currentSubSection, tables])
     
     const currentTableIndex = useMemo(() => {
@@ -76,7 +76,7 @@ function DashboardPage(props) {
                     className={ currentSection === sections.TABLES ? '--selected' : '' } 
                     dangerouslySetInnerHTML={{ __html: tableEditorIcon }}
                     // TODO: This needs to be set to the last visited table
-                    to={paths.toTables()}>
+                    to={paths.toTables(projectId)}>
                 </Link>
                 <Link>
                     <span>{'{}'}</span>
@@ -91,7 +91,7 @@ function DashboardPage(props) {
                 <Link dangerouslySetInnerHTML={{ __html: userIcon }}></Link>
             </div>
         </div>
-    ), [currentSection])
+    ), [currentSection, projectId])
 
     const renderSidePanelBodyComp = useCallback(() => {
         switch (currentSection) {

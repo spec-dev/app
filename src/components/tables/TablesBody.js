@@ -1,15 +1,5 @@
 import React, { useCallback, useState, useRef, useEffect } from 'react'
 import { cn, getPCN } from '../../utils/classes'
-import filterIcon from '../../svgs/filter'
-import blistIcon from '../../svgs/blist'
-import searchIcon from '../../svgs/search'
-import lockIcon from '../../svgs/lock'
-import historyIcon from '../../svgs/history'
-import modelRelationshipIcon from '../../svgs/model-relationship'
-import keyIcon from '../../svgs/key'
-import checkIcon from '../../svgs/check'
-import linkIcon from '../../svgs/link'
-import NewColumnDropdown from '../../components/shared/dropdowns/NewColumnDropdown'
 import Slider from '../shared/sliders/Slider'
 import SelectLiveColumnFormatterPanel from '../shared/panels/SelectLiveColumnFormatterPanel'
 import TransformObjectPanel from '../shared/panels/TransformObjectPanel'
@@ -18,11 +8,23 @@ import NewLiveColumnPanel from '../shared/panels/NewLiveColumnPanel'
 import { cloneDeep } from 'lodash-es'
 import CountUp from 'react-countup'
 import { getFromStorage, setToStorage } from '../../utils/cache'
+import { selectPageRecords } from '../../utils/queries'
+import {
+    filterIcon,
+    blistIcon,
+    searchIcon,
+    historyIcon,
+    modelRelationshipIcon,
+    keyIcon,
+    checkIcon,
+    linkIcon,
+} from '../../svgs/icons'
+import api from '../../utils/api'
 
 const className = 'tables-body'
 const pcn = getPCN(className)
 
-const status = {
+export const tableStatus = {
     BACKFILLING: {
         id: 'backfilling',
         title: 'Backfilling...',
@@ -39,7 +41,7 @@ const status = {
 
 const getStatusIcon = statusId => {
     switch (statusId) {
-        case status.IN_SYNC.id:
+        case tableStatus.IN_SYNC.id:
             return (
                 <span
                     className={pcn('__header-status-icon', '__header-status-icon--check')}
@@ -52,17 +54,9 @@ const getStatusIcon = statusId => {
 }
 
 const getColHeaderIcon = (col, table) => {
-    if (table.name === 'marketplaces' && col.name === 'address' && !!((getFromStorage('marketplace_listings') || {}).name)) {
-        return [linkIcon, 'link']
-    }
-
-    if (table.name === 'collections' && col.name === 'contract_address' && !!((getFromStorage('assets') || {}).name)) {
-        return [linkIcon, 'link']
-    }
-    
-    if (col.isLiveLinkColumn && col.liveSource && table.status !== null) {
-        return [linkIcon, 'link']
-    }
+    // if (col.isLiveLinkColumn && col.liveSource && status !== null) {
+    //     return [linkIcon, 'link']
+    // }
 
     if (col.isPrimaryKey) {
         return [keyIcon, 'key']
@@ -76,37 +70,14 @@ const getColHeaderIcon = (col, table) => {
 }
 
 const getColType = (col, table) => {
-    // if (table.name === 'marketplaces' && col.name === 'address' && !!((getFromStorage('marketplace_listings') || {}).name)) {
-    //     return (
-    //         <span className={pcn('__col-header-type')}>
-    //             <span>Listing</span>
-    //         </span>
-    //     )
+    // if (!col.liveSource || status === null) {
+    //     return <span className={pcn('__col-header-type')}>{ col.type }</span>
     // }
 
-    // if (table.name === 'collections' && col.name === 'contract_address' && !!((getFromStorage('assets') || {}).name)) {
-    //     return (
-    //         <span className={pcn('__col-header-type')}>
-    //             <span>NFTAsset</span>
-    //         </span>
-    //     )
-    // }
-
-    if (!col.liveSource || table.status === null) {
-        return <span className={pcn('__col-header-type')}>{ col.type }</span>
-    }
-
-    let colType = table.liveObjectSpec?.name
-    if (colType === 'ENS Profile' && col.name === 'address' && !!((getFromStorage('nfts') || {}).name)) {
-        colType += ', NFT'
-        if (table.status === null) {
-            return <span className={pcn('__col-header-type')}>{ col.type }</span>
-        }
-    }
 
     return (
         <span className={pcn('__col-header-type')}>
-            <span>{ colType }</span>
+            {/* <span>{ colType }</span> */}
         </span>
     )
 }
@@ -117,8 +88,8 @@ const timing = {
 
 function TablesBody(props) {
     const [table, setTable] = useState(props.table || {})
-    const newColumnDropdownRef = useRef()
-    const extendTableDropdownRef = useRef()
+    const [status, setStatus] = useState(props.status || tableStatus.IN_SYNC.id)
+    const [records, setRecords] = useState(props.records || null)
     const newLiveColumnSliderRef = useRef()
     const newLiveColumnPanelRef = useRef()
     const selectLiveColumnFormatterPanelRef = useRef()
@@ -127,20 +98,6 @@ function TablesBody(props) {
     const transformObjectSliderRef = useRef()
     const transformObjectPanelRef = useRef()
     const hookSliderRef = useRef()
-
-    const onClickLinkObjectButton = useCallback(() => {
-        newColumnDropdownRef.current?.show()
-    }, [])
-
-    const onClickExtendTable = useCallback(() => {
-        extendTableDropdownRef.current?.show()
-    }, [])
-
-    const onSelectNewColumnType = useCallback(({ id }) => {
-        if (id === 'live') {
-            newLiveColumnSliderRef.current?.show()
-        }
-    }, [])
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -173,7 +130,7 @@ function TablesBody(props) {
 
         // Update table.
         newTable.columns = newCols
-        newTable.status = status.BACKFILLING
+        newTable.status = tableStatus.BACKFILLING
         newTable.liveObjectSpec = liveObjectSpec
 
         setTable(newTable)
@@ -200,63 +157,80 @@ function TablesBody(props) {
         selectLiveColumnFormatterSliderRef.current?.show()
     }, [])
 
+    const loadPageRecords = useCallback(async () => {
+        const { data, ok } = await api.meta.query({ query: selectPageRecords(table.name, 0) })
+        if (!ok) {
+            // TODO: Log/display error
+            setRecords([])
+            return
+        }
+        setRecords(data)
+    }, [table])
+
     useEffect(() => {
         if (!props.table) return
-        
         if (props.table.name !== table.name) {
             setTable(props.table)
+            setRecords(null)
             return
         }
 
         // Backfilling -> Populating
-        if (table.status?.id === status.BACKFILLING.id) {
+        if (status === tableStatus.BACKFILLING.id) {
             setTimeout(() => {
                 const newTable = cloneDeep(table)
-                newTable.status = status.POPULATING
+                newTable.status = tableStatus.POPULATING
                 setTable(newTable)
                 setToStorage(newTable.name, newTable)
             }, 2200)
         }
         // Populating -> In-Sync
-        else if (table.status?.id === status.POPULATING.id) {
+        else if (status === tableStatus.POPULATING.id) {
             setTimeout(() => {
                 const newTable = cloneDeep(table)
-                newTable.status = status.IN_SYNC
+                newTable.status = tableStatus.IN_SYNC
                 setTable(newTable)
                 setToStorage(newTable.name, newTable)
             }, (table.records?.length || 0) * timing.rowFadeInDelay + 400)
         }
     }, [table, props.table])
 
+    useEffect(() => {
+        if (table?.name && records === null) {
+            loadPageRecords()
+        }
+    }, [table, records, loadPageRecords])
+
     const renderStatus = useCallback(() => (
         <div className={pcn('__header-status-container')}>
             <div className={pcn('__header-status', `__header-status--backfilling`)}>
-                <span>{ status.BACKFILLING.title }</span>
+                <span>{ tableStatus.BACKFILLING.title }</span>
             </div>
             <div className={pcn('__header-status', `__header-status--in-sync`)}>
                 <span
                     className={pcn('__header-status-icon', '__header-status-icon--check')}
                     dangerouslySetInnerHTML={{ __html: checkIcon }}>
                 </span>
-                <span>{ status.IN_SYNC.title }</span>
+                <span>{ tableStatus.IN_SYNC.title }</span>
             </div>
         </div>
-    ), [table])
+    ), [])
 
     const renderNumRecords = useCallback((mod) => {
-        const numRecords = table.records?.length || 0
-        const isPlural = table.isLiveTable && table.status === null ? true : numRecords !== 1
+        const numRecords = records?.length || 0
 
         let start = 0
         let end = 0
-        if (table.status?.id === status.POPULATING.id) {
+        if (status === tableStatus.POPULATING.id) {
             end = numRecords
-        } else if (table.status?.id === status.IN_SYNC.id) {
+        } else if (status === tableStatus.IN_SYNC.id) {
             start = numRecords
             end = numRecords
-        } else if (table.status === null) {
-            start = table.isLiveTable ? 0 : numRecords
-            end = table.isLiveTable ? 0 : numRecords
+        }
+
+        let style = {}
+        if (records === null) {
+            style = { display: 'none' }
         }
 
         return (
@@ -264,14 +238,14 @@ function TablesBody(props) {
                 <CountUp start={start} end={end} delay={0} duration={(numRecords * timing.rowFadeInDelay) / 1000}>
                     {({ countUpRef }) => (
                         <span>
-                            <span ref={countUpRef}></span>
-                            <span>{ `Record${isPlural ? 's' : ''}` }</span>
+                            <span style={style} ref={countUpRef}></span>
+                            <span>{ `${records === null ? '-- ' : ''}Record${numRecords !== 1 ? 's' : ''}` }</span>
                         </span>
                     )}
                 </CountUp>
             </div>
         )
-    }, [table])
+    }, [table, status, records])
 
     const renderFilterButton = useCallback(() => (
         <div className={pcn('__filter-button')}>
@@ -287,26 +261,12 @@ function TablesBody(props) {
         </div>
     ), [])
 
-    const renderSearchButton = useCallback(() => (
-        <div className={pcn('__search-button')}>
-            <span dangerouslySetInnerHTML={{ __html: searchIcon }}></span>
-            <span>Search</span>
-        </div>
-    ), [])
-
     const renderLinkObjectButton = useCallback(() => (
         <div className={pcn('__header-new-col-button')}>
-            <span id='newColDropdownTarget' onClick={() => onSelectNewColumnType({ id: 'live' })}>
+            <span id='newColDropdownTarget' onClick={() => newLiveColumnSliderRef.current?.show() }>
                 <span>+</span>
                 <span>Link Live Data</span>
             </span>
-        </div>
-    ), [onSelectNewColumnType])
-
-    const renderRLSStatus = useCallback(() => (
-        <div className={pcn('__rls-status')}>
-            <span dangerouslySetInnerHTML={{ __html: lockIcon }}></span>
-            <span>RLS Enabled</span>
         </div>
     ), [])
 
@@ -346,8 +306,8 @@ function TablesBody(props) {
                     className={pcn(
                         '__col-header',
                         `__col-header--${table.name}-${col.hide === false ? col.liveSource : col.name}`,
-                        !!col.liveSource && table.status !== null ? '__col-header--live' : '',
-                        col.isLiveLinkColumn && table.status !== null ? '__col-header--live-link' : '',
+                        !!col.liveSource && status !== null ? '__col-header--live' : '',
+                        col.isLiveLinkColumn && status !== null ? '__col-header--live-link' : '',
                         col.isPrimaryKey ? '__col-header--primary' : '',
                         forceGreen ? '__col-header--force-green' : '',
 
@@ -358,10 +318,10 @@ function TablesBody(props) {
                             dangerouslySetInnerHTML={{ __html: icon }}>
                         </span>
                     }
-                    { !icon && !col.isLiveLinkColumn && !!col.liveSource && table.status?.id === status.IN_SYNC.id &&
+                    { !icon && !col.isLiveLinkColumn && !!col.liveSource && status === tableStatus.IN_SYNC.id &&
                         <span className='blink-indicator'><span></span></span>
                     }
-                    { !icon && !col.isLiveLinkColumn && !!col.liveSource && (table.status?.id === status.BACKFILLING.id || table.status?.id === status.POPULATING.id) &&
+                    { !icon && !col.isLiveLinkColumn && !!col.liveSource && (status === tableStatus.BACKFILLING.id || status === tableStatus.POPULATING.id) &&
                         <span className={pcn('__col-header-type-icon', `__col-header-type-icon--circle`)}><span></span></span>
                     }
                     <span className={pcn('__col-header-name')}>{col.name}</span>
@@ -369,25 +329,11 @@ function TablesBody(props) {
                 </div>
             ))
         })
-
-        colHeaders.push((
-            <div key='add' className={pcn('__col-header', '__col-header--new-col')}>
-                <span id='extendTableDropdownTarget' onClick={onClickExtendTable}>
-                    <span>+</span>
-                </span>
-                <NewColumnDropdown
-                    key='extendTableDropdown'
-                    id='extendTableDropdown'
-                    onSelectOption={onSelectNewColumnType}
-                    ref={extendTableDropdownRef}
-                />
-            </div>
-        ))
-
+        
         return colHeaders
-    }, [table, onClickExtendTable, onSelectNewColumnType])
+    }, [table])
 
-    const renderRecords = useCallback(() => table.records?.map((record, i) => {
+    const renderRecords = useCallback(() => records?.map((record, i) => {
         const cells = [(
             <div key='check' className={pcn('__cell', '__cell--check-col')}>
                 <span></span>
@@ -418,8 +364,8 @@ function TablesBody(props) {
                     className={pcn(
                         '__cell', 
                         `__cell--${table.name}-${col.hide === false ? col.liveSource : col.name}`,
-                        !!col.liveSource && table.status !== null ? '__cell--live' : '',
-                        col.isLiveLinkColumn && table.status !== null ? '__cell--live-link' : '',
+                        !!col.liveSource && status !== null ? '__cell--live' : '',
+                        col.isLiveLinkColumn && status !== null ? '__cell--live-link' : '',
                         value === 'NULL' ? '__cell--null' : '',
                         col.isPrimaryKey ? '__cell--primary' : '',
                     )}>
@@ -436,14 +382,14 @@ function TablesBody(props) {
             <div
                 key={i}    
                 className={pcn('__row')}
-                style={ table.isLiveTable && table.status?.id === status.POPULATING.id 
+                style={ table.isLiveTable && status === tableStatus.POPULATING.id 
                     ? { transition: `opacity 0.25s ease ${delay}ms` } 
                     : {} 
                 }>
                 { cells }
             </div>
         )
-    }) || [], [table])
+    }) || [], [table, status, records])
 
     const renderTableLoading = useCallback(() => (
         <div className={pcn('__table-loading')}>
@@ -458,9 +404,8 @@ function TablesBody(props) {
     return (
         <div className={cn(
             className,
-            `${className}--${table.name}`,
-            `${className}--${table.status?.id}`,
-            table.isLiveTable ? `${className}--live-table` : '',
+            `${className}--${status}`,
+            records === null ? `${className}--loading` : '',
         )}>
             <div className={pcn('__header')}>
                 <div className={pcn('__header-left')}>
@@ -470,24 +415,20 @@ function TablesBody(props) {
                                 <span>{ table.name }</span>
                             </div>
                             <div className={pcn('__table-desc')}>
-                                <span>{ table.desc || <i>No description</i> }</span>
+                                <span>{ table.comment || <i>No description</i> }</span>
                             </div>
                         </div>
                         <div className={pcn('__header-left-bottom')}>
-                            { table.status && renderStatus() }
+                            { renderStatus() }
                             { renderNumRecords('header') }
                             { renderFilterButton() }
                             { renderSortButton() }
-                            { renderSearchButton() }
                             { renderLinkObjectButton() }
                         </div>
                     </div>
                 </div>
                 <div className={pcn('__header-right')}>
                     <div className={pcn('__header-right-liner')}>
-                        <div className={pcn('__header-right-top')}>
-                            { renderRLSStatus() }
-                        </div>
                         <div className={pcn('__header-right-bottom')}>
                             { renderHistoryButton() }
                         </div>
@@ -496,7 +437,7 @@ function TablesBody(props) {
             </div>
             <div className={pcn('__main')}>
                 <div className={pcn('__col-headers')}>
-                    { table.status?.id === status.BACKFILLING.id && renderTableLoading() }
+                    { status === tableStatus.BACKFILLING.id && renderTableLoading() }
                     { renderColHeaders() }
                 </div>
                 <div className={pcn('__records')}>
