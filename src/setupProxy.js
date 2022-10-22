@@ -2,8 +2,7 @@ const proxy = require('http-proxy-middleware')
 
 const targets = {
     CORE_API_URL: process.env.REACT_APP_CORE_API_URL || 'https://api.spec.dev',
-    REALTIME_URL: process.env.REACT_APP_REALTIME_URL || 'ws://localhost:54322',
-    META_API_URL: process.env.REACT_APP_META_API_URL || 'http://localhost:54323',
+    META_API_URL: process.env.REACT_APP_META_API_URL || 'http://localhost:54322',
 }
 
 module.exports = function(app) {
@@ -27,18 +26,6 @@ module.exports = function(app) {
             pathRewrite: {
                 '^/meta': '/',
             },
-        }
-    ))
-    // Realtime proxy.
-    app.use(proxy(
-        '/realtime',
-        {
-            target: targets.REALTIME_URL,
-            changeOrigin: true,
-            pathRewrite: {
-                '^/realtime': '/',
-            },
-            ws: true,
         }
     ))
 }

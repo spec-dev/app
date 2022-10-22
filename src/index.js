@@ -1,4 +1,5 @@
 import './styles/css/index.css'
+import './utils/config'
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { BrowserRouter } from 'react-router-dom'

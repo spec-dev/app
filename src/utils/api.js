@@ -60,11 +60,25 @@ class ApiClient {
     makeRequest = async ( path, options, minRespTime ) => {
         const timer = minRespTime ? new Timer( minRespTime ) : null
         timer && timer.start()
-        const resp = await fetch( this.path + path, options )
+
+        let resp
+        try {
+            resp = await fetch( this.path + path, options )
+        } catch (err) {
+            console.error(err)
+        }
+
         return await this.handleResponse( resp, timer )
     }
 
     handleResponse = async ( resp, timer ) => {
+        if (!resp) return {
+            data: null,
+            ok: false,
+            status: null,
+            headers: null,
+            timer,
+        }
         const { headers, status } = resp
         const ok = ApiClient.successStatuses.has(status)
         const data = this.camelizeKeys(await resp.json())
@@ -87,7 +101,7 @@ class MetaApiClient extends ApiClient {
         super('/meta', false)
     }
 
-    tables = async () => await this.get('/tables')
+    tables = async params => await this.get('/tables', params)
 }
 
 const api = {

@@ -201,6 +201,8 @@ function TablesBody(props) {
     }, [])
 
     useEffect(() => {
+        if (!props.table) return
+        
         if (props.table.name !== table.name) {
             setTable(props.table)
             return
@@ -222,7 +224,7 @@ function TablesBody(props) {
                 newTable.status = status.IN_SYNC
                 setTable(newTable)
                 setToStorage(newTable.name, newTable)
-            }, table.records.length * timing.rowFadeInDelay + 400)
+            }, (table.records?.length || 0) * timing.rowFadeInDelay + 400)
         }
     }, [table, props.table])
 
@@ -242,7 +244,7 @@ function TablesBody(props) {
     ), [table])
 
     const renderNumRecords = useCallback((mod) => {
-        const numRecords = table.records.length
+        const numRecords = table.records?.length || 0
         const isPlural = table.isLiveTable && table.status === null ? true : numRecords !== 1
 
         let start = 0
@@ -259,7 +261,7 @@ function TablesBody(props) {
 
         return (
             <div className={pcn(`__${mod}-num-records`)}>
-                <CountUp start={start} end={end} delay={0} duration={(table.records.length * timing.rowFadeInDelay) / 1000}>
+                <CountUp start={start} end={end} delay={0} duration={(numRecords * timing.rowFadeInDelay) / 1000}>
                     {({ countUpRef }) => (
                         <span>
                             <span ref={countUpRef}></span>
@@ -385,7 +387,7 @@ function TablesBody(props) {
         return colHeaders
     }, [table, onClickExtendTable, onSelectNewColumnType])
 
-    const renderRecords = useCallback(() => table.records.map((record, i) => {
+    const renderRecords = useCallback(() => table.records?.map((record, i) => {
         const cells = [(
             <div key='check' className={pcn('__cell', '__cell--check-col')}>
                 <span></span>
@@ -441,13 +443,17 @@ function TablesBody(props) {
                 { cells }
             </div>
         )
-    }), [table])
+    }) || [], [table])
 
     const renderTableLoading = useCallback(() => (
         <div className={pcn('__table-loading')}>
             <div className='indeterminate'></div>
         </div>
     ), [])
+
+    if (!table || !Object.keys(table).length) {
+        return <div className={className}></div>
+    }
 
     return (
         <div className={cn(

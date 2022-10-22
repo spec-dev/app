@@ -4,7 +4,6 @@
     "private": true,
     "dependencies": {
         "@monaco-editor/react": "^4.4.5",
-        "@supabase/realtime-js": "^2.1.0",
         "humps": "^2.0.1",
         "jquery": "^3.6.0",
         "lodash-es": "^4.17.21",

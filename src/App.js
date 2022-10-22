@@ -1,27 +1,22 @@
 import { Redirect, Route, Switch } from 'react-router'
-import { paths, sections } from './utils/nav'
+import { paths } from './utils/nav'
 import DashboardPage from './components/dashboard/DashboardPage'
+import { getCurrentProject } from './utils/cache'
 
-const defaultRoutes = [
-    {
-        path: paths.DASHBOARD,
-        component: DashboardPage,
-    },
-]
-
-const buildRouteSpec = () => ({
-    routes: defaultRoutes,
-    fallback: '/project/abc/tables',
-})
+const routes = [{
+    path: paths.DASHBOARD,
+    component: DashboardPage,
+}]
 
 function App() {
-    const { routes, fallback } = buildRouteSpec()
+    const currentProjectId = getCurrentProject()?.id
+    const fallbackPath = paths.toTables(currentProjectId || '')
 
     return (
         <div id='app'>
             <Switch>
                 { routes.map((props, i) => <Route key={i} {...props}/> )}
-                <Redirect to={fallback} />
+                <Redirect to={fallbackPath} />
             </Switch>
         </div>
     )
