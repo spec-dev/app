@@ -4,9 +4,9 @@ import { paths, sections } from '../../utils/nav'
 import TablesPanel from '../tables/TablesPanel'
 import TablesBody from '../tables/TablesBody'
 import { Link } from 'react-router-dom'
-import api from '../../utils/api'
 import { getCurrentProject, getCurrentSchemaName } from '../../utils/cache'
-import { getSchema, resolveSchema } from '../../utils/schema'
+import { getSchema, resolveSchema, getSeedCursors } from '../../utils/schema'
+import { getConfig } from '../../utils/config'
 import {
     barChartIcon,
     blistIcon,
@@ -40,8 +40,10 @@ function DashboardPage(props) {
     const currentSection = useMemo(() => params.section || sections.TABLES, [params])
     const currentSubSection = useMemo(() => params.subSection || null, [params])
     const currentProject = useMemo(() => getCurrentProject(), [projectId])
-
-    const [tables, setTables] = useState(getSchema(getCurrentSchemaName()))
+    const [config, setConfig] = useState(null)
+    const [seedCursors, setSeedCursors] = useState([])
+    const [currentSchemaName, _] = useState(getCurrentSchemaName())
+    const [tables, setTables] = useState(getSchema(currentSchemaName))
     const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
 
     const currentTable = useMemo(() => {
@@ -57,12 +59,26 @@ function DashboardPage(props) {
 
     useEffect(async () => {
         if (currentSection === sections.TABLES && !tables) {
-            const { data, ok } = await resolveSchema(getCurrentSchemaName())
-            if (!ok) {
+            const [tablesResult, seedCursorsResult, configData] = await Promise.all([
+                resolveSchema(getCurrentSchemaName()),
+                getSeedCursors(),
+                getConfig(),
+            ])
+            if (!tablesResult.ok) {
                 // TODO: Show error.
                 return
             }
-            setTables(data)
+            if (!seedCursorsResult.ok) {
+                // TODO: Show error.
+                return
+            }
+            if (!configData) {
+                // TODO: Show error
+                return
+            }
+            setSeedCursors(seedCursorsResult.data)
+            setConfig(configData)
+            setTables(tablesResult.data)
         }
     }, [projectId, currentSection, tables])
 
@@ -127,12 +143,14 @@ function DashboardPage(props) {
                 return (
                     <TablesBody
                         table={currentTable}
+                        config={config}
+                        seedCursors={seedCursors}
                     />
                 )
             default:
                 return null
         }
-    }, [currentSection, currentTable])
+    }, [currentSection, currentTable, config, seedCursors])
 
     const renderHeaderProjectPath = useCallback(() => currentProject?.org && currentProject?.name ? (
         <div className={pcn('__project-path')}>

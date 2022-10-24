@@ -1,6 +1,14 @@
 import api from './api'
 
 export const DEFAULT_SCHEMA_NAME = 'public'
+export const SPEC_SCHEMA_NAME = 'spec'
+
+export const specTableNames = {
+    EVENT_CURSORS: 'event_cursors',
+    LIVE_COLUMNS: 'live_columns',
+    SEED_CURSORS: 'seed_cursors',
+    TABLE_SUB_CURSORS: 'table_sub_cursors',
+}
 
 export const schemas = {}
 
@@ -12,4 +20,8 @@ export async function resolveSchema(schemaName) {
         schemas[schemaName] = data
     }
     return { data, ok }
+}
+
+export async function getSeedCursors() {
+    return api.meta.query({ query: `select * from ${SPEC_SCHEMA_NAME}.${specTableNames.SEED_CURSORS}` })
 }

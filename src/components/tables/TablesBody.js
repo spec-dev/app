@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useRef, useEffect } from 'react'
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
 import { cn, getPCN } from '../../utils/classes'
 import Slider from '../shared/sliders/Slider'
 import SelectLiveColumnFormatterPanel from '../shared/panels/SelectLiveColumnFormatterPanel'
@@ -7,8 +7,10 @@ import HookPanel from '../shared/panels/HookPanel'
 import NewLiveColumnPanel from '../shared/panels/NewLiveColumnPanel'
 import { cloneDeep } from 'lodash-es'
 import CountUp from 'react-countup'
-import { getFromStorage, setToStorage } from '../../utils/cache'
+import { setToStorage } from '../../utils/cache'
 import { selectPageRecords } from '../../utils/queries'
+import { abbrevColType } from '../../utils/formatters'
+import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
     filterIcon,
     blistIcon,
@@ -53,33 +55,47 @@ const getStatusIcon = statusId => {
     }
 }
 
-const getColHeaderIcon = (col, table) => {
-    // if (col.isLiveLinkColumn && col.liveSource && status !== null) {
-    //     return [linkIcon, 'link']
-    // }
-
-    if (col.isPrimaryKey) {
+const getColHeaderIcon = (
+    col, 
+    status, 
+    isLiveOrLinkColumn, 
+    isLinkColumn,
+    isPrimaryKey,
+    isForeignKey,
+) => {
+    if (isLinkColumn) {
+        return [linkIcon, 'link']
+    }
+    if (isPrimaryKey) {
         return [keyIcon, 'key']
     }
-
-    if (col.isForeignKey) {
+    if (isForeignKey) {
         return [modelRelationshipIcon, 'rel']
     }
-
     return [null, null]
 }
 
-const getColType = (col, table) => {
-    // if (!col.liveSource || status === null) {
-    //     return <span className={pcn('__col-header-type')}>{ col.type }</span>
-    // }
+const compileLiveColumnDataForTable = (table, config) => {
+    if (!table?.name) return {}
 
+    // Get the live columns and link columns related to this table.
+    const liveColumns = getLiveColumnsForTable(table.schema, table.name, config)
+    const linkColumns = getLiveColumnLinksOnTable(table.schema, table.name, config)
 
-    return (
-        <span className={pcn('__col-header-type')}>
-            {/* <span>{ colType }</span> */}
-        </span>
-    )
+    for (const linkColumn of linkColumns) {
+        if (liveColumns[linkColumn.column]) {
+            liveColumns[linkColumn.column].isLinkColumn = true
+            continue
+        }
+
+        liveColumns[linkColumn.column] = {
+            ...linkColumn.liveColumn,
+            isLinkColumn: true,
+        }
+    }
+
+    return liveColumns
+    
 }
 
 const timing = {
@@ -87,9 +103,16 @@ const timing = {
 }
 
 function TablesBody(props) {
+    const { config = {}, seedCursors = [] } = props
     const [table, setTable] = useState(props.table || {})
     const [status, setStatus] = useState(props.status || tableStatus.IN_SYNC.id)
     const [records, setRecords] = useState(props.records || null)
+    const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
+    const hasLiveColumns = useMemo(() => Object.values(liveColumns).length > 0, [liveColumns])
+    const primaryKeyColNames = useMemo(() => new Set((table?.primary_keys || []).map(pk => pk.name)), [table])
+    const foreignKeyColNames = useMemo(() => new Set((table?.relationships || []).filter(
+        rel => rel.source_table_name === table.name
+    ).map(rel => rel.source_column_name)), [table])
     const newLiveColumnSliderRef = useRef()
     const newLiveColumnPanelRef = useRef()
     const selectLiveColumnFormatterPanelRef = useRef()
@@ -98,6 +121,8 @@ function TablesBody(props) {
     const transformObjectSliderRef = useRef()
     const transformObjectPanelRef = useRef()
     const hookSliderRef = useRef()
+
+    console.log(table)
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -285,32 +310,29 @@ function TablesBody(props) {
         )]
 
         table.columns.forEach(col => {
-            const [icon, mod] = getColHeaderIcon(col, table)
-            const colType = getColType(col, table)
-
-            if (col.hide) {
-                return
-            }
-        
-            let forceGreen = false
-            // if (table.name === 'marketplaces' && col.name === 'address' && !!((getFromStorage('marketplace_listings') || {}).name)) {
-            //     forceGreen = true
-            // }
-            // else if (table.name === 'collections' && col.name === 'contract_address' && !!((getFromStorage('assets') || {}).name)) {
-            //     forceGreen = true
-            // }
+            const liveColumnData = liveColumns[col.name]
+            const isLiveOrLinkColumn = !!liveColumnData
+            const isLinkColumn = liveColumnData?.isLinkColumn
+            const isPrimaryKey = primaryKeyColNames.has(col.name)
+            const isForeignKey = foreignKeyColNames.has(col.name)
+            const [icon, mod] = getColHeaderIcon(
+                col,
+                status,
+                isLiveOrLinkColumn,
+                isLinkColumn,
+                isPrimaryKey,
+                isForeignKey,
+            )
+            const colType = liveColumnData?.givenName || abbrevColType(col.data_type)
             
             colHeaders.push((
                 <div
                     key={col.name}
                     className={pcn(
                         '__col-header',
-                        `__col-header--${table.name}-${col.hide === false ? col.liveSource : col.name}`,
-                        !!col.liveSource && status !== null ? '__col-header--live' : '',
-                        col.isLiveLinkColumn && status !== null ? '__col-header--live-link' : '',
-                        col.isPrimaryKey ? '__col-header--primary' : '',
-                        forceGreen ? '__col-header--force-green' : '',
-
+                        isLiveOrLinkColumn ? '__col-header--live' : '',
+                        isLinkColumn ? '__col-header--live-link' : '',
+                        isPrimaryKey ? '__col-header--primary' : '',
                     )}>
                     { icon &&
                         <span
@@ -318,20 +340,22 @@ function TablesBody(props) {
                             dangerouslySetInnerHTML={{ __html: icon }}>
                         </span>
                     }
-                    { !icon && !col.isLiveLinkColumn && !!col.liveSource && status === tableStatus.IN_SYNC.id &&
+                    { !icon && isLiveOrLinkColumn && !isLinkColumn && status === tableStatus.IN_SYNC.id &&
                         <span className='blink-indicator'><span></span></span>
                     }
-                    { !icon && !col.isLiveLinkColumn && !!col.liveSource && (status === tableStatus.BACKFILLING.id || status === tableStatus.POPULATING.id) &&
+                    { !icon && isLiveOrLinkColumn && !isLinkColumn && status !== tableStatus.IN_SYNC.id &&
                         <span className={pcn('__col-header-type-icon', `__col-header-type-icon--circle`)}><span></span></span>
                     }
                     <span className={pcn('__col-header-name')}>{col.name}</span>
-                    { colType }
+                    <span className={pcn('__col-header-type')}>
+                        <span>{ colType }</span>
+                    </span>
                 </div>
             ))
         })
         
         return colHeaders
-    }, [table])
+    }, [table, liveColumns])
 
     const renderRecords = useCallback(() => records?.map((record, i) => {
         const cells = [(
@@ -419,7 +443,7 @@ function TablesBody(props) {
                             </div>
                         </div>
                         <div className={pcn('__header-left-bottom')}>
-                            { renderStatus() }
+                            { hasLiveColumns && renderStatus() }
                             { renderNumRecords('header') }
                             { renderFilterButton() }
                             { renderSortButton() }
