@@ -14,7 +14,6 @@ import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/c
 import {
     filterIcon,
     blistIcon,
-    searchIcon,
     historyIcon,
     modelRelationshipIcon,
     keyIcon,
@@ -105,7 +104,6 @@ const getColumnWidths = (table, liveColumns, primaryKeyColNames, foreignKeyColNa
         widths.push(colWidth)
     }
 
-    console.log(widths)
     return widths
 }
 
@@ -145,6 +143,7 @@ function TablesBody(props) {
         colWidthConfig.CHECK_COLUMN_WIDTH, ...columnWidths
     ].map(w => `${w}px`).join(' '), [columnWidths])
 
+    // Refs.
     const newLiveColumnSliderRef = useRef()
     const newLiveColumnPanelRef = useRef()
     const selectLiveColumnFormatterPanelRef = useRef()
@@ -246,9 +245,9 @@ function TablesBody(props) {
                 newTable.status = tableStatus.IN_SYNC
                 setTable(newTable)
                 setToStorage(newTable.name, newTable)
-            }, (table.records?.length || 0) * timing.rowFadeInDelay + 400)
+            }, (records?.length || 0) * timing.rowFadeInDelay + 400)
         }
-    }, [table, props.table])
+    }, [table, props.table, status, records])
 
     useEffect(() => {
         if (table?.name && records === null) {
@@ -378,7 +377,7 @@ function TablesBody(props) {
         })
         
         return colHeaders
-    }, [table, liveColumns])
+    }, [table, status, liveColumns])
 
     const renderRecords = useCallback(() => records?.map((record, i) => {
         const cells = [(
@@ -390,33 +389,31 @@ function TablesBody(props) {
         const delay = i * timing.rowFadeInDelay
 
         table.columns.forEach(col => {
-            if (col.hide) {
-                return
-            }
-
-            let value = record[col.hide === false ? col.liveSource : col.name]
+            let value = record[col.name]
             if (value === null) {
                 value = 'NULL'
-            } 
-            else if (value === true || value === false) {
+            } else if (value === true || value === false) {
                 value = value.toString()
-            }
-            else if (!value) {
+            } else if (!value) {
                 value = ''
             }
+
+            const liveColumnData = liveColumns[col.name]
+            const isLiveOrLinkColumn = !!liveColumnData
+            const isLinkColumn = liveColumnData?.isLinkColumn
+            const isPrimaryKey = primaryKeyColNames.has(col.name)
 
             cells.push((
                 <div
                     key={col.name}
                     className={pcn(
                         '__cell', 
-                        `__cell--${table.name}-${col.hide === false ? col.liveSource : col.name}`,
-                        !!col.liveSource && status !== null ? '__cell--live' : '',
-                        col.isLiveLinkColumn && status !== null ? '__cell--live-link' : '',
+                        isLiveOrLinkColumn ? '__cell--live' : '',
+                        isLinkColumn ? '__cell--live-link' : '',
                         value === 'NULL' ? '__cell--null' : '',
-                        col.isPrimaryKey ? '__cell--primary' : '',
+                        isPrimaryKey ? '__cell--primary' : '',
                     )}>
-                    <span style={{ transition: `opacity 0.25s ease ${table.isLiveTable ? 0 : delay}ms, color 0.25s ease 0s` }}>
+                    <span style={{ transition: `opacity 0.25s ease ${hasLiveColumns ? 0 : delay}ms, color 0.25s ease 0s` }}>
                         { value }
                     </span>
                 </div>
@@ -427,14 +424,14 @@ function TablesBody(props) {
             <div
                 key={i}
                 className={pcn('__row')}
-                style={ table.isLiveTable && status === tableStatus.POPULATING.id 
+                style={ hasLiveColumns && status === tableStatus.POPULATING.id 
                     ? { transition: `opacity 0.25s ease ${delay}ms`, gridTemplateColumns: gridTemplateColumnsValue } 
                     : { gridTemplateColumns: gridTemplateColumnsValue } 
                 }>
                 { cells }
             </div>
         )
-    }) || [], [table, status, records])
+    }) || [], [table, status, records, hasLiveColumns, liveColumns, gridTemplateColumnsValue])
 
     const renderTableLoading = useCallback(() => (
         <div className={pcn('__table-loading')}>
