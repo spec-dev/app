@@ -80,10 +80,7 @@ function DashboardPage(props) {
             setSeedCursors(seedCursorsResult.data)
             setConfig(configData)
             setTables(tablesResult.data)
-            api.metaSocket.onConfigUpdate = newConfig => {
-                console.log(newConfig)
-                setConfig(newConfig)
-            }
+            api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
         }
     }, [projectId, currentSection, tables])
 
