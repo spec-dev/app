@@ -142,6 +142,7 @@ function DashboardPage(props) {
             case sections.TABLES:
                 return (
                     <TablesBody
+                        schema={currentSchemaName}
                         table={currentTable}
                         config={config}
                         seedCursors={seedCursors}
@@ -150,7 +151,7 @@ function DashboardPage(props) {
             default:
                 return null
         }
-    }, [currentSection, currentTable, config, seedCursors])
+    }, [currentSection, currentTable, config, seedCursors, currentSchemaName])
 
     const renderHeaderProjectPath = useCallback(() => currentProject?.org && currentProject?.name ? (
         <div className={pcn('__project-path')}>

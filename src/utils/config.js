@@ -35,7 +35,7 @@ export function getLiveColumnsForTable(schema, table, config) {
 
 export function getLiveColumnLinksOnTable(schema, table, config) {
     const liveObjects = config.objects || {}
-    const liveColumnLinks = []
+    const liveColumnLinks = {}
     for (const givenName in liveObjects) {
         const obj = liveObjects[givenName]
 
@@ -48,9 +48,10 @@ export function getLiveColumnLinksOnTable(schema, table, config) {
             for (const property in linkOn) {
                 const colPath = linkOn[property]
                 const [colSchema, colTable, colName] = colPath.split('.')
-                if (colSchema === schema && colTable === table) {
-                    liveColumnLinks.push({
+                if (colSchema === schema && colTable === table && !liveColumnLinks[colName]) {
+                    liveColumnLinks[colName] = {
                         column: colName,
+                        targetTablePath: obj.table,
                         liveObject: {
                             nsp,
                             name,
@@ -58,12 +59,75 @@ export function getLiveColumnLinksOnTable(schema, table, config) {
                             property,
                             givenName,
                         }
-                    })
+                    }
                 }
+            }
+
+            const seedColPathMappings = getSeedColPathMappings(link.seedWith, linkOn)
+            for (const mapping of seedColPathMappings) {
+                for (const property in mapping) {
+                    const colPath = mapping[property]
+                    const [colSchema, colTable, colName] = colPath.split('.')
+                    if (colSchema === schema && colTable === table && !liveColumnLinks[colName]) {
+                        liveColumnLinks[colName] = {
+                            column: colName,
+                            targetTablePath: obj.table,
+                            liveObject: {
+                                nsp,
+                                name,
+                                version,
+                                property,
+                                givenName,
+                            },
+                            isSeedColumn: true,
+                        }
+                    }
+                }    
             }
         }
     }
-    return liveColumnLinks
+    return Object.values(liveColumnLinks)
+}
+
+export function getSeedColPathMappings(seedWith, linkOn) {
+    const isString = typeof seedWith === 'string'
+    const isArray = Array.isArray(seedWith)
+
+    // String or array of object properties.
+    if (isString || isArray) {
+        const seedProperties = (isArray ? seedWith : [seedWith])
+        linkOn = linkOn || {}
+        
+        let seedColPaths = []
+        let newEntry = {}
+        for (const val of seedProperties) {
+            if (typeof val === 'object') {
+                if (Object.keys(newEntry).length) {
+                    seedColPaths.push(newEntry)
+                    newEntry = {}        
+                }
+                seedColPaths.push(val)
+            } else if (linkOn.hasOwnProperty(val)) {
+                newEntry[val] = linkOn[val]
+            } else {
+                if (Object.keys(newEntry).length) {
+                    seedColPaths.push(newEntry)
+                    newEntry = {}
+                }
+            }
+        }
+        if (Object.keys(newEntry).length) {
+            seedColPaths.push(newEntry)
+        }
+        return seedColPaths
+    }
+
+    // Map of property:colPath
+    if (typeof seedWith === 'object') {
+        return [seedWith || {}]
+    }
+    
+    return []
 }
 
 export function splitLiveObjectId(id) {

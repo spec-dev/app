@@ -585,7 +585,7 @@ $backfillFetchDuration: 2s;
 // All rows
 .tables-body__col-headers,
 .tables-body__row {
-    display: inline-flex;
+    display: grid;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
@@ -632,11 +632,11 @@ $backfillFetchDuration: 2s;
     }
 }
 
-.tables-body__row {
-    &>div:last-child {
-        width: $tableNewColumnWidth;
-    }
-}
+// .tables-body__row {
+//     &>div:last-child {
+//         width: $tableNewColumnWidth;
+//     }
+// }
 
 // All cells
 .tables-body__col-header,
@@ -647,9 +647,9 @@ $backfillFetchDuration: 2s;
     padding-left: 15px;
     padding-right: 15px;
 
-    &:not(:first-child) {
-        min-width: 100px;
-    }
+    // &:not(:first-child) {
+    //     min-width: 100px;
+    // }
 }
 
 // All check cells

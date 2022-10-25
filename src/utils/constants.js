@@ -9,7 +9,7 @@ const constants = {
     PROJECT_ORG: process.env.REACT_APP_PROJECT_ORG,
     PROJECT_NAME: process.env.REACT_APP_PROJECT_NAME,
 
-    RECORDS_PER_PAGE: parseInt(process.env.REACT_APP_RECORDS_PER_PAGE || 1000),
+    RECORDS_PER_PAGE: parseInt(process.env.REACT_APP_RECORDS_PER_PAGE || 100),
 }
 constants.isLocal = () => constants.ENV === 'local'
 

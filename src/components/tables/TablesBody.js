@@ -41,24 +41,14 @@ export const tableStatus = {
     }
 }
 
-const getStatusIcon = statusId => {
-    switch (statusId) {
-        case tableStatus.IN_SYNC.id:
-            return (
-                <span
-                    className={pcn('__header-status-icon', '__header-status-icon--check')}
-                    dangerouslySetInnerHTML={{ __html: checkIcon }}>
-                </span>
-            )
-        default:
-            return null
-    }
+const colWidthConfig = {
+    PIXELS_PER_CHAR: 8,
+    ICON_OFFSET: 25,
+    IDEAL_NAME_TYPE_GUTTER: 50,
+    CHECK_COLUMN_WIDTH: 47,
 }
 
 const getColHeaderIcon = (
-    col, 
-    status, 
-    isLiveOrLinkColumn, 
     isLinkColumn,
     isPrimaryKey,
     isForeignKey,
@@ -83,19 +73,40 @@ const compileLiveColumnDataForTable = (table, config) => {
     const linkColumns = getLiveColumnLinksOnTable(table.schema, table.name, config)
 
     for (const linkColumn of linkColumns) {
-        if (liveColumns[linkColumn.column]) {
-            liveColumns[linkColumn.column].isLinkColumn = true
-            continue
-        }
-
         liveColumns[linkColumn.column] = {
-            ...linkColumn.liveColumn,
+            ...(liveColumns[linkColumn.column] || linkColumn.liveObject),
+            targetTablePath: linkColumn.targetTablePath,
             isLinkColumn: true,
+            isSeedColumn: !!linkColumn.isSeedColumn,
         }
     }
 
     return liveColumns
+}
+
+const getColumnWidths = (table, liveColumns, primaryKeyColNames, foreignKeyColNames) => {
+    if (!table?.columns) return []
     
+    const widths = []
+    for (const col of table.columns) {
+        let numChars = col.name.length
+        const liveColumnData = liveColumns[col.name]
+        const isLiveOrLinkColumn = !!liveColumnData
+        const isPrimaryKey = primaryKeyColNames.has(col.name)
+        const isForeignKey = foreignKeyColNames.has(col.name)
+        const hasIcon = isLiveOrLinkColumn || isPrimaryKey || isForeignKey
+        const numColTypeChars = (liveColumnData?.givenName || abbrevColType(col.data_type)).length
+        numChars += numColTypeChars
+        const colWidth = (
+            (numChars * colWidthConfig.PIXELS_PER_CHAR) + 
+            (hasIcon ? colWidthConfig.ICON_OFFSET : 0) +
+            colWidthConfig.IDEAL_NAME_TYPE_GUTTER
+        )
+        widths.push(colWidth)
+    }
+
+    console.log(widths)
+    return widths
 }
 
 const timing = {
@@ -103,16 +114,37 @@ const timing = {
 }
 
 function TablesBody(props) {
-    const { config = {}, seedCursors = [] } = props
+    // Props.
+    const { schema, config = {}, seedCursors = [] } = props
+
+    // State.
     const [table, setTable] = useState(props.table || {})
     const [status, setStatus] = useState(props.status || tableStatus.IN_SYNC.id)
     const [records, setRecords] = useState(props.records || null)
-    const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
-    const hasLiveColumns = useMemo(() => Object.values(liveColumns).length > 0, [liveColumns])
+
+    // Constraints.
     const primaryKeyColNames = useMemo(() => new Set((table?.primary_keys || []).map(pk => pk.name)), [table])
     const foreignKeyColNames = useMemo(() => new Set((table?.relationships || []).filter(
         rel => rel.source_table_name === table.name
     ).map(rel => rel.source_column_name)), [table])
+    
+    // Live column info.
+    const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
+    const hasLiveColumns = useMemo(() => Object.keys((
+        (config?.tables || {})[schema] || {})[table.name] || {}
+    ).length > 0, [config, schema, table])
+
+    // Sizing.
+    const columnWidths = useMemo(() => getColumnWidths(
+        table, 
+        liveColumns,
+        primaryKeyColNames,
+        foreignKeyColNames,
+    ), [table, liveColumns])
+    const gridTemplateColumnsValue = useMemo(() => [
+        colWidthConfig.CHECK_COLUMN_WIDTH, ...columnWidths
+    ].map(w => `${w}px`).join(' '), [columnWidths])
+
     const newLiveColumnSliderRef = useRef()
     const newLiveColumnPanelRef = useRef()
     const selectLiveColumnFormatterPanelRef = useRef()
@@ -121,8 +153,6 @@ function TablesBody(props) {
     const transformObjectSliderRef = useRef()
     const transformObjectPanelRef = useRef()
     const hookSliderRef = useRef()
-
-    console.log(table)
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -315,14 +345,7 @@ function TablesBody(props) {
             const isLinkColumn = liveColumnData?.isLinkColumn
             const isPrimaryKey = primaryKeyColNames.has(col.name)
             const isForeignKey = foreignKeyColNames.has(col.name)
-            const [icon, mod] = getColHeaderIcon(
-                col,
-                status,
-                isLiveOrLinkColumn,
-                isLinkColumn,
-                isPrimaryKey,
-                isForeignKey,
-            )
+            const [icon, mod] = getColHeaderIcon(isLinkColumn, isPrimaryKey, isForeignKey)
             const colType = liveColumnData?.givenName || abbrevColType(col.data_type)
             
             colHeaders.push((
@@ -400,15 +423,13 @@ function TablesBody(props) {
             ))
         })
 
-        cells.push((<div key='empty' className={pcn('__cell')}></div>))
-
         return (
             <div
-                key={i}    
+                key={i}
                 className={pcn('__row')}
                 style={ table.isLiveTable && status === tableStatus.POPULATING.id 
-                    ? { transition: `opacity 0.25s ease ${delay}ms` } 
-                    : {} 
+                    ? { transition: `opacity 0.25s ease ${delay}ms`, gridTemplateColumns: gridTemplateColumnsValue } 
+                    : { gridTemplateColumns: gridTemplateColumnsValue } 
                 }>
                 { cells }
             </div>
@@ -460,7 +481,7 @@ function TablesBody(props) {
                 </div>
             </div>
             <div className={pcn('__main')}>
-                <div className={pcn('__col-headers')}>
+                <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
                     { status === tableStatus.BACKFILLING.id && renderTableLoading() }
                     { renderColHeaders() }
                 </div>
