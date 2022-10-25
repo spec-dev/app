@@ -21,6 +21,7 @@ import {
     helpIcon,
     bubbleIcon,
 } from '../../svgs/icons'
+import api from '../../utils/api'
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -79,6 +80,10 @@ function DashboardPage(props) {
             setSeedCursors(seedCursorsResult.data)
             setConfig(configData)
             setTables(tablesResult.data)
+            api.metaSocket.onConfigUpdate = newConfig => {
+                console.log(newConfig)
+                setConfig(newConfig)
+            }
         }
     }, [projectId, currentSection, tables])
 

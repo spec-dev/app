@@ -31,8 +31,6 @@ const options = {
     },
 }
 
-
-
 const orderedOptions = [
     options.standard,
     options.live,

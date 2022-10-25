@@ -3,6 +3,8 @@ import $ from 'jquery'
 import humps from 'humps'
 import Timer from './timer'
 import { stringify } from './json'
+import { createEventClient } from '@spec.dev/event-client'
+import constants from './constants'
 
 class ApiClient {
 
@@ -91,8 +93,6 @@ class CoreApiClient extends ApiClient {
     constructor() {
         super('/core')
     }
-
-    check = async () => await this.get('/health-check')
 }
 
 class MetaApiClient extends ApiClient {
@@ -108,9 +108,30 @@ class MetaApiClient extends ApiClient {
     config = async () => await this.get('/config')
 }
 
+class MetaSocketClient {
+
+    static channels = {
+        CONFIG_UPDATE: 'config:update'
+    }
+
+    constructor() {
+        this.onConfigUpdate = () => {}
+        this.client = createEventClient({
+            hostname: constants.META_API_HOSTNAME,
+            port: constants.META_API_PORT,
+            onConnect: () => this._subscribeToChannels(),
+        })
+    }
+
+    _subscribeToChannels() {
+        this.client.on(MetaSocketClient.channels.CONFIG_UPDATE, data => this.onConfigUpdate(data))
+    }
+}
+
 const api = {
     core: new CoreApiClient(),
     meta: new MetaApiClient(),
+    metaSocket: new MetaSocketClient(),
 }
 
 export default api

@@ -9,6 +9,9 @@ const constants = {
     PROJECT_ORG: process.env.REACT_APP_PROJECT_ORG,
     PROJECT_NAME: process.env.REACT_APP_PROJECT_NAME,
 
+    META_API_HOSTNAME: process.env.REACT_APP_META_API_HOSTNAME || 'localhost',
+    META_API_PORT: parseInt(process.env.REACT_APP_META_API_PORT || 54322),
+
     RECORDS_PER_PAGE: parseInt(process.env.REACT_APP_RECORDS_PER_PAGE || 100),
 }
 constants.isLocal = () => constants.ENV === 'local'
