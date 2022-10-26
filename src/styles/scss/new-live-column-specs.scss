@@ -310,6 +310,27 @@
             left: 58px;
         }
     }
+
+    .interface {
+        white-space: pre;
+        font-family: CodeRegular;
+        font-size: 12px;
+        line-height: 20px;
+        color: #eee;
+
+        .hljs-keyword { 
+            color: $purpleAccent; 
+        }
+        .hljs-title, .hljs-built_in, .hljs-literal { 
+            color: $tealAccent; 
+        }
+        .hljs-string {
+            color: $blueAccent;
+        }
+        .hljs-number {
+            color: #dfd2af;
+        }
+    }
 }
 
 .new-live-column-specs__cols,
@@ -450,13 +471,10 @@
         justify-content: space-between;
         align-items: flex-start;    
         overflow: hidden;
-        height: 390px;
         position: relative;
         transition: height .6s $defaultTiming;
 
         &.new-live-column-specs__type-overview-liner--expanded {
-            height: 1350px;
-
             &:after {
                 opacity: 0;
             }
@@ -477,28 +495,8 @@
         }
     }
 
-    &.new-live-column-specs__type-overview--NFTAsset {
-        .new-live-column-specs__type-overview-liner.new-live-column-specs__type-overview-liner--expanded {
-            height: 730px;
-        }
-    }
-
-    &.new-live-column-specs__type-overview--NFTSale {
-        .new-live-column-specs__type-overview-liner.new-live-column-specs__type-overview-liner--expanded {
-            height: 990px;
-        }
-    }
-
-    &.new-live-column-specs__type-overview--CompoundMarketAPY {
-        .new-live-column-specs__type-overview-liner.new-live-column-specs__type-overview-liner--expanded {
-            height: 510px;
-        }
-    }
-
     &.new-live-column-specs__type-overview--ENSProfile {
         .new-live-column-specs__type-overview-liner {
-            height: 345px;
-
             &:after {
                 display: none;
             }

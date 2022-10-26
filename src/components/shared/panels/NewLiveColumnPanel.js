@@ -4,9 +4,8 @@ import LiveObjectSearch from './LiveObjectSearch'
 import NewLiveColumnSpecs from './NewLiveColumnSpecs'
 import { animated, useTransition } from 'react-spring'
 import { noop } from '../../../utils/nodash'
-import { specs } from '../../../data/specs'
 import spinner from '../../../svgs/chasing-tail-spinner'
-import NewLiveColumnBehavior from './NewLiveColumnBehavior'
+import { getAllLiveObjects } from '../../../utils/liveObjects'
 
 const className = 'new-live-column-panel'
 const pcn = getPCN(className)
@@ -23,12 +22,27 @@ const getHeaderTitle = index => {
 }
 
 function NewLiveColumnPanel(props, ref) {
-    const { table = {}, onCancel = noop, onCreate = noop, selectLiveColumnFormatter = noop, addTransform = noop, addHook = noop } = props
-    const [state, setState] = useState({ index: 0, liveObjectSpec: {} })
+    // Props.
+    const {
+        table = {},
+        onCancel = noop,
+        onCreate = noop,
+        selectLiveColumnFormatter = noop,
+        addTransform = noop,
+        addHook = noop,
+    } = props
+    const liveObjects = getAllLiveObjects()
+
+    // State.
+    const [state, setState] = useState({ index: 0, liveObject: {} })
     const [result, setResult] = useState({ cols: null, status: 'default' })
+
+    // Refs.
     const liveObjectSearchRef = useRef()
     const newLiveColumnSpecsRef = useRef()
     const hasSaved = useRef(false)
+
+    // Transitions.
     const transitions = useTransition(state.index, {
         initial: { opacity: 1 },
         from: { opacity: 0 },
@@ -54,10 +68,6 @@ function NewLiveColumnPanel(props, ref) {
 
     const onClickBack = useCallback(() => {
         setState(prevState => ({ ...prevState, index: 0 }))
-    }, [])
-
-    const onSelectLiveObject = useCallback(result => {
-        setState({ index: 1, liveObjectSpec: specs[result.id] || {} })
     }, [])
 
     const renderHeader = useCallback(() => (
@@ -91,8 +101,12 @@ function NewLiveColumnPanel(props, ref) {
                     )}
                     onClick={onClickCreate}>
                     { result.status === 'saving'
-                        ? <span className='svg-spinner svg-spinner--chasing-tail' dangerouslySetInnerHTML={{ __html: spinner }}></span>
-                        : <span>Create</span>
+                        ? (
+                            <span
+                                className='svg-spinner svg-spinner--chasing-tail'
+                                dangerouslySetInnerHTML={{ __html: spinner }}>    
+                            </span>
+                        ) : <span>Create</span>
                     }
                 </button>
             </div>
@@ -102,9 +116,9 @@ function NewLiveColumnPanel(props, ref) {
     useEffect(() => {
         if (result.status === 'saving' && !hasSaved.current) {
             hasSaved.current = true
-            setTimeout(() => onCreate(state.liveObjectSpec, result.cols), 1000)
+            setTimeout(() => onCreate(state.liveObject, result.cols), 1000)
         }
-    }, [result, state.liveObjectSpec, onCreate])
+    }, [result, state.liveObject, onCreate])
 
     return (
         <div className={className}>
@@ -117,10 +131,11 @@ function NewLiveColumnPanel(props, ref) {
                                 className={pcn('__section', '__section--0')}
                                 style={{ opacity: opacity.to({ range: [0.0, 1.0], output: [0, 1] }) }}>
                                 <LiveObjectSearch
-                                    onSelectLiveObject={onSelectLiveObject}
+                                    liveObjects={liveObjects}
+                                    onSelectLiveObject={liveObject => setState({ index: 1, liveObject })}
                                     ref={liveObjectSearchRef}
                                 />
-                            </animated.div>  
+                            </animated.div>
                         )
                     case 1:
                         return (
@@ -129,7 +144,7 @@ function NewLiveColumnPanel(props, ref) {
                                 style={{ opacity: opacity.to({ range: [1.0, 0.0], output: [1, 0] }) }}>
                                 <NewLiveColumnSpecs
                                     table={table}
-                                    liveObjectSpec={state.liveObjectSpec}
+                                    liveObject={state.liveObject}
                                     selectLiveColumnFormatter={selectLiveColumnFormatter}
                                     addTransform={addTransform}
                                     addHook={addHook}
@@ -137,46 +152,8 @@ function NewLiveColumnPanel(props, ref) {
                                 />
                             </animated.div>
                         )
-                    case 2:
-                        return (
-                            <animated.div
-                                className={pcn('__section', '__section--2')}
-                                style={{ opacity: opacity.to({ range: [1.0, 0.0], output: [1, 0] }) }}>
-                                <NewLiveColumnBehavior
-                                    table={table}
-                                    liveObjectSpec={state.liveObjectSpec}
-                                    selectLiveColumnFormatter={selectLiveColumnFormatter}
-                                    addTransform={addTransform}
-                                    ref={newLiveColumnSpecsRef}
-                                />
-                            </animated.div>                        
-                        )
                 }
             })}
-            {/* { transitions(({ opacity }, item) =>
-                item ? (
-                    <animated.div
-                        className={pcn('__section', '__section--0')}
-                        style={{ opacity: opacity.to({ range: [0.0, 1.0], output: [0, 1] }) }}>
-                        <LiveObjectSearch
-                            onSelectLiveObject={onSelectLiveObject}
-                            ref={liveObjectSearchRef}
-                        />
-                    </animated.div>
-                ) : (
-                    <animated.div
-                        className={pcn('__section', '__section--1')}
-                        style={{ opacity: opacity.to({ range: [1.0, 0.0], output: [1, 0] }) }}>
-                        <NewLiveColumnSpecs
-                            table={table}
-                            liveObjectSpec={state.liveObjectSpec}
-                            selectLiveColumnFormatter={selectLiveColumnFormatter}
-                            addTransform={addTransform}
-                            ref={newLiveColumnSpecsRef}
-                        />
-                    </animated.div>
-                )
-            )} */}
             { renderFooter() }
         </div>
     )

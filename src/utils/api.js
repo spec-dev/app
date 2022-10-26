@@ -93,6 +93,8 @@ class CoreApiClient extends ApiClient {
     constructor() {
         super('/core')
     }
+
+    liveObjects = async () => await this.get('/live-objects')
 }
 
 class MetaApiClient extends ApiClient {

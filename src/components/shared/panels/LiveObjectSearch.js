@@ -95,10 +95,10 @@ const results = [
 ]
 
 function LiveObjectSearch(props, ref) {
-    const { onSelectLiveObject = noop } = props
+    const { liveObjects = [], onSelectLiveObject = noop } = props
     const lastKeyCode = useRef(null)
     const searchInputRef = useRef()
-    const [searchResults, setSearchResults] = useState(results)
+    const [searchResults, setSearchResults] = useState(liveObjects)
 
     useImperativeHandle(ref, () => ({
         focusSearchBar: () => {
@@ -112,7 +112,7 @@ function LiveObjectSearch(props, ref) {
 
     const onTypeQuery = useCallback((e) => {
         const value = e.currentTarget.value.toLowerCase()
-        const matchingResults = results.filter(r => r.name.toLowerCase().includes(value))
+        const matchingResults = liveObjects.filter(liveObject => liveObject.name.toLowerCase().includes(value))
         setSearchResults(matchingResults)
     }, [])
 
@@ -123,7 +123,7 @@ function LiveObjectSearch(props, ref) {
     const onKeyUp = e => {
         switch (lastKeyCode.current) {
         case keyCodes.ENTER:
-            onSelectLiveObject(searchResults[0])
+            searchResults.length && onSelectLiveObject(searchResults[0])
             break
         default:
             break

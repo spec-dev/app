@@ -5,6 +5,7 @@
     "dependencies": {
         "@monaco-editor/react": "^4.4.5",
         "@spec.dev/event-client": "^0.0.8",
+        "highlight.js": "^11.6.0",
         "humps": "^2.0.1",
         "jquery": "^3.6.0",
         "lodash-es": "^4.17.21",

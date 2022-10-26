@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React from 'react'
 import { getPCN } from '../../../utils/classes'
 import { s3 } from '../../../utils/path'
 import subIcon from '../../../svgs/sub'
@@ -8,14 +8,21 @@ const className = 'live-object-search-result'
 const pcn = getPCN(className)
 
 function LiveObjectSearchResult(props) {
-    const { name, icon, desc, likes, author, onClick = noop } = props
+    const { 
+        id,
+        name, 
+        desc, 
+        latestVersion = {},
+        onClick = noop,
+    } = props
+
     return (
         <div className={className} onClick={onClick}>
             <div className={pcn('__liner')}>
                 <div className={pcn('__left')}>
                     <img
                         className={pcn('__icon')}
-                        src={s3(icon)}
+                        src={s3(`${id}.jpg`)}
                         alt=""
                     />
                     <div className={pcn('__main')}>
@@ -28,13 +35,11 @@ function LiveObjectSearchResult(props) {
                     </div>
                 </div>
                 <div className={pcn('__right')}>
-                    <div className={pcn('__author')}>
-                        { author }
+                    <div className={pcn('__version')}>
+                        { latestVersion.version }
                     </div>
-                    <div className={pcn('__likes')}>
-                        <span>{ likes }</span>
-                        <span dangerouslySetInnerHTML={{ __html: subIcon }}>
-                        </span>
+                    <div className={pcn('__nsp')}>
+                        <span>@{ latestVersion.nsp }</span>
                     </div>
                 </div>
             </div>

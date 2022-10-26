@@ -10,6 +10,7 @@ import CountUp from 'react-countup'
 import { setToStorage } from '../../utils/cache'
 import { selectPageRecords } from '../../utils/queries'
 import { abbrevColType } from '../../utils/formatters'
+import { getAllLiveObjects, loadAllLiveObjects } from '../../utils/liveObjects'
 import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
     filterIcon,
@@ -41,10 +42,11 @@ export const tableStatus = {
 }
 
 const colWidthConfig = {
-    PIXELS_PER_CHAR: 8,
-    ICON_OFFSET: 25,
-    IDEAL_NAME_TYPE_GUTTER: 50,
+    DEFAULT_OFFSET: 25,
+    PIXELS_PER_CHAR: 7,
+    IDEAL_NAME_TYPE_GUTTER: 35,
     CHECK_COLUMN_WIDTH: 47,
+    MIN_WIDTH: 100,
 }
 
 const getColHeaderIcon = (
@@ -83,25 +85,21 @@ const compileLiveColumnDataForTable = (table, config) => {
     return liveColumns
 }
 
-const getColumnWidths = (table, liveColumns, primaryKeyColNames, foreignKeyColNames) => {
+const getColumnWidths = (table, liveColumns) => {
     if (!table?.columns) return []
     
     const widths = []
     for (const col of table.columns) {
         let numChars = col.name.length
         const liveColumnData = liveColumns[col.name]
-        const isLiveOrLinkColumn = !!liveColumnData
-        const isPrimaryKey = primaryKeyColNames.has(col.name)
-        const isForeignKey = foreignKeyColNames.has(col.name)
-        const hasIcon = isLiveOrLinkColumn || isPrimaryKey || isForeignKey
         const numColTypeChars = (liveColumnData?.givenName || abbrevColType(col.data_type)).length
         numChars += numColTypeChars
         const colWidth = (
+            colWidthConfig.DEFAULT_OFFSET +
             (numChars * colWidthConfig.PIXELS_PER_CHAR) + 
-            (hasIcon ? colWidthConfig.ICON_OFFSET : 0) +
             colWidthConfig.IDEAL_NAME_TYPE_GUTTER
         )
-        widths.push(colWidth)
+        widths.push(Math.max(colWidth, colWidthConfig.MIN_WIDTH))
     }
 
     return widths
@@ -133,12 +131,7 @@ function TablesBody(props) {
     ).length > 0, [config, schema, table])
 
     // Sizing.
-    const columnWidths = useMemo(() => getColumnWidths(
-        table, 
-        liveColumns,
-        primaryKeyColNames,
-        foreignKeyColNames,
-    ), [table, liveColumns])
+    const columnWidths = useMemo(() => getColumnWidths(table, liveColumns), [table, liveColumns])
     const gridTemplateColumnsValue = useMemo(() => [
         colWidthConfig.CHECK_COLUMN_WIDTH, ...columnWidths
     ].map(w => `${w}px`).join(' '), [columnWidths])
@@ -152,6 +145,7 @@ function TablesBody(props) {
     const transformObjectSliderRef = useRef()
     const transformObjectPanelRef = useRef()
     const hookSliderRef = useRef()
+    const hasEagerLoadedAllLiveObjects = useRef(false)
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -252,6 +246,10 @@ function TablesBody(props) {
     useEffect(() => {
         if (table?.name && records === null) {
             loadPageRecords()
+        }
+        if (table?.name && !hasEagerLoadedAllLiveObjects.current) {
+            hasEagerLoadedAllLiveObjects.current = true
+            loadAllLiveObjects()
         }
     }, [table, records, loadPageRecords])
 

@@ -88,15 +88,15 @@
     justify-content: center;
 }
 
-.live-object-search-result__author {
+.live-object-search-result__version {
     font-size: 12px;
     letter-spacing: 0.1px;
     display: inline-block;
     color: $gray;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
-.live-object-search-result__likes {
+.live-object-search-result__nsp {
     display: inline-flex;
     flex-direction: row;
     align-items: center;
@@ -107,20 +107,5 @@
         letter-spacing: 0.1px;
         display: inline-block;
         color: $gray;
-    }
-
-    span:last-child {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 15px;
-        height: auto;
-        margin-left: 6px;
-
-        svg {
-            width: 100%;
-            height: auto;
-            fill: $gray;
-        }
     }
 }

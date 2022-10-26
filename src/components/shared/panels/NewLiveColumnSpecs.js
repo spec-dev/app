@@ -3,10 +3,10 @@ import { getPCN, cn } from '../../../utils/classes'
 import { noop } from '../../../utils/nodash'
 import EditableLiveColumns from './EditableLiveColumns'
 import RequiredLinks from './RequiredLinks'
-import caretDownIcon from '../../../svgs/caret-down'
-import shuffleIcon from '../../../svgs/shuffle'
-import linkIcon from '../../../svgs/link'
-import invokeIcon from '../../../svgs/invoke'
+import { caretDownIcon } from '../../../svgs/icons'
+import hljs from 'highlight.js/lib/core'
+import typescript from 'highlight.js/lib/languages/typescript'
+hljs.registerLanguage('typescript', typescript)
 
 const className = 'new-live-column-specs'
 const pcn = getPCN(className)
@@ -21,6 +21,11 @@ const docsHeaderTabs = [
         name: 'Example',
     },
 ]
+
+const docsHeight = {
+    COLLAPSED: 390,
+    EXPANDED_OFFSET: 50,
+}
 
 const getDefaultNewLiveCols = liveObjectSpec => {
     if (liveObjectSpec.name === 'NFTAsset') {
@@ -150,104 +155,154 @@ const getDefaultNewLiveCols = liveObjectSpec => {
     return [{}]
 }
 
+const buildInterfaceCode = liveObjectVersion => {
+    const { name, properties = [] } = (liveObjectVersion || {})
+    if (!name) return ''
+
+    const openingLine = `interface ${name} {`
+    const propertyLines = properties.map(p => `    ${p.name}: ${p.type}`)
+    const closingLine = '}'
+    const lines = [openingLine, ...propertyLines, closingLine].join('\n')
+
+    return hljs.highlight(lines, { language: 'typescript' }).value
+}
+
+const buildExampleObjectCode = liveObjectVersion => {
+    const example = liveObjectVersion?.example
+    if (!example) return ''
+
+    return hljs.highlight(
+        JSON.stringify(example, null, 4).replace(/"([^"]+)":/g, '$1:'), // remove quotes on keys
+        { language: 'typescript' }
+    ).value
+}
+
 function NewLiveColumnSpecs(props, ref) {
-    const { liveObjectSpec = {}, selectLiveColumnFormatter = noop, addTransform = noop, addHook = noop } = props
+    // Props
+    const {
+        liveObject = {},
+        selectLiveColumnFormatter = noop,
+        addTransform = noop,
+        addHook = noop,
+    } = props
+
+    // State
     const [docsExpanded, setDocsExpanded] = useState(false)
-    const name = useMemo(() => liveObjectSpec.name, [liveObjectSpec])
-    const typeDef = useMemo(() => liveObjectSpec.typeDef, [liveObjectSpec])
-    const requiredLinks = useMemo(() => typeDef?.properties?.filter(p => !!p.linkRequired), [typeDef])
     const [selectedDocsIndex, setSelectedDocsIndex] = useState(0)
+
+    // Refs
     const editableLiveColumnsRef = useRef()
+    const expandedDocsHeight = useRef(null)
+
+    // Derived
+    const liveObjectVersion = useMemo(() => liveObject?.latestVersion || {}, [liveObject])
+    const interfaceCode = useMemo(() => liveObjectVersion ? buildInterfaceCode(liveObjectVersion) : '', [liveObjectVersion])
+    const exampleObjectCode = useMemo(() => liveObjectVersion ? buildExampleObjectCode(liveObjectVersion) : '', [liveObjectVersion])
 
     useImperativeHandle(ref, () => ({
         serialize: () => editableLiveColumnsRef.current?.serialize() || {},
     }))
 
-    const renderProperties = useCallback(() => typeDef.properties.map((p, i) => (
+    const calculateExpandedDocsHeight = useCallback(ref => {
+        if (expandedDocsHeight.current || !ref) return
+        setTimeout(() => {
+            if (ref.offsetHeight) {
+                expandedDocsHeight.current = ref.offsetHeight + docsHeight.EXPANDED_OFFSET
+            }
+        }, 10)
+    }, [])
+
+    const renderProperties = useCallback(() => liveObjectVersion.properties.map((p, i) => (
         <div key={i} className={pcn('__doc-property')}>
             <div><span>{p.name}</span><span>{p.type}</span></div>
             <div>{p.desc}</div>
         </div>
-    )), [typeDef])
+    )), [liveObjectVersion])
 
-    if (!name || !typeDef) {
+    const renderDocsSection = useCallback(() => (
+        <div className={pcn('__docs')} ref={calculateExpandedDocsHeight}>
+            <div className={pcn('__doc-object-name')}>
+                <span>{ liveObjectVersion.name }</span><span>&mdash;</span><span>Live Object</span>
+            </div>
+            <div className={pcn('__doc-properties')}>
+                { renderProperties() }
+            </div>
+        </div>
+    ), [liveObjectVersion, renderProperties])
+
+    const renderInterfaceSection = useCallback(() => (
+        <div className={cn('editor', pcn('__interface'))}>
+            <div className={pcn(
+                '__interface-header',
+                `__interface-header--index-${selectedDocsIndex}`,
+                `__interface-header--${docsHeaderTabs[selectedDocsIndex].name?.toLowerCase()?.replaceAll(' ', '-')}`,  
+            )}>
+                <div className={pcn('__interface-header-slider')}></div>
+                { docsHeaderTabs.map((tab, i) => (
+                    <div
+                        key={i}
+                        className={pcn(
+                            '__interface-header-tab', 
+                            i === selectedDocsIndex ? '__interface-header-tab--selected' : '',
+                        )}
+                        onClick={i === selectedDocsIndex ? noop : () => setSelectedDocsIndex(i)}>
+                        <span>{tab.name}</span>
+                    </div>
+                ))}
+            </div>
+            <div
+                className={pcn(
+                    '__interface-body', 
+                    `__interface-body--${liveObjectVersion.name}`, 
+                    `__interface-body--index-${selectedDocsIndex}`,
+                )}>
+                <div
+                    className='interface'
+                    dangerouslySetInnerHTML={{ __html: selectedDocsIndex === 1 ? exampleObjectCode : interfaceCode }}>    
+                </div>
+            </div>
+        </div>
+    ), [liveObjectVersion, selectedDocsIndex, interfaceCode, exampleObjectCode])
+
+    const renderTypeOverview = useCallback(() => (
+        <div className={pcn('__type-overview', `__type-overview--${liveObjectVersion.name}`)}>
+            <div
+                style={{ height: docsExpanded && expandedDocsHeight.current 
+                    ? expandedDocsHeight.current : docsHeight.COLLAPSED 
+                }}
+                className={pcn(
+                    '__type-overview-liner', 
+                    docsExpanded ? '__type-overview-liner--expanded' : '',
+                )}>
+                { renderDocsSection() }
+                { renderInterfaceSection() }
+            </div>
+            <span
+                className={pcn('__expand', docsExpanded ? '__expand--expanded' : '')}
+                onClick={() => setDocsExpanded(!docsExpanded)}
+                dangerouslySetInnerHTML={{ __html: caretDownIcon }}>
+            </span>
+        </div>
+    ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection])
+
+    if (!liveObjectVersion.name) {
         return <div className={className}></div>
     }
 
     return (
         <div className={className}>
-            <div className={pcn('__type-overview', `__type-overview--${typeDef.name}`)}>
-                <div className={pcn('__type-overview-liner', docsExpanded ? '__type-overview-liner--expanded' : '')}>
-                    <div className={pcn('__docs')}>
-                        <div className={pcn('__doc-object-name')}>
-                            <span>{ typeDef.name }</span><span>&mdash;</span><span>Live Object</span>
-                        </div>
-                        <div className={pcn('__doc-properties')}>
-                            { renderProperties() }
-                        </div>
-                    </div>
-                    <div className={cn('editor', pcn('__interface'))}>
-                        <div className={pcn(
-                            '__interface-header', 
-                            `__interface-header--index-${selectedDocsIndex}`,
-                            `__interface-header--${docsHeaderTabs[selectedDocsIndex].name?.toLowerCase()?.replaceAll(' ', '-')}`,  
-                        )}>
-                            <div className={pcn('__interface-header-slider')}></div>
-                            { docsHeaderTabs.map((tab, i) => (
-                                <div
-                                    key={i}
-                                    className={pcn(
-                                        '__interface-header-tab', 
-                                        i === selectedDocsIndex ? '__interface-header-tab--selected' : '',
-                                    )}
-                                    onClick={i === selectedDocsIndex ? noop : () => setSelectedDocsIndex(i)}>
-                                    <span>{tab.name}</span>
-                                </div>
-                            ))}
-                        </div>
-                        <div
-                            className={pcn('__interface-body', `__interface-body--${typeDef.name}`, `__interface-body--index-${selectedDocsIndex}`)}
-                            dangerouslySetInnerHTML={{ __html: selectedDocsIndex === 1 ? typeDef.exampleData : typeDef.code }}>
-                        </div>
-                    </div>
-                </div>
-                <span
-                    className={pcn(
-                        '__expand',
-                        docsExpanded ? '__expand--expanded' : ''
-                    )}
-                    onClick={() => setDocsExpanded(!docsExpanded)}
-                    dangerouslySetInnerHTML={{ __html: caretDownIcon }}>
-                </span>
-            </div>
-            <div className={pcn('__transform')}>
-                <div className={pcn('__transform-section-title')}>
-                    <span dangerouslySetInnerHTML={{ __html: shuffleIcon }}></span>
-                    <span>Personalize The Object</span>
-                </div>
-                <div className={pcn('__transform-section-subtitle')}>
-                    Transform {typeDef.name} into the exact format and structure you need.
-                </div>
-                <div className={pcn('__transform-body')}>
-                    <div className={pcn('__action-buttons', '__action-buttons--transform')}>
-                        <button onClick={() => addTransform(liveObjectSpec)}>
-                            <span>+</span>
-                            <span>Add Transform</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div className={pcn('__cols')}>
+            { renderTypeOverview() }
+            {/* <div className={pcn('__cols')}>
                 <div className={pcn('__cols-section-title', '__cols-section-title--pad-left')}>
                     <span className='blink-indicator'><span></span></span>
                     Create Live Columns
                 </div>
                 <div className={pcn('__transform-section-subtitle')}>
-                    Stream {typeDef.name} properties directly into your columns.
+                    Stream {liveObjectVersion.name} properties directly into your columns.
                 </div>
                 <div className={pcn('__new-cols')}>
                     <EditableLiveColumns
-                        liveObjectSpec={liveObjectSpec}
+                        liveObject={liveObject}
                         selectLiveColumnFormatter={selectLiveColumnFormatter}
                         newCols={getDefaultNewLiveCols(liveObjectSpec)}
                         ref={editableLiveColumnsRef}
@@ -261,33 +316,16 @@ function NewLiveColumnSpecs(props, ref) {
                         <span>Link Required Fields</span>
                     </div>
                     <div className={pcn('__rel-section-subtitle')}>
-                        Link the unique fields of { typeDef.name } to their respective columns in your database.
+                        Link the unique fields of { liveObjectVersion.name } to their respective columns in your database.
                     </div>
                     <div className={pcn('__rel-inputs')}>
                         <RequiredLinks
-                            liveObjectSpec={liveObjectSpec}
+                            liveObject={liveObject}
                             properties={requiredLinks}
                         />
                     </div>
                 </div>
-            }
-            <div className={pcn('__transform')}>
-                <div className={pcn('__hooks-section-title')}>
-                    <span dangerouslySetInnerHTML={{ __html: invokeIcon }}></span>
-                    <span>Hooks</span>
-                </div>
-                <div className={pcn('__transform-section-subtitle')}>
-                    Run custom functions before or after INSERT, UPDATE, and DELETE operations.
-                </div>
-                <div className={pcn('__transform-body')}>
-                    <div className={pcn('__action-buttons', '__action-buttons--transform')}>
-                        <button onClick={() => addHook(liveObjectSpec)}>
-                            <span>+</span>
-                            <span>Add Hook</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            } */}
         </div>
     )
 }
