@@ -36,7 +36,7 @@ function LiveObjectSearchResult(props) {
                 </div>
                 <div className={pcn('__right')}>
                     <div className={pcn('__version')}>
-                        { latestVersion.version }
+                        v{ latestVersion.version }
                     </div>
                     <div className={pcn('__nsp')}>
                         <span>@{ latestVersion.nsp }</span>

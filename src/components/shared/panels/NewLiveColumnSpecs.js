@@ -3,7 +3,7 @@ import { getPCN, cn } from '../../../utils/classes'
 import { noop } from '../../../utils/nodash'
 import EditableLiveColumns from './EditableLiveColumns'
 import RequiredLinks from './RequiredLinks'
-import { caretDownIcon } from '../../../svgs/icons'
+import { caretDownIcon, linkIcon } from '../../../svgs/icons'
 import hljs from 'highlight.js/lib/core'
 import typescript from 'highlight.js/lib/languages/typescript'
 hljs.registerLanguage('typescript', typescript)
@@ -23,8 +23,8 @@ const docsHeaderTabs = [
 ]
 
 const docsHeight = {
-    COLLAPSED: 390,
-    EXPANDED_OFFSET: 50,
+    COLLAPSED: 430,
+    EXPANDED_OFFSET: 58,
 }
 
 const getDefaultNewLiveCols = liveObjectSpec => {
@@ -285,6 +285,25 @@ function NewLiveColumnSpecs(props, ref) {
         </div>
     ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection])
 
+    const renderLiveColumnsSection = useCallback(() => (
+        <div className={pcn('__cols')}>
+            <div className={pcn('__cols-section-title', '__cols-section-title--pad-left')}>
+                <span className='blink-indicator'><span></span></span>
+                Create Live Columns
+            </div>
+            <div className={pcn('__transform-section-subtitle')}>
+                Stream {liveObjectVersion.name} properties directly into your columns.
+            </div>
+            <div className={pcn('__new-cols')}>
+                <EditableLiveColumns
+                    liveObjectVersion={liveObjectVersion}
+                    selectLiveColumnFormatter={selectLiveColumnFormatter}
+                    ref={editableLiveColumnsRef}
+                />
+            </div>
+        </div>
+    ), [liveObjectVersion, liveObject])
+
     if (!liveObjectVersion.name) {
         return <div className={className}></div>
     }
@@ -292,40 +311,22 @@ function NewLiveColumnSpecs(props, ref) {
     return (
         <div className={className}>
             { renderTypeOverview() }
-            {/* <div className={pcn('__cols')}>
-                <div className={pcn('__cols-section-title', '__cols-section-title--pad-left')}>
-                    <span className='blink-indicator'><span></span></span>
-                    Create Live Columns
+            { renderLiveColumnsSection() }
+            <div className={pcn('__rel')}>
+                <div className={pcn('__rel-section-title')}>
+                    <span dangerouslySetInnerHTML={{ __html: linkIcon }}></span>
+                    <span>Input Columns</span>
                 </div>
-                <div className={pcn('__transform-section-subtitle')}>
-                    Stream {liveObjectVersion.name} properties directly into your columns.
+                <div className={pcn('__rel-section-subtitle')}>
+                    Link the unique fields of { liveObjectVersion.name } to their respective columns in your database.
                 </div>
-                <div className={pcn('__new-cols')}>
-                    <EditableLiveColumns
+                {/* <div className={pcn('__rel-inputs')}>
+                    <RequiredLinks
                         liveObject={liveObject}
-                        selectLiveColumnFormatter={selectLiveColumnFormatter}
-                        newCols={getDefaultNewLiveCols(liveObjectSpec)}
-                        ref={editableLiveColumnsRef}
+                        properties={requiredLinks}
                     />
-                </div>
+                </div> */}
             </div>
-            { requiredLinks?.length > 0 &&
-                <div className={pcn('__rel')}>
-                    <div className={pcn('__rel-section-title')}>
-                        <span dangerouslySetInnerHTML={{ __html: linkIcon }}></span>
-                        <span>Link Required Fields</span>
-                    </div>
-                    <div className={pcn('__rel-section-subtitle')}>
-                        Link the unique fields of { liveObjectVersion.name } to their respective columns in your database.
-                    </div>
-                    <div className={pcn('__rel-inputs')}>
-                        <RequiredLinks
-                            liveObject={liveObject}
-                            properties={requiredLinks}
-                        />
-                    </div>
-                </div>
-            } */}
         </div>
     )
 }

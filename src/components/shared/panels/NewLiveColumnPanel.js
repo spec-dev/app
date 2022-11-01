@@ -15,9 +15,7 @@ const getHeaderTitle = index => {
         case 0:
             return 'Select Live Object'
         case 1:
-            return 'Create Live Columns'
-        case 2:
-            return 'Relationships & Hooks'
+            return 'Embed Live Data'
     }
 }
 

@@ -317,7 +317,7 @@ function TablesBody(props) {
         <div className={pcn('__header-new-col-button')}>
             <span id='newColDropdownTarget' onClick={() => newLiveColumnSliderRef.current?.show() }>
                 <span>+</span>
-                <span>Link Live Data</span>
+                <span>Add Live Data</span>
             </span>
         </div>
     ), [])
