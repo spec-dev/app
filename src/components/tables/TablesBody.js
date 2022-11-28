@@ -123,6 +123,7 @@ function TablesBody(props) {
     const foreignKeyColNames = useMemo(() => new Set((table?.relationships || []).filter(
         rel => rel.source_table_name === table.name
     ).map(rel => rel.source_column_name)), [table])
+    // Need to store result of compileLiveColumnDataForTable() for each relationship in a map
     
     // Live column info.
     const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
@@ -497,6 +498,7 @@ function TablesBody(props) {
                 onShown={onNewLiveColumnSliderShown}>
                 <NewLiveColumnPanel
                     table={table}
+                    schema={schema}
                     onCreate={onCreateNewLiveColumns}
                     onCancel={() => newLiveColumnSliderRef.current?.hide()}
                     selectLiveColumnFormatter={selectLiveColumnFormatter}

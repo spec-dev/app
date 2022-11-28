@@ -107,6 +107,8 @@ class MetaApiClient extends ApiClient {
 
     query = async payload => await this.post('/query', payload)
 
+    liveColumns = async payload => await this.post('/live-columns', payload)
+
     config = async () => await this.get('/config')
 }
 

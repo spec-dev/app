@@ -43,7 +43,7 @@
         }
         
         &:first-child {
-            margin-right: calc(#{$newLiveColArrowWidth} - 10px);
+            margin-right: $newLiveColArrowWidth;
         }
     }
 }
@@ -59,7 +59,7 @@
 .editable-live-columns__col-input {
     position: relative;
     display: flex;
-    height: 58px;
+    height: 54px;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
@@ -86,13 +86,13 @@
     height: 35px;
 
     &.editable-live-columns__col-input-field--col-name,
-    &.editable-live-columns__col-input-field--data-source {
+    &.editable-live-columns__col-input-field--property {
         input, select {
             font-family: CodeRegular;
         }
     }
 
-    &.editable-live-columns__col-input-field--data-source {
+    &.editable-live-columns__col-input-field--property {
         position: relative;
 
         &.editable-live-columns__col-input-field--has-value {
@@ -104,6 +104,7 @@
         .spec__control {
             border: 1px solid adjust-color($gray, $alpha: -0.75) !important;
             background-color: transparent !important;
+            padding-left: 13px;
         }
 
         &:before {
@@ -360,8 +361,7 @@
     }
 
     &.editable-live-columns__col-input-icon-button--remove {
-        // display: none
-        margin-left: 10px;
+        margin-left: 12px;
         
 
         svg {
@@ -372,7 +372,7 @@
 }
 
 .editable-live-columns__action-buttons {
-    margin-top: 13px;
+    margin-top: 11px;
     display: flex;
     flex-direction: row;
     width: 100%;
@@ -403,7 +403,8 @@
             letter-spacing: 0.11px;
         }
         
-        &:hover {
+        &:hover,
+        &:focus {
             background-color: adjust-color($backgroundLight, $alpha: -0.75);
         }
     }

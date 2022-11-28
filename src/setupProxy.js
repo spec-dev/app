@@ -5,7 +5,7 @@ const targets = {
     META_API_URL: process.env.REACT_APP_META_API_URL || 'http://localhost:54322',
 }
 
-module.exports = function(app) {
+module.exports = function(app) {    
     // Core API proxy.
     app.use(proxy(
         '/core',

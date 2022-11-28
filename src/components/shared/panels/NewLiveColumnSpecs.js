@@ -2,10 +2,12 @@ import React, { useMemo, useState, useRef, useCallback, forwardRef, useImperativ
 import { getPCN, cn } from '../../../utils/classes'
 import { noop } from '../../../utils/nodash'
 import EditableLiveColumns from './EditableLiveColumns'
-import RequiredLinks from './RequiredLinks'
-import { caretDownIcon, linkIcon } from '../../../svgs/icons'
+import LiveColumnFilters from './LiveColumnFilters'
+import UniqueMappings from './UniqueMappings'
+import { caretDownIcon, filterIcon, linkIcon } from '../../../svgs/icons'
 import hljs from 'highlight.js/lib/core'
 import typescript from 'highlight.js/lib/languages/typescript'
+import { camelToSnake } from '../../../utils/formatters'
 hljs.registerLanguage('typescript', typescript)
 
 const className = 'new-live-column-specs'
@@ -27,164 +29,45 @@ const docsHeight = {
     EXPANDED_OFFSET: 58,
 }
 
-const getDefaultNewLiveCols = liveObjectSpec => {
-    if (liveObjectSpec.name === 'NFTAsset') {
-        return [
-            {
-                columnName: 'token_id',
-                dataSource: 'tokenId',
-            },
-            {
-                columnName: 'owner_address',
-                dataSource: 'ownerAddress',
-            },
-            {
-                columnName: 'erc_standard',
-                dataSource: null,
-            },
-        ]
-    }
-    if (liveObjectSpec.name === 'NFTSale') {
-        return [
-            {
-                columnName: 'seller',
-                dataSource: 'seller',
-            },
-            {
-                columnName: 'buyer',
-                dataSource: 'buyer',
-            },
-            {
-                columnName: 'price_eth',
-                dataSource: 'priceETH',
-            },
-            {
-                columnName: 'price_usd',
-                dataSource: 'priceUSD',
-            },
-            {
-                columnName: 'datetime',
-                dataSource: 'datetime',
-            },
-        ]
-    }
-    if (liveObjectSpec.name === 'Listing') {
-        return [
-            {
-                columnName: 'marketplace_id',
-                dataSource: null,
-            },
-            {
-                columnName: 'listing_id',
-                dataSource: 'listingId',
-            },
-            {
-                columnName: 'listing_type',
-                dataSource: 'listingType',
-            },
-            {
-                columnName: 'asset_contract',
-                dataSource: 'assetContract',
-            },
-            {
-                columnName: 'token_owner',
-                dataSource: 'tokenOwner',
-            },
-            {
-                columnName: 'token_id',
-                dataSource: 'tokenId',
-            },
-            {
-                columnName: 'token_type',
-                dataSource: 'tokenType',
-            },
-            {
-                columnName: 'start_time',
-                dataSource: 'startTime',
-            },
-            {
-                columnName: 'end_time',
-                dataSource: 'endTime',
-            },
-            {
-                columnName: 'currency',
-                dataSource: 'currency',
-            },
-            {
-                columnName: 'reserve_price_per_token',
-                dataSource: 'reservePricePerToken',
-            },
-            {
-                columnName: 'buyout_price_per_token',
-                dataSource: 'buyoutPricePerToken',
-            },
-            {
-                columnName: 'was_removed',
-                dataSource: null,
-            },
-            {
-                columnName: 'updated_at',
-                dataSource: null,
-            },
-            {
-                columnName: 'created_at',
-                dataSource: null,
-            },
-        ]
-    }
-    if (liveObjectSpec.name === 'CompoundMarketAPY') {
-        return [
-            {
-                columnName: 'name',
-                dataSource: 'name',
-            },
-            {
-                columnName: 'address',
-                dataSource: null,
-            },
-            {
-                columnName: 'supply_apy',
-                dataSource: 'supplyAPY',
-            },
-            {
-                columnName: 'borrow_apy',
-                dataSource: 'borrowAPY',
-            },
-        ]
-    }
-    return [{}]
-}
-
 const buildInterfaceCode = liveObjectVersion => {
     const { name, properties = [] } = (liveObjectVersion || {})
     if (!name) return ''
-
     const openingLine = `interface ${name} {`
     const propertyLines = properties.map(p => `    ${p.name}: ${p.type}`)
     const closingLine = '}'
     const lines = [openingLine, ...propertyLines, closingLine].join('\n')
-
     return hljs.highlight(lines, { language: 'typescript' }).value
 }
 
 const buildExampleObjectCode = liveObjectVersion => {
     const example = liveObjectVersion?.example
     if (!example) return ''
-
     return hljs.highlight(
         JSON.stringify(example, null, 4).replace(/"([^"]+)":/g, '$1:'), // remove quotes on keys
         { language: 'typescript' }
     ).value
 }
 
+const guessDefaultLiveColumns = (columnNames, propertyNames, columnOrder) => {
+    const liveColumns = []
+    const columnNamesSet = new Set(columnNames)
+    for (const propertyName of propertyNames) {
+        const exactMatch = columnNamesSet.has(propertyName)
+        const columnName = exactMatch ? propertyName : camelToSnake(propertyName)
+
+        if (exactMatch || columnNamesSet.has(columnName)) {
+            liveColumns.push({
+                property: propertyName,
+                columnName: columnName,
+            })
+        }
+    }
+    return liveColumns.sort((a, b) => columnOrder[a.columnName] - columnOrder[b.columnName])
+}
+
 function NewLiveColumnSpecs(props, ref) {
     // Props
-    const {
-        liveObject = {},
-        selectLiveColumnFormatter = noop,
-        addTransform = noop,
-        addHook = noop,
-    } = props
+    const { liveObject, table, schema } = props
 
     // State
     const [docsExpanded, setDocsExpanded] = useState(false)
@@ -192,16 +75,48 @@ function NewLiveColumnSpecs(props, ref) {
 
     // Refs
     const editableLiveColumnsRef = useRef()
+    const liveColumnFiltersRef = useRef()
+    const uniqueMappingsRef = useRef()
     const expandedDocsHeight = useRef(null)
 
     // Derived
     const liveObjectVersion = useMemo(() => liveObject?.latestVersion || {}, [liveObject])
     const interfaceCode = useMemo(() => liveObjectVersion ? buildInterfaceCode(liveObjectVersion) : '', [liveObjectVersion])
     const exampleObjectCode = useMemo(() => liveObjectVersion ? buildExampleObjectCode(liveObjectVersion) : '', [liveObjectVersion])
+    const columnNames = useMemo(() => table?.columns?.map(c => c.name) || [], [table])
+    const columnOrder = useMemo(() => {
+        const order = {}
+        for (const col of table?.columns || []) {
+            order[col.name] = col.ordinal_position
+        }
+        return order
+    }, [table])
+    const propertyNames = useMemo(() => liveObjectVersion?.properties?.map(p => p.name) || [], [liveObjectVersion])
+    const defaultLiveColumns = useMemo(() => guessDefaultLiveColumns(columnNames, propertyNames, columnOrder), [columnNames, propertyNames])
+    
+    const getLiveColumns = useCallback(() => editableLiveColumnsRef.current?.serialize() || [], [])
+    const getFilters = useCallback(() => liveColumnFiltersRef.current?.serialize() || [], [])
+    const getUniqueMappings = useCallback(() => uniqueMappingsRef.current?.serialize() || [], [])
 
     useImperativeHandle(ref, () => ({
-        serialize: () => editableLiveColumnsRef.current?.serialize() || {},
-    }))
+        serialize: () => {
+            const liveColumns = getLiveColumns().filter(liveColumn => (
+                !!liveColumn.property && !!liveColumn.columnName
+            ))
+            const filters = getFilters().filter(filter => (
+                !!filter.property && !!filter.value
+            ))
+            const uniqueMappings = getUniqueMappings().filter(mapping => (
+                !!mapping.property && !!mapping.columnPath
+            ))
+
+            return {
+                liveColumns,
+                filters,
+                uniqueMappings,
+            }
+        }
+    }), [getLiveColumns, getFilters, getUniqueMappings])
 
     const calculateExpandedDocsHeight = useCallback(ref => {
         if (expandedDocsHeight.current || !ref) return
@@ -286,19 +201,67 @@ function NewLiveColumnSpecs(props, ref) {
     ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection])
 
     const renderLiveColumnsSection = useCallback(() => (
-        <div className={pcn('__cols')}>
-            <div className={pcn('__cols-section-title', '__cols-section-title--pad-left')}>
+        <div className={pcn('__section', '__section--live-columns')}>
+            <div className={pcn('__section-title')}>
                 <span className='blink-indicator'><span></span></span>
-                Create Live Columns
+                <span>Live Columns</span>
             </div>
-            <div className={pcn('__transform-section-subtitle')}>
+            <div className={pcn('__section-subtitle')}>
                 Stream {liveObjectVersion.name} properties directly into your columns.
             </div>
-            <div className={pcn('__new-cols')}>
+            <div className={pcn('__section-main')}>
                 <EditableLiveColumns
                     liveObjectVersion={liveObjectVersion}
-                    selectLiveColumnFormatter={selectLiveColumnFormatter}
+                    liveColumns={defaultLiveColumns?.length ? defaultLiveColumns : [{}]}
+                    columnNames={columnNames}
                     ref={editableLiveColumnsRef}
+                />
+            </div>
+        </div>
+    ), [liveObjectVersion, liveObject])
+
+    const renderFiltersSection = useCallback(() => (
+        <div className={pcn('__section', '__section--filters')}>
+            <div className={pcn('__section-title')}>
+                <span
+                    className={pcn('__section-icon')}
+                    dangerouslySetInnerHTML={{ __html: filterIcon }}>
+                </span>
+                <span>Filters</span>
+            </div>
+            <div className={pcn('__section-subtitle')}>
+                Get all {liveObjectVersion.name}s where...
+            </div>
+            <div className={pcn('__section-main')}>
+                <LiveColumnFilters
+                    liveObjectVersion={liveObjectVersion}
+                    schema={schema}
+                    ref={liveColumnFiltersRef}
+                />
+            </div>
+        </div>
+    ), [liveObjectVersion, liveObject, schema])
+
+    const renderMappingsSection = useCallback(() => (
+        <div className={pcn('__section', '__section--mapping')}>
+            <div className={pcn('__section-title')}>
+                <span
+                    className={pcn('__section-icon')}
+                    dangerouslySetInnerHTML={{ __html: linkIcon }}>
+                </span>
+                <span>1:1 Unique Mapping</span>
+            </div>
+            <div className={pcn('__section-subtitle')}>
+                Something something something...
+            </div>
+            <div className={pcn('__section-main')}>
+                <UniqueMappings
+                    liveObjectVersion={liveObjectVersion}
+                    schema={schema}
+                    tableName={table.name}
+                    getLiveColumns={getLiveColumns}
+                    getFilters={getFilters}
+                    ref={uniqueMappingsRef}
                 />
             </div>
         </div>
@@ -312,21 +275,8 @@ function NewLiveColumnSpecs(props, ref) {
         <div className={className}>
             { renderTypeOverview() }
             { renderLiveColumnsSection() }
-            <div className={pcn('__rel')}>
-                <div className={pcn('__rel-section-title')}>
-                    <span dangerouslySetInnerHTML={{ __html: linkIcon }}></span>
-                    <span>Input Columns</span>
-                </div>
-                <div className={pcn('__rel-section-subtitle')}>
-                    Link the unique fields of { liveObjectVersion.name } to their respective columns in your database.
-                </div>
-                {/* <div className={pcn('__rel-inputs')}>
-                    <RequiredLinks
-                        liveObject={liveObject}
-                        properties={requiredLinks}
-                    />
-                </div> */}
-            </div>
+            { renderFiltersSection() }
+            { renderMappingsSection() }
         </div>
     )
 }

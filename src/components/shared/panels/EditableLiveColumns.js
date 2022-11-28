@@ -13,15 +13,17 @@ const className = 'editable-live-columns'
 const pcn = getPCN(className)
 
 function EditableLiveColumns(props, ref) {
-    const { liveObjectVersion = {}, selectLiveColumnFormatter = noop } = props
-    const dataSourceOptions = useMemo(() => (
-        (liveObjectVersion.properties || []).map(p => ({ value: p.name, label: `.${p.name}` }))
-    ), [liveObjectVersion])
+    const { liveObjectVersion = {}, columnNames = [] } = props
     const [liveColumns, setLiveColumns] = useState(props.liveColumns || [{}])
-    const manuallyChangedColName = useRef({})
+    const propertyOptions = useMemo(() => (liveObjectVersion.properties || []).map(p => (
+        { value: p.name, label: `.${p.name}` }
+    )), [liveObjectVersion])
+    const columnNameOptions = useMemo(() => columnNames?.map(name => (
+        { value: name, label: name }
+    ) || []), [columnNames])
 
     useImperativeHandle(ref, () => ({
-        serialize: () => liveColumns
+        serialize: () => liveColumns,
     }), [liveColumns])
 
     const setColData = useCallback((idx, key, value) => {
@@ -36,23 +38,14 @@ function EditableLiveColumns(props, ref) {
             updatedNewCols.push(colData)
         }
 
-        if (key === 'columnName' && !manuallyChangedColName.current[idx]) {
-            manuallyChangedColName.current[idx] = true
-        }
-
-        else if (key === 'dataSource' && !manuallyChangedColName.current[idx]) {
-            const dataSource = liveObjectVersion.properties.find(p => p.name === value)
-            if (dataSource && dataSource.type !== 'hash' && liveObjectVersion.name === 'ENS Profile') {
-                updatedNewCols[idx].columnName = camelToSnake(value)
-            }
-        }
-
-        else if (key === 'formatter' && value?.type === 'key-val' && !manuallyChangedColName.current[idx]) {
-            updatedNewCols[idx].columnName = camelToSnake(value.config.key)
+        // Auto-select last column if all columns are live.
+        if (columnNames.length === updatedNewCols.length && !updatedNewCols[idx].columnName) {
+            const selectedColumnNames = new Set(updatedNewCols.map(entry => entry.columnName).filter(v => !!v))
+            updatedNewCols[idx].columnName = columnNames.find(name => !selectedColumnNames.has(name))
         }
 
         setLiveColumns(updatedNewCols)
-    }, [liveColumns, liveObjectVersion])
+    }, [liveColumns, liveObjectVersion, columnNames])
 
     const addNewColumn = useCallback(() => {
         setLiveColumns(prevState => [ ...prevState, {}])
@@ -67,98 +60,50 @@ function EditableLiveColumns(props, ref) {
             updatedNewCols.push(liveColumns[i])
         }
         setLiveColumns(updatedNewCols)
-
-        // TODO: Do something to adjust manuallyChangedColName map
     }, [liveColumns])
-
-    const customizeFormatter = useCallback((i, dataSource)=> {
-        let property
-        if (dataSource === liveObjectVersion.name) {
-            property = {
-                isLiveObject: true,
-                type: 'hash',
-                name: ''
-            }
-        } else {
-            property = liveObjectVersion.properties.find(p => p.name === dataSource)
-        }
-
-        selectLiveColumnFormatter(liveObjectVersion, property, formatter => {
-            setColData(i, 'formatter', formatter)
-        })
-    }, [selectLiveColumnFormatter, liveObjectVersion, setColData])
-
-    const renderFormatter = useCallback(formatter => {
-        switch (formatter?.type) {
-            case 'key-val':
-                return `.${formatter.config.key}`
-            case 'custom-function':
-                return liveObjectVersion.name === 'NFT' ? 'setName()' : 'Custom'
-            case 'stringify':
-                return 'Stringify'
-            default:
-                return 'None'
-        }
-    }, [])
 
     const renderColInputs = useCallback(() => liveColumns.map((col, i) => (
         <div key={i} className={pcn('__col-input')}>
             <SelectInput
                 className={pcn(
                     '__col-input-field', 
-                    '__col-input-field--data-source', 
-                    !!col.dataSource ? '__col-input-field--has-value' : '',
+                    '__col-input-field--property', 
+                    !!col.property ? '__col-input-field--has-value' : '',
                 )}
                 classNamePrefix='spec'
-                value={col.dataSource}
-                options={dataSourceOptions}
+                value={col.property}
+                options={propertyOptions}
                 placeholder='.property'
                 isRequired={true}
                 updateFromAbove={true}
-                onChange={value => setColData(i, 'dataSource', value)}
+                onChange={value => setColData(i, 'property', value)}
             />
-            <div className={pcn('__col-arrow', !!col.dataSource ? '__col-arrow--shown' : '')}>
+            <div className={pcn('__col-arrow', !!col.property ? '__col-arrow--shown' : '')}>
                 <div className={pcn('__col-arrow-line')}>
                     <span></span>
                     <span className={pcn('__col-arrow-point')} dangerouslySetInnerHTML={{ __html: triangleIcon }}></span>
                 </div>
             </div>
-            {/* <div
+            <SelectInput
                 className={pcn(
-                    '__formatter',
-                    '__formatter',
-                    col.dataSource ? '' : '__formatter--disabled',
-                    !!col.formatter ? '__formatter--exists' : '',
-                    !!col.formatter?.type ? `__formatter--${col.formatter.type}` : ''
+                    '__col-input-field', 
+                    '__col-input-field--col-name', 
                 )}
-                onClick={ col.dataSource ? () => customizeFormatter(i, col.dataSource) : noop }
-                >
-                <div className={pcn('__formatter-button')}>
-                    <span>+</span>
-                </div>
-                <span className={pcn('__formatter-icon')} dangerouslySetInnerHTML={{ __html: transformIcon }}></span>
-            </div> */}
-            <TextInput
-                className={pcn('__col-input-field', '__col-input-field--col-name')}
-                value={col.columnName || ''}
+                classNamePrefix='spec'
+                value={col.columnName}
+                options={columnNameOptions}
                 placeholder='column_name'
                 isRequired={true}
                 updateFromAbove={true}
-                spellCheck={false}
                 onChange={value => setColData(i, 'columnName', value)}
             />
-            <div
-                className={pcn('__col-input-icon-button', '__col-input-icon-button--settings')}
-                onClick={() => {}}
-                dangerouslySetInnerHTML={{ __html: gearIcon }}>
-            </div>
             <div
                 className={pcn('__col-input-icon-button', '__col-input-icon-button--remove')}
                 onClick={() => removeCol(i)}
                 dangerouslySetInnerHTML={{ __html: closeIcon }}>
             </div>
         </div>
-    )), [liveColumns, setColData, dataSourceOptions, customizeFormatter, renderFormatter, removeCol])
+    )), [liveColumns, setColData, propertyOptions, removeCol])
 
     return (
         <div className={className}>
@@ -166,7 +111,7 @@ function EditableLiveColumns(props, ref) {
                 { liveColumns.length > 0 && 
                     <div className={pcn('__header')}>
                         <span>{liveObjectVersion.name} (Source)</span>
-                        <span>Destination Column</span>
+                        <span>Column (Destination)</span>
                     </div>
                 }
                 <div className={pcn('__col-inputs')}>

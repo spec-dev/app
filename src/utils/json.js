@@ -1,8 +1,8 @@
 export const parse = str => {
     try {
         return JSON.parse(str)
-    } catch (e) {
-        console.log(e)
+    } catch (err) {
+        console.error(err)
         return {}
     }
 }
@@ -10,8 +10,8 @@ export const parse = str => {
 export const stringify = data => {
     try {
         return JSON.stringify(data)
-    } catch (e) {
-        console.log(e)
+    } catch (err) {
+        console.error(err)
         return ''
     }
 }

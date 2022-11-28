@@ -6,16 +6,17 @@ export async function getConfig() {
 }
 
 export function getLiveColumnsForTable(schema, table, config) {
-    const liveColumns = (config.tables[schema] || {})[table] || {}
+    const liveColumns = ((config.tables || {})[schema] || {})[table] || {}
     if (!Object.keys(liveColumns).length) return {}
 
+    const liveObjects = config.objects || {}
     const formattedLiveColumns = {}
     for (const column in liveColumns) {
         const propertyPath = liveColumns[column] || ''
         const [liveObjectGivenName, property] = propertyPath.split('.')
         if (!liveObjectGivenName || !property) continue
 
-        const liveObject = config.objects[liveObjectGivenName] || {}
+        const liveObject = liveObjects[liveObjectGivenName] || {}
         if (!Object.keys(liveObject).length) continue
 
         const [nsp, name, version] = splitLiveObjectId(liveObject.id)
@@ -86,6 +87,7 @@ export function getLiveColumnLinksOnTable(schema, table, config) {
             }
         }
     }
+    
     return Object.values(liveColumnLinks)
 }
 
