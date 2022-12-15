@@ -115,11 +115,15 @@ class MetaApiClient extends ApiClient {
 class MetaSocketClient {
 
     static channels = {
-        CONFIG_UPDATE: 'config:update'
+        CONFIG_UPDATE: 'config:update',
+        SEED_CHANGE: 'seed:change',
+        TABLE_DATA_CHANGE: 'table-data:change',    
     }
 
     constructor() {
         this.onConfigUpdate = () => {}
+        this.onSeedChange = () => {}
+        this.onTableDataChange = () => {}
         this.client = createEventClient({
             hostname: constants.META_API_HOSTNAME,
             port: constants.META_API_PORT,
@@ -129,6 +133,8 @@ class MetaSocketClient {
 
     _subscribeToChannels() {
         this.client.on(MetaSocketClient.channels.CONFIG_UPDATE, data => this.onConfigUpdate(data))
+        this.client.on(MetaSocketClient.channels.SEED_CHANGE, data => this.onSeedChange(data))
+        this.client.on(MetaSocketClient.channels.TABLE_DATA_CHANGE, data => this.onTableDataChange(data))
     }
 }
 

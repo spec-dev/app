@@ -32,7 +32,7 @@ function NewLiveColumnPanel(props, ref) {
         table = {},
         schema,
         onCancel = noop,
-        onApply = noop,
+        onSave = noop,
         selectLiveColumnFormatter = noop,
         addTransform = noop,
         addHook = noop,
@@ -50,7 +50,6 @@ function NewLiveColumnPanel(props, ref) {
     // Refs.
     const liveObjectSearchRef = useRef()
     const newLiveColumnSpecsRef = useRef()
-    const hasSaved = useRef(false)
 
     // Transitions.
     const transitions = useTransition(state.index, {
@@ -63,7 +62,8 @@ function NewLiveColumnPanel(props, ref) {
 
     useImperativeHandle(ref, () => ({
         focusSearchBar: () => liveObjectSearchRef.current?.focusSearchBar(),
-    }))
+        isSaving: () => state.status === status.SAVING,
+    }), [state.status])
 
     const onClickCancel = useCallback(() => {
         onCancel()
@@ -106,8 +106,13 @@ function NewLiveColumnPanel(props, ref) {
     }, [state])
 
     useEffect(() => {
-        state.status === status.SAVING && !!state.payload && save()
-    }, [state.status, save])
+        if (state.status === status.SAVING && !!state.payload) {
+            // setTimeout(() => {
+                save()
+                onSave()
+            // }, 500)
+        }
+    }, [state.status, save, onSave])
 
     const renderHeader = useCallback(() => (
         <div className={pcn('__header')}>
@@ -139,14 +144,15 @@ function NewLiveColumnPanel(props, ref) {
                         state.status === 'saving' ? '__footer-button--show-loader' : ''
                     )}
                     onClick={onClickApply}>
-                    { state.status === 'saving'
+                        <span>Apply</span>
+                    {/* { state.status === 'saving'
                         ? (
                             <span
                                 className='svg-spinner svg-spinner--chasing-tail'
                                 dangerouslySetInnerHTML={{ __html: spinner }}>    
                             </span>
                         ) : <span>Apply</span>
-                    }
+                    } */}
                 </button>
             </div>
         </div>

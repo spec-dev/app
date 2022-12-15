@@ -33,7 +33,8 @@ function Slider(props, ref) {
     useImperativeHandle(ref, () => ({
         show: () => setShown(true),
         hide: () => setShown(false),
-    }))
+        isShown: () => !!shown,
+    }), [shown])
 
     useEffect(() => {
         if (shown) {

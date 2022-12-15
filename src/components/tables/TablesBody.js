@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react'
+import React, { useCallback, useMemo, useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
 import { cn, getPCN } from '../../utils/classes'
 import Slider from '../shared/sliders/Slider'
 import SelectLiveColumnFormatterPanel from '../shared/panels/SelectLiveColumnFormatterPanel'
@@ -105,17 +105,24 @@ const getColumnWidths = (table, liveColumns) => {
     return widths
 }
 
+const defaultInitialStatus = (initialSeedCursor) => {
+    if (!initialSeedCursor) return tableStatus.IN_SYNC.id
+    return initialSeedCursor.cursor && initialSeedCursor.cursor > 0
+        ? tableStatus.POPULATING.id
+        : tableStatus.BACKFILLING.id
+}
+
 const timing = {
     rowFadeInDelay: 35,
 }
 
-function TablesBody(props) {
+function TablesBody(props, ref) {
     // Props.
-    const { schema, config = {}, seedCursors = [] } = props
+    const { schema, config = {} } = props
 
     // State.
     const [table, setTable] = useState(props.table || {})
-    const [status, setStatus] = useState(props.status || tableStatus.IN_SYNC.id)
+    const [status, setStatus] = useState(props.status || defaultInitialStatus(props.seedCursor))
     const [records, setRecords] = useState(props.records || null)
 
     // Constraints.
@@ -123,7 +130,9 @@ function TablesBody(props) {
     const foreignKeyColNames = useMemo(() => new Set((table?.relationships || []).filter(
         rel => rel.source_table_name === table.name
     ).map(rel => rel.source_column_name)), [table])
-    // Need to store result of compileLiveColumnDataForTable() for each relationship in a map
+
+    // Sort & filter rules.
+    const [sortRules, setSortRules] = useState(Array.from(primaryKeyColNames).map(column => ({ column, order: 'asc' })))
     
     // Live column info.
     const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
@@ -147,6 +156,9 @@ function TablesBody(props) {
     const transformObjectPanelRef = useRef()
     const hookSliderRef = useRef()
     const hasEagerLoadedAllLiveObjects = useRef(false)
+    const seedCursor = useRef(props.seedCursor || null)
+    const backfillingCallback = useRef(null)
+    const backfillingTimer = useRef(null)
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -158,38 +170,9 @@ function TablesBody(props) {
         hookSliderRef.current?.show()
     }, [])
 
-    const onCreateNewLiveColumns = useCallback((liveObjectSpec, addedCols) => {
-        const newTable = cloneDeep(table)
-        const liveSourcesSelected = {}
-        for (let c of addedCols) {
-            liveSourcesSelected[c.formatter?.config?.key ? c.formatter.config.key : c.dataSource] = c
-        }
-
-        let newCols = []
-        for (let col of newTable.columns) {
-            // Put live source on linked column.
-            if (col.isLiveLinkColumn) {
-                col.liveSource = liveObjectSpec.name
-            } else if (col.hide && col.liveSource && liveSourcesSelected[col.liveSource]) {
-                col.hide = false
-                col.name = liveSourcesSelected[col.liveSource].columnName
-            }
-            newCols.push(col)
-        }
-
-        // Update table.
-        newTable.columns = newCols
-        newTable.status = tableStatus.BACKFILLING
-        newTable.liveObjectSpec = liveObjectSpec
-
-        setTable(newTable)
-        setToStorage(newTable.name, newTable)
-
-        // Hide slider.
-        setTimeout(() => {
-            newLiveColumnSliderRef.current?.hide()
-        }, 1)
-    }, [table])
+    const onSaveLiveColumns = useCallback(() => {
+        newLiveColumnSliderRef.current?.hide()
+    }, [])
 
     const onNewLiveColumnSliderShown = useCallback(() => {
         setTimeout(() => {
@@ -207,14 +190,42 @@ function TablesBody(props) {
     }, [])
 
     const loadPageRecords = useCallback(async () => {
-        const { data, ok } = await api.meta.query({ query: selectPageRecords(table.name, 0) })
+        const { data, ok } = await api.meta.query({ 
+            query: selectPageRecords(table.name, sortRules)
+        })
+
         if (!ok) {
             // TODO: Log/display error
             setRecords([])
             return
         }
+
         setRecords(data)
-    }, [table])
+    }, [table, sortRules])
+
+    const onDataChange = useCallback(async (events) => {
+        await loadPageRecords()
+        
+        if (seedCursor.current && status === tableStatus.BACKFILLING.id) {
+            const next = () => {
+                setStatus(tableStatus.POPULATING.id)
+
+                setTimeout(() => {
+                    seedCursor.current = null
+                    setStatus(tableStatus.IN_SYNC.id)
+                }, 2000) // calculated based on num new records inserted on page
+            }
+            if (backfillingTimer.current) {
+                backfillingCallback.current = next
+            } else {
+                next()
+            }
+        }
+    }, [loadPageRecords, status])
+
+    useImperativeHandle(ref, () => ({
+        onDataChange: events => onDataChange(events),
+    }), [onDataChange])
 
     useEffect(() => {
         if (!props.table) return
@@ -225,23 +236,23 @@ function TablesBody(props) {
         }
 
         // Backfilling -> Populating
-        if (status === tableStatus.BACKFILLING.id) {
-            setTimeout(() => {
-                const newTable = cloneDeep(table)
-                newTable.status = tableStatus.POPULATING
-                setTable(newTable)
-                setToStorage(newTable.name, newTable)
-            }, 2200)
-        }
-        // Populating -> In-Sync
-        else if (status === tableStatus.POPULATING.id) {
-            setTimeout(() => {
-                const newTable = cloneDeep(table)
-                newTable.status = tableStatus.IN_SYNC
-                setTable(newTable)
-                setToStorage(newTable.name, newTable)
-            }, (records?.length || 0) * timing.rowFadeInDelay + 400)
-        }
+        // if (status === tableStatus.BACKFILLING.id) {
+        //     setTimeout(() => {
+        //         const newTable = cloneDeep(table)
+        //         newTable.status = tableStatus.POPULATING
+        //         setTable(newTable)
+        //         setToStorage(newTable.name, newTable)
+        //     }, 2200)
+        // }
+        // // Populating -> In-Sync
+        // else if (status === tableStatus.POPULATING.id) {
+        //     setTimeout(() => {
+        //         const newTable = cloneDeep(table)
+        //         newTable.status = tableStatus.IN_SYNC
+        //         setTable(newTable)
+        //         setToStorage(newTable.name, newTable)
+        //     }, (records?.length || 0) * timing.rowFadeInDelay + 400)
+        // }
     }, [table, props.table, status, records])
 
     useEffect(() => {
@@ -253,6 +264,32 @@ function TablesBody(props) {
             loadAllLiveObjects()
         }
     }, [table, records, loadPageRecords])
+
+    useEffect(() => {
+        if (props.seedCursor) {
+            // New seed.
+            if (seedCursor.current === null || seedCursor.current.id !== props.seedCursor.id) {
+                seedCursor.current = props.seedCursor
+
+                backfillingCallback.current = null
+                backfillingTimer.current = setTimeout(() => {
+                    backfillingTimer.current = null
+                    backfillingCallback.current && backfillingCallback.current()
+                }, 2500)
+
+                setStatus(tableStatus.BACKFILLING.id)
+            }
+            // Seed updated.
+            else if (seedCursor.current.id === props.seedCursor.id) {
+                seedCursor.current = props.seedCursor
+            }
+        }
+        // Seed complete.
+        else if (seedCursor.current) {
+            // ...
+        }
+    }, [props.seedCursor])
+
 
     const renderStatus = useCallback(() => (
         <div className={pcn('__header-status-container')}>
@@ -499,7 +536,7 @@ function TablesBody(props) {
                 <NewLiveColumnPanel
                     table={table}
                     schema={schema}
-                    onCreate={onCreateNewLiveColumns}
+                    onSave={onSaveLiveColumns}
                     onCancel={() => newLiveColumnSliderRef.current?.hide()}
                     selectLiveColumnFormatter={selectLiveColumnFormatter}
                     addTransform={addTransform}
@@ -542,4 +579,5 @@ function TablesBody(props) {
     )
 }
 
+TablesBody = forwardRef(TablesBody)
 export default TablesBody

@@ -58,32 +58,19 @@ $backfillFetchDuration: 2s;
     width: 100%;
     position: relative;
 
-    &.tables-body--wallets {
-        .tables-body__table-loading {
-            left: 567px;
-            animation: show-loader 2s linear forwards;
+    .tables-body__table-loading {
+        right: auto;
+        width: 100%;
+        max-width: calc(100vw - #{$sideNavWidth} - #{$sidePanelWidth} - 1px);    
+        animation: show-loader 2.5s linear forwards;
+
+        &:before {
+            animation: indeterminate 2.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
         }
-    }
 
-    &.tables-body--nfts,
-    &.tables-body--marketplace_listings,
-    &.tables-body--asset_sales,
-    &.tables-body--assets,
-    &.tables-body--compound_markets {
-        .tables-body__table-loading {
-            right: auto;
-            width: 100%;
-            max-width: calc(100vw - #{$sideNavWidth} - #{$sidePanelWidth} - 1px);    
-            animation: show-loader 2.5s linear forwards;
-
-            &:before {
-                animation: indeterminate 2.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
-            }
-
-            &:after {
-                animation: indeterminate-short 2.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-                animation-delay: 1.3s;
-            }
+        &:after {
+            animation: indeterminate-short 2.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+            animation-delay: 1.3s;
         }
     }
 
@@ -671,10 +658,10 @@ $backfillFetchDuration: 2s;
 
 .tables-body__col-header.tables-body__col-header--primary,
 .tables-body__cell.tables-body__cell--primary {
-    // z-index: 2;
-    // position: sticky;
-    // left: 47px;
-    // border-right: 2px solid adjust-color($gray, $alpha: -0.92);
+    z-index: 2;
+    position: sticky;
+    left: 47px;
+    border-right: 2px solid adjust-color($gray, $alpha: -0.92);
 }
 
 .tables-body__cell.tables-body__cell--check-col,

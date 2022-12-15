@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { cn, getPCN } from '../../utils/classes'
 import { paths, sections } from '../../utils/nav'
 import TablesPanel from '../tables/TablesPanel'
@@ -46,6 +46,7 @@ function DashboardPage(props) {
     const [currentSchemaName, _] = useState(getCurrentSchemaName())
     const [tables, setTables] = useState(getSchema(currentSchemaName))
     const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
+    const tablesBodyRef = useRef()
 
     const currentTable = useMemo(() => {
         if (currentSection !== sections.TABLES) return null
@@ -57,6 +58,49 @@ function DashboardPage(props) {
         if (!tableNames || !currentTable) return 0
         return Math.max(tableNames.indexOf(currentTable.name), 0)
     }, [tableNames, currentTable])
+
+    const onSeedCursorsChange = useCallback(events => {
+        const eventsBySeedCursorId = {}
+        for (const event of events) {
+            const seedCursorId = event.data?.id
+            if (!seedCursorId) continue
+            eventsBySeedCursorId[seedCursorId] = event
+        }
+        
+        const newSeedCursors = []
+        for (const seedCursor of seedCursors) {
+            const event = eventsBySeedCursorId[seedCursor.id]
+            if (!event) {
+                newSeedCursors.push(seedCursor)
+                continue
+            }
+
+            if (event.operation === 'UPDATE') {
+                newSeedCursors.push(event.data)
+            }
+        }
+
+        events.filter(e => e.operation === 'INSERT').forEach(event => {
+            newSeedCursors.push(event.data)
+        })  
+
+        setSeedCursors(newSeedCursors)
+    }, [seedCursors])
+
+    const onTableDataChange = useCallback(events => {
+        console.log(currentTable)
+        if (!currentSchemaName || !currentTable?.name) return
+        
+        const firstEvent = events[0] || {}
+        const eventSchema = firstEvent.schema
+        const eventTable = firstEvent.table
+
+        if (eventSchema !== currentSchemaName || eventTable !== currentTable.name) {
+            return
+        }
+
+        tablesBodyRef.current?.onDataChange(events)
+    }, [currentSchemaName, currentTable])
 
     useEffect(async () => {
         if (currentSection === sections.TABLES && !tables) {
@@ -77,12 +121,16 @@ function DashboardPage(props) {
                 // TODO: Show error
                 return
             }
+
             setSeedCursors(seedCursorsResult.data)
             setConfig(configData)
             setTables(tablesResult.data)
+
             api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
         }
-    }, [projectId, currentSection, tables])
+        api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
+        api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
+    }, [projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
 
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
@@ -119,6 +167,7 @@ function DashboardPage(props) {
                         projectId={projectId}
                         tableNames={tableNames}
                         currentTableIndex={currentTableIndex}
+                        seedCursors={seedCursors}
                     />
                 )
             default:
@@ -147,7 +196,10 @@ function DashboardPage(props) {
                         schema={currentSchemaName}
                         table={currentTable}
                         config={config}
-                        seedCursors={seedCursors}
+                        seedCursor={(seedCursors || []).find(sc => (
+                            sc.spec.table_path === `${currentSchemaName}.${currentTable?.name}`
+                        ))}
+                        ref={tablesBodyRef}
                     />
                 )
             default:
