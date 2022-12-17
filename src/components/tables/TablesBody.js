@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react'
+import $ from 'jquery'
 import { cn, getPCN } from '../../utils/classes'
 import Slider from '../shared/sliders/Slider'
 import SelectLiveColumnFormatterPanel from '../shared/panels/SelectLiveColumnFormatterPanel'
@@ -10,6 +11,7 @@ import CountUp from 'react-countup'
 import { setToStorage } from '../../utils/cache'
 import { selectPageRecords } from '../../utils/queries'
 import { abbrevColType } from '../../utils/formatters'
+import { sum } from '../../utils/math'
 import { getAllLiveObjects, loadAllLiveObjects } from '../../utils/liveObjects'
 import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
@@ -21,6 +23,7 @@ import {
     checkIcon,
     linkIcon,
 } from '../../svgs/icons'
+import Flipper from '../shared/Flipper'
 import api from '../../utils/api'
 
 const className = 'tables-body'
@@ -112,8 +115,12 @@ const defaultInitialStatus = (initialSeedCursor) => {
         : tableStatus.BACKFILLING.id
 }
 
+const defaultSortRules = (primaryKeyColNames) => (
+    Array.from(primaryKeyColNames).map(column => ({ column, order: 'asc' }))
+) 
+
 const timing = {
-    rowFadeInDelay: 35,
+    rowFadeInDelay: 33,
 }
 
 function TablesBody(props, ref) {
@@ -132,7 +139,7 @@ function TablesBody(props, ref) {
     ).map(rel => rel.source_column_name)), [table])
 
     // Sort & filter rules.
-    const [sortRules, setSortRules] = useState(Array.from(primaryKeyColNames).map(column => ({ column, order: 'asc' })))
+    const [sortRules, setSortRules] = useState(defaultSortRules(primaryKeyColNames))
     
     // Live column info.
     const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
@@ -159,6 +166,8 @@ function TablesBody(props, ref) {
     const seedCursor = useRef(props.seedCursor || null)
     const backfillingCallback = useRef(null)
     const backfillingTimer = useRef(null)
+    const fadeInRowIndexesRange = useRef([])
+    const tablesBodyRef = useRef()
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -189,36 +198,62 @@ function TablesBody(props, ref) {
         selectLiveColumnFormatterSliderRef.current?.show()
     }, [])
 
-    const loadPageRecords = useCallback(async () => {
+    const loadPageRecords = useCallback(async (trackChanges) => {
+        let sortBy = sortRules
+        if (!sortBy.length && primaryKeyColNames.size) {
+            sortBy = defaultSortRules(primaryKeyColNames)
+        }
+    
         const { data, ok } = await api.meta.query({ 
-            query: selectPageRecords(table.name, sortRules)
+            query: selectPageRecords(table.name, sortBy)
         })
 
         if (!ok) {
             // TODO: Log/display error
+            fadeInRowIndexesRange.current = []
             setRecords([])
             return
         }
 
+        if (trackChanges && !fadeInRowIndexesRange.current?.length) {
+            const prevNumRowsOnPage = records?.length || 0
+            const numRowsOnPage = data.length
+    
+            if (numRowsOnPage <= prevNumRowsOnPage) {
+                fadeInRowIndexesRange.current = []
+            } else {
+                fadeInRowIndexesRange.current = [prevNumRowsOnPage, numRowsOnPage - prevNumRowsOnPage]
+            }    
+        }
+
         setRecords(data)
-    }, [table, sortRules])
+    }, [table, sortRules, primaryKeyColNames, records, status])
 
     const onDataChange = useCallback(async (events) => {
-        await loadPageRecords()
-        
-        if (seedCursor.current && status === tableStatus.BACKFILLING.id) {
-            const next = () => {
+        await loadPageRecords(true)
+
+        if (status === tableStatus.BACKFILLING.id) {
+            const cb = () => {
                 setStatus(tableStatus.POPULATING.id)
 
+                const fadeInIndexes = fadeInRowIndexesRange.current || []
+                const from = fadeInIndexes[0] || 0
+                const to = fadeInIndexes[1] || 0
+                const numNewRecords = to - from
+
                 setTimeout(() => {
-                    seedCursor.current = null
-                    setStatus(tableStatus.IN_SYNC.id)
-                }, 2000) // calculated based on num new records inserted on page
+                    if (seedCursor.current) {
+                        $(tablesBodyRef.current).removeClass(`${className}--populating-page`)
+                    } else {
+                        setStatus(tableStatus.IN_SYNC.id)
+                    }
+                }, numNewRecords ? (numNewRecords * timing.rowFadeInDelay) : 0)
             }
+
             if (backfillingTimer.current) {
-                backfillingCallback.current = next
+                backfillingCallback.current = cb
             } else {
-                next()
+                cb()
             }
         }
     }, [loadPageRecords, status])
@@ -234,27 +269,8 @@ function TablesBody(props, ref) {
             setRecords(null)
             return
         }
-
-        // Backfilling -> Populating
-        // if (status === tableStatus.BACKFILLING.id) {
-        //     setTimeout(() => {
-        //         const newTable = cloneDeep(table)
-        //         newTable.status = tableStatus.POPULATING
-        //         setTable(newTable)
-        //         setToStorage(newTable.name, newTable)
-        //     }, 2200)
-        // }
-        // // Populating -> In-Sync
-        // else if (status === tableStatus.POPULATING.id) {
-        //     setTimeout(() => {
-        //         const newTable = cloneDeep(table)
-        //         newTable.status = tableStatus.IN_SYNC
-        //         setTable(newTable)
-        //         setToStorage(newTable.name, newTable)
-        //     }, (records?.length || 0) * timing.rowFadeInDelay + 400)
-        // }
-    }, [table, props.table, status, records])
-
+    }, [table, props.table])
+    
     useEffect(() => {
         if (table?.name && records === null) {
             loadPageRecords()
@@ -270,14 +286,14 @@ function TablesBody(props, ref) {
             // New seed.
             if (seedCursor.current === null || seedCursor.current.id !== props.seedCursor.id) {
                 seedCursor.current = props.seedCursor
+                setStatus(tableStatus.BACKFILLING.id)
 
                 backfillingCallback.current = null
                 backfillingTimer.current = setTimeout(() => {
                     backfillingTimer.current = null
                     backfillingCallback.current && backfillingCallback.current()
-                }, 2500)
-
-                setStatus(tableStatus.BACKFILLING.id)
+                    backfillingCallback.current = null
+                }, 2000)
             }
             // Seed updated.
             else if (seedCursor.current.id === props.seedCursor.id) {
@@ -286,10 +302,23 @@ function TablesBody(props, ref) {
         }
         // Seed complete.
         else if (seedCursor.current) {
-            // ...
+            seedCursor.current = null
         }
     }, [props.seedCursor])
 
+    useEffect(() => {
+        if (status === tableStatus.IN_SYNC.id) {
+            if (fadeInRowIndexesRange.current?.length) {
+                fadeInRowIndexesRange.current = []
+                setTimeout(() => {
+                    $(`.${pcn('__row')}--new`).css('opacity', 1)
+                    setTimeout(() => {
+                        $(`.${pcn('__row')}--new`).removeClass(`${pcn('__row')}--new-accent`)
+                    }, 2000)
+                }, 10)
+            }
+        }
+    })
 
     const renderStatus = useCallback(() => (
         <div className={pcn('__header-status-container')}>
@@ -385,7 +414,7 @@ function TablesBody(props, ref) {
             
             colHeaders.push((
                 <div
-                    key={col.name}
+                    key={`${table.name}-${col.name}`}
                     className={pcn(
                         '__col-header',
                         isLiveOrLinkColumn ? '__col-header--live' : '',
@@ -422,8 +451,6 @@ function TablesBody(props, ref) {
             </div>
         )]
 
-        const delay = i * timing.rowFadeInDelay
-
         table.columns.forEach(col => {
             let value = record[col.name]
             if (value === null) {
@@ -441,7 +468,7 @@ function TablesBody(props, ref) {
 
             cells.push((
                 <div
-                    key={col.name}
+                    key={`${table.name}-${col.name}`}
                     className={pcn(
                         '__cell', 
                         isLiveOrLinkColumn ? '__cell--live' : '',
@@ -449,19 +476,35 @@ function TablesBody(props, ref) {
                         value === 'NULL' ? '__cell--null' : '',
                         isPrimaryKey ? '__cell--primary' : '',
                     )}>
-                    <span style={{ transition: `opacity 0.25s ease ${hasLiveColumns ? 0 : delay}ms, color 0.25s ease 0s` }}>
-                        { value }
+                    <span>
+                        <Flipper value={value}/>
                     </span>
                 </div>
             ))
         })
 
+        const isNew = fadeInRowIndexesRange.current 
+            && fadeInRowIndexesRange.current.length 
+            && i >= fadeInRowIndexesRange.current[0] 
+            && i <= fadeInRowIndexesRange.current[1]
+
+        const delay = (isNew ? Math.max((i - fadeInRowIndexesRange.current[0]), 0) : 0) * timing.rowFadeInDelay
+        const isInSync = status === tableStatus.IN_SYNC.id
+
         return (
             <div
                 key={i}
-                className={pcn('__row')}
-                style={ hasLiveColumns && status === tableStatus.POPULATING.id 
-                    ? { transition: `opacity 0.25s ease ${delay}ms`, gridTemplateColumns: gridTemplateColumnsValue } 
+                className={pcn(
+                    '__row',
+                    isNew  ? '__row--new' : '',
+                    isNew && isInSync ? '__row--new-accent' : ''
+                )}
+                style={ isNew 
+                    ? { 
+                        transition: `opacity 0.25s ease ${delay}ms`, 
+                        gridTemplateColumns: gridTemplateColumnsValue,
+                        ...(isInSync ? { opacity: 0 } : {}),
+                    } 
                     : { gridTemplateColumns: gridTemplateColumnsValue } 
                 }>
                 { cells }
@@ -469,11 +512,14 @@ function TablesBody(props, ref) {
         )
     }) || [], [table, status, records, hasLiveColumns, liveColumns, gridTemplateColumnsValue])
 
-    const renderTableLoading = useCallback(() => (
-        <div className={pcn('__table-loading')}>
-            <div className='indeterminate'></div>
-        </div>
-    ), [])
+    const renderTableLoading = useCallback(() => {
+        const maxWidth = sum([colWidthConfig.CHECK_COLUMN_WIDTH, ...columnWidths])
+        return (
+            <div className={pcn('__table-loading')} style={{ maxWidth: `${maxWidth}px` }}>
+                <div className='indeterminate'></div>
+            </div>
+        )
+    }, [columnWidths])
 
     if (!table || !Object.keys(table).length) {
         return <div className={className}></div>
@@ -483,8 +529,9 @@ function TablesBody(props, ref) {
         <div className={cn(
             className,
             `${className}--${status}`,
+            status === tableStatus.POPULATING.id ? `${className}--populating-page` : '',
             records === null ? `${className}--loading` : '',
-        )}>
+        )} ref={tablesBodyRef}>
             <div className={pcn('__header')}>
                 <div className={pcn('__header-left')}>
                     <div className={pcn('__header-left-liner')}>
@@ -515,7 +562,7 @@ function TablesBody(props, ref) {
             </div>
             <div className={pcn('__main')}>
                 <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
-                    { status === tableStatus.BACKFILLING.id && renderTableLoading() }
+                    { renderTableLoading() }
                     { renderColHeaders() }
                 </div>
                 <div className={pcn('__records')}>

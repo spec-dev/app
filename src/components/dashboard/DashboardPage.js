@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom'
 import { getCurrentProject, getCurrentSchemaName } from '../../utils/cache'
 import { getSchema, resolveSchema, getSeedCursors } from '../../utils/schema'
 import { getConfig } from '../../utils/config'
+
 import {
     barChartIcon,
     blistIcon,
@@ -88,7 +89,6 @@ function DashboardPage(props) {
     }, [seedCursors])
 
     const onTableDataChange = useCallback(events => {
-        console.log(currentTable)
         if (!currentSchemaName || !currentTable?.name) return
         
         const firstEvent = events[0] || {}

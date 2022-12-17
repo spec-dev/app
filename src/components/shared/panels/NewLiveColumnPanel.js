@@ -107,10 +107,8 @@ function NewLiveColumnPanel(props, ref) {
 
     useEffect(() => {
         if (state.status === status.SAVING && !!state.payload) {
-            // setTimeout(() => {
-                save()
-                onSave()
-            // }, 500)
+            onSave()
+            setTimeout(save, 100)
         }
     }, [state.status, save, onSave])
 
