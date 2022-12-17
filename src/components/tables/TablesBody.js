@@ -562,7 +562,7 @@ function TablesBody(props, ref) {
             </div>
             <div className={pcn('__main')}>
                 <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
-                    { renderTableLoading() }
+                    { status === tableStatus.BACKFILLING.id && renderTableLoading() }
                     { renderColHeaders() }
                 </div>
                 <div className={pcn('__records')}>

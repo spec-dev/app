@@ -497,10 +497,10 @@ $backfillFetchDuration: 2s;
     }
 
     &:hover {
-        scrollbar-color: #181631 transparent;
+        scrollbar-color: rgba(24, 22, 49, 0.5) transparent;
 
         &::-webkit-scrollbar-thumb {
-            background-color: #181631;
+            background-color: rgba(24, 22, 49, 0.5);
         }
     }
 }
