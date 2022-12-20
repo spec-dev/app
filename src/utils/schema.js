@@ -21,7 +21,3 @@ export async function resolveSchema(schemaName) {
     }
     return { data, ok }
 }
-
-export async function getSeedCursors() {
-    return api.meta.query({ query: `select * from ${SPEC_SCHEMA_NAME}.${specTableNames.SEED_CURSORS}` })
-}

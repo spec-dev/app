@@ -6,13 +6,12 @@ import SelectLiveColumnFormatterPanel from '../shared/panels/SelectLiveColumnFor
 import TransformObjectPanel from '../shared/panels/TransformObjectPanel'
 import HookPanel from '../shared/panels/HookPanel'
 import NewLiveColumnPanel from '../shared/panels/NewLiveColumnPanel'
-import { cloneDeep } from 'lodash-es'
 import CountUp from 'react-countup'
-import { setToStorage } from '../../utils/cache'
-import { selectPageRecords } from '../../utils/queries'
+import { getPageRecords, getTableCount } from '../../utils/queries'
 import { abbrevColType } from '../../utils/formatters'
 import { sum } from '../../utils/math'
-import { getAllLiveObjects, loadAllLiveObjects } from '../../utils/liveObjects'
+import { getNewCount, tableCounts } from '../../utils/counts'
+import { loadAllLiveObjects } from '../../utils/liveObjects'
 import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
     filterIcon,
@@ -24,10 +23,13 @@ import {
     linkIcon,
 } from '../../svgs/icons'
 import Flipper from '../shared/Flipper'
-import api from '../../utils/api'
+import { pendingSeeds } from '../../utils/pendingSeeds'
+import constants from '../../utils/constants'
 
 const className = 'tables-body'
 const pcn = getPCN(className)
+
+const nextPageObserverId = 'fetch-next-page'
 
 export const tableStatus = {
     BACKFILLING: {
@@ -131,16 +133,16 @@ function TablesBody(props, ref) {
     const [table, setTable] = useState(props.table || {})
     const [status, setStatus] = useState(props.status || defaultInitialStatus(props.seedCursor))
     const [records, setRecords] = useState(props.records || null)
+    const [count, setCount] = useState(table?.name ? (tableCounts[[schema, table.name].join('.')] || null) : null)
 
     // Constraints.
     const primaryKeyColNames = useMemo(() => new Set((table?.primary_keys || []).map(pk => pk.name)), [table])
     const foreignKeyColNames = useMemo(() => new Set((table?.relationships || []).filter(
         rel => rel.source_table_name === table.name
     ).map(rel => rel.source_column_name)), [table])
-
-    // Sort & filter rules.
-    const [sortRules, setSortRules] = useState(defaultSortRules(primaryKeyColNames))
     
+    const [sortRules, setSortRules] = useState(defaultSortRules(primaryKeyColNames))
+
     // Live column info.
     const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
     const hasLiveColumns = useMemo(() => Object.keys((
@@ -168,6 +170,12 @@ function TablesBody(props, ref) {
     const backfillingTimer = useRef(null)
     const fadeInRowIndexesRange = useRef([])
     const tablesBodyRef = useRef()
+    const prevCount = useRef(table?.name ? (tableCounts[[schema, table.name].join('.')] || null) : null)
+    const fadeInTimer = useRef(null)
+    const removeAccentTimer = useRef(null)
+    const removePopulatingTimer = useRef(null)
+    const nextPageFetchOffset = useRef(null)
+    const nextPageObserverCreated = useRef(false)
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -203,10 +211,16 @@ function TablesBody(props, ref) {
         if (!sortBy.length && primaryKeyColNames.size) {
             sortBy = defaultSortRules(primaryKeyColNames)
         }
-    
-        const { data, ok } = await api.meta.query({ 
-            query: selectPageRecords(table.name, sortBy)
-        })
+        
+        const offset = 0
+        const limit = Math.max(records?.length || 0, constants.RECORDS_PER_PAGE)
+
+        const { data, ok } = await getPageRecords(
+            table.name, 
+            sortBy, 
+            offset,
+            limit,
+        )
 
         if (!ok) {
             // TODO: Log/display error
@@ -227,21 +241,70 @@ function TablesBody(props, ref) {
         }
 
         setRecords(data)
-    }, [table, sortRules, primaryKeyColNames, records, status])
+    }, [schema, table.name, sortRules, primaryKeyColNames, records])
+
+    const fetchNextPage = useCallback(async () => {
+        if (nextPageFetchOffset.current && records.length <= nextPageFetchOffset.current) {
+            return
+        }
+        nextPageFetchOffset.current = records.length
+
+        let sortBy = sortRules
+        if (!sortBy.length && primaryKeyColNames.size) {
+            sortBy = defaultSortRules(primaryKeyColNames)
+        }
+
+        const { data, ok } = await getPageRecords(
+            table.name,
+            sortBy, 
+            records.length,
+            constants.RECORDS_PER_PAGE,
+        )
+
+        if (!ok) {
+            // TODO: Log/display error
+            return
+        }
+
+        setRecords([ ...records, ...data ])
+    }, [schema, table.name, sortRules, records, primaryKeyColNames])
+
+    const loadRecordCount = useCallback(async () => {
+        const tablePath = [schema, table.name].join('.')
+        const { data, ok } = await getTableCount(tablePath)
+        if (!ok) {
+            // TODO: Log/display error
+            return
+        }
+
+        const countResult = (data[0] || {}).count || 0
+        if (hasLiveColumns) {
+            tableCounts[tablePath] = countResult
+        }
+
+        prevCount.current = countResult
+        setCount(countResult)
+    }, [schema, table])
 
     const onDataChange = useCallback(async (events) => {
+        const tablePath = [schema, table.name].join('.')
+        if (!tableCounts.hasOwnProperty(tablePath)) {
+            tableCounts[tablePath] = getNewCount(count, events)
+        }
+
         await loadPageRecords(true)
 
         if (status === tableStatus.BACKFILLING.id) {
             const cb = () => {
                 setStatus(tableStatus.POPULATING.id)
+                setCount(tableCounts[tablePath])
 
                 const fadeInIndexes = fadeInRowIndexesRange.current || []
                 const from = fadeInIndexes[0] || 0
                 const to = fadeInIndexes[1] || 0
                 const numNewRecords = to - from
 
-                setTimeout(() => {
+                removePopulatingTimer.current = setTimeout(() => {
                     if (seedCursor.current) {
                         $(tablesBodyRef.current).removeClass(`${className}--populating-page`)
                     } else {
@@ -255,31 +318,77 @@ function TablesBody(props, ref) {
             } else {
                 cb()
             }
+        } else {
+            setCount(tableCounts[tablePath])
         }
-    }, [loadPageRecords, status])
+    }, [loadPageRecords, status, schema, table, count])
+
+    const createFetchNextPageObserver = useCallback(() => {
+        const observer = new IntersectionObserver( entries => {
+            if (entries && entries[0] && entries[0].isIntersecting) {
+                fetchNextPage()
+            }
+        }, { threshold: 0 })
+
+        const el = document.querySelector( `#${nextPageObserverId}` )
+        el && observer.observe( el )
+    }, [fetchNextPage])
 
     useImperativeHandle(ref, () => ({
         onDataChange: events => onDataChange(events),
     }), [onDataChange])
 
     useEffect(() => {
+        if (!records?.length) return
+        createFetchNextPageObserver()
+    }, [records, createFetchNextPageObserver])
+
+    useEffect(() => {
         if (!props.table) return
         if (props.table.name !== table.name) {
+            if (backfillingTimer.current) {
+                clearTimeout(backfillingTimer.current)
+                backfillingTimer.current = null
+                backfillingCallback.current = null
+            }
+            if (fadeInTimer.current) {
+                clearTimeout(fadeInTimer.current)
+                fadeInTimer.current = null
+            }
+            if (removeAccentTimer.current) {
+                clearTimeout(removeAccentTimer.current)
+                removeAccentTimer.current = null
+            }
+            if (removePopulatingTimer.current) {
+                clearTimeout(removePopulatingTimer.current)
+                removePopulatingTimer.current = null
+            }
+            nextPageFetchOffset.current = null
             setTable(props.table)
+            setStatus(defaultInitialStatus(props.seedCursor))
+            const nextCount = props.table.name ? (tableCounts[[schema, props.table.name].join('.')] || null) : null
+            prevCount.current = nextCount
+            setCount(nextCount)
+            setSortRules(defaultSortRules(primaryKeyColNames))
             setRecords(null)
             return
         }
-    }, [table, props.table])
+    }, [schema, table, props.table, props.seedCursor, primaryKeyColNames])
     
     useEffect(() => {
         if (table?.name && records === null) {
+            if (count === null) {
+                loadRecordCount()
+            } else {
+                prevCount.current = count
+            }
             loadPageRecords()
         }
         if (table?.name && !hasEagerLoadedAllLiveObjects.current) {
             hasEagerLoadedAllLiveObjects.current = true
             loadAllLiveObjects()
         }
-    }, [table, records, loadPageRecords])
+    }, [table, records, count, loadPageRecords, loadRecordCount])
 
     useEffect(() => {
         if (props.seedCursor) {
@@ -293,7 +402,7 @@ function TablesBody(props, ref) {
                     backfillingTimer.current = null
                     backfillingCallback.current && backfillingCallback.current()
                     backfillingCallback.current = null
-                }, 2000)
+                }, 1250)
             }
             // Seed updated.
             else if (seedCursor.current.id === props.seedCursor.id) {
@@ -310,9 +419,9 @@ function TablesBody(props, ref) {
         if (status === tableStatus.IN_SYNC.id) {
             if (fadeInRowIndexesRange.current?.length) {
                 fadeInRowIndexesRange.current = []
-                setTimeout(() => {
+                fadeInTimer.current = setTimeout(() => {
                     $(`.${pcn('__row')}--new`).css('opacity', 1)
-                    setTimeout(() => {
+                    removeAccentTimer.current = setTimeout(() => {
                         $(`.${pcn('__row')}--new`).removeClass(`${pcn('__row')}--new-accent`)
                     }, 2000)
                 }, 10)
@@ -336,35 +445,38 @@ function TablesBody(props, ref) {
     ), [])
 
     const renderNumRecords = useCallback((mod) => {
-        const numRecords = records?.length || 0
+        let start = prevCount.current || 0
+        let end = count || 0
 
-        let start = 0
-        let end = 0
-        if (status === tableStatus.POPULATING.id) {
-            end = numRecords
-        } else if (status === tableStatus.IN_SYNC.id) {
-            start = numRecords
-            end = numRecords
-        }
+        if (start !== end) {
+            prevCount.current = end
+        } 
 
-        let style = {}
-        if (records === null) {
-            style = { display: 'none' }
+        let duration = 0
+        if (end > start) {
+            duration = (end - start) / 1000
+            const fadeInIndexes = fadeInRowIndexesRange.current || []
+            const from = fadeInIndexes[0] || 0
+            const to = fadeInIndexes[1] || 0
+            const numNewRecords = to - from
+            if (numNewRecords) {
+                duration = (numNewRecords * timing.rowFadeInDelay) / 1000
+            }
         }
 
         return (
             <div className={pcn(`__${mod}-num-records`)}>
-                <CountUp start={start} end={end} delay={0} duration={(numRecords * timing.rowFadeInDelay) / 1000}>
+                <CountUp start={start} end={end} delay={0} duration={duration}>
                     {({ countUpRef }) => (
                         <span>
-                            <span style={style} ref={countUpRef}></span>
-                            <span>{ `${records === null ? '-- ' : ''}Record${numRecords !== 1 ? 's' : ''}` }</span>
+                            <span style={count === null ? { display: 'none' } : {}} ref={countUpRef}></span>
+                            <span>{ `${count === null ? '-- ' : ''}Record${count !== 1 ? 's' : ''}` }</span>
                         </span>
                     )}
                 </CountUp>
             </div>
         )
-    }, [table, status, records])
+    }, [count])
 
     const renderFilterButton = useCallback(() => (
         <div className={pcn('__filter-button')}>
@@ -396,7 +508,7 @@ function TablesBody(props, ref) {
         </div>
     ), [])
 
-    const renderColHeaders = useCallback(() => {
+    const renderColHeaders = useCallback((appliedStatus) => {
         const colHeaders = [(
             <div key='check' className={pcn('__col-header', '__col-header--check-col')}>
                 <span></span>
@@ -427,10 +539,10 @@ function TablesBody(props, ref) {
                             dangerouslySetInnerHTML={{ __html: icon }}>
                         </span>
                     }
-                    { !icon && isLiveOrLinkColumn && !isLinkColumn && status === tableStatus.IN_SYNC.id &&
+                    { !icon && isLiveOrLinkColumn && !isLinkColumn && appliedStatus === tableStatus.IN_SYNC.id &&
                         <span className='blink-indicator'><span></span></span>
                     }
-                    { !icon && isLiveOrLinkColumn && !isLinkColumn && status !== tableStatus.IN_SYNC.id &&
+                    { !icon && isLiveOrLinkColumn && !isLinkColumn && appliedStatus !== tableStatus.IN_SYNC.id &&
                         <span className={pcn('__col-header-type-icon', `__col-header-type-icon--circle`)}><span></span></span>
                     }
                     <span className={pcn('__col-header-name')}>{col.name}</span>
@@ -442,9 +554,9 @@ function TablesBody(props, ref) {
         })
         
         return colHeaders
-    }, [table, status, liveColumns])
+    }, [table, liveColumns])
 
-    const renderRecords = useCallback(() => records?.map((record, i) => {
+    const renderRecords = useCallback((appliedStatus) => records?.map((record, i) => {
         const cells = [(
             <div key='check' className={pcn('__cell', '__cell--check-col')}>
                 <span></span>
@@ -489,7 +601,23 @@ function TablesBody(props, ref) {
             && i <= fadeInRowIndexesRange.current[1]
 
         const delay = (isNew ? Math.max((i - fadeInRowIndexesRange.current[0]), 0) : 0) * timing.rowFadeInDelay
-        const isInSync = status === tableStatus.IN_SYNC.id
+        const isInSync = appliedStatus === tableStatus.IN_SYNC.id
+
+        const extraProps = {}
+
+        if (i + 21 === records.length && (records.length % constants.RECORDS_PER_PAGE) === 0) {
+            const pageIndex = parseInt(i / constants.RECORDS_PER_PAGE)
+            let addFetchNextPageMarker = false
+            if (count === null) {
+                addFetchNextPageMarker = true
+            } else {
+                const finalPageIndex = parseInt(count / constants.RECORDS_PER_PAGE)
+                addFetchNextPageMarker = pageIndex < finalPageIndex
+            }
+            if (addFetchNextPageMarker) {
+                extraProps.id = nextPageObserverId
+            }
+        }
 
         return (
             <div
@@ -506,11 +634,12 @@ function TablesBody(props, ref) {
                         ...(isInSync ? { opacity: 0 } : {}),
                     } 
                     : { gridTemplateColumns: gridTemplateColumnsValue } 
-                }>
+                }
+                {...extraProps}>
                 { cells }
             </div>
         )
-    }) || [], [table, status, records, hasLiveColumns, liveColumns, gridTemplateColumnsValue])
+    }) || [], [table, records, count, hasLiveColumns, liveColumns, gridTemplateColumnsValue])
 
     const renderTableLoading = useCallback(() => {
         const maxWidth = sum([colWidthConfig.CHECK_COLUMN_WIDTH, ...columnWidths])
@@ -525,11 +654,17 @@ function TablesBody(props, ref) {
         return <div className={className}></div>
     }
 
+    let appliedStatus = status
+    if (table?.name && pendingSeeds.has([schema, table.name].join('.'))) {
+        appliedStatus = tableStatus.BACKFILLING.id
+        pendingSeeds.delete([schema, table.name].join('.'))
+    }
+
     return (
         <div className={cn(
             className,
-            `${className}--${status}`,
-            status === tableStatus.POPULATING.id ? `${className}--populating-page` : '',
+            `${className}--${appliedStatus}`,
+            appliedStatus === tableStatus.POPULATING.id ? `${className}--populating-page` : '',
             records === null ? `${className}--loading` : '',
         )} ref={tablesBodyRef}>
             <div className={pcn('__header')}>
@@ -562,18 +697,11 @@ function TablesBody(props, ref) {
             </div>
             <div className={pcn('__main')}>
                 <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
-                    { status === tableStatus.BACKFILLING.id && renderTableLoading() }
-                    { renderColHeaders() }
+                    { appliedStatus === tableStatus.BACKFILLING.id && renderTableLoading() }
+                    { renderColHeaders(appliedStatus) }
                 </div>
                 <div className={pcn('__records')}>
-                    { renderRecords() }
-                </div>
-            </div>
-            <div className={pcn('__footer')}>
-                <div className={pcn('__footer-liner')}>
-                    <div className={pcn('__footer-num-records')}>
-                        { renderNumRecords('footer') }
-                    </div>    
+                    { renderRecords(appliedStatus) }
                 </div>
             </div>
             <Slider

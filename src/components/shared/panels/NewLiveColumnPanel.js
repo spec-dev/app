@@ -8,6 +8,7 @@ import api from '../../../utils/api'
 import { toNamespacedVersion } from '../../../utils/formatters'
 import spinner from '../../../svgs/chasing-tail-spinner'
 import { getAllLiveObjects } from '../../../utils/liveObjects'
+import { pendingSeeds } from '../../../utils/pendingSeeds'
 
 const className = 'new-live-column-panel'
 const pcn = getPCN(className)
@@ -107,8 +108,9 @@ function NewLiveColumnPanel(props, ref) {
 
     useEffect(() => {
         if (state.status === status.SAVING && !!state.payload) {
+            pendingSeeds.add(state.payload.tablePath)
             onSave()
-            setTimeout(save, 100)
+            save()
         }
     }, [state.status, save, onSave])
 

@@ -264,13 +264,13 @@ $backfillFetchDuration: 2s;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px;
+    padding: 0 10px;
     border-radius: 12.5px;
     background-color: adjust-color($backgroundMedium, $alpha: -0.15);
     color: adjust-color($lightGray, $alpha: -0.1);
     font-size: 11px;
     margin-right: 24px;
-    width: 80px;
+    min-width: 91px;
 
     & > span {
         & > span:first-child {
@@ -470,7 +470,8 @@ $backfillFetchDuration: 2s;
     top: $tablesSectionHeaderHeight;
     left: 0;
     width: 100%;
-    bottom: $tablesSectionFooterHeight;
+    // bottom: $tablesSectionFooterHeight;
+    bottom: 0;
     display: block;
     border-top: 1px solid adjust-color($gray, $alpha: -0.92);
     overflow-y: overlay;
@@ -497,10 +498,10 @@ $backfillFetchDuration: 2s;
     }
 
     &:hover {
-        scrollbar-color: rgba(24, 22, 49, 0.5) transparent;
+        scrollbar-color: rgba(24, 22, 49, 0.7) transparent;
 
         &::-webkit-scrollbar-thumb {
-            background-color: rgba(24, 22, 49, 0.5);
+            background-color: rgba(24, 22, 49, 0.7);
         }
     }
 }
@@ -1041,7 +1042,6 @@ $backfillFetchDuration: 2s;
     border-radius: 12.5px;
     color: adjust-color($gray, $alpha: -0.2);
     font-size: 10.5px;
-    width: 80px;
     margin-top: -1.5px;
 
     & > span {

@@ -5,7 +5,9 @@ import TablesPanel from '../tables/TablesPanel'
 import TablesBody from '../tables/TablesBody'
 import { Link } from 'react-router-dom'
 import { getCurrentProject, getCurrentSchemaName } from '../../utils/cache'
-import { getSchema, resolveSchema, getSeedCursors } from '../../utils/schema'
+import { getSchema, resolveSchema } from '../../utils/schema'
+import { updateTableCountWithEvents } from '../../utils/counts'
+import { getSeedCursors } from '../../utils/queries'
 import { getConfig } from '../../utils/config'
 
 import {
@@ -95,11 +97,11 @@ function DashboardPage(props) {
         const eventSchema = firstEvent.schema
         const eventTable = firstEvent.table
 
-        if (eventSchema !== currentSchemaName || eventTable !== currentTable.name) {
-            return
-        }
+        updateTableCountWithEvents(events, [eventSchema, eventTable].join('.'))
 
-        tablesBodyRef.current?.onDataChange(events)
+        if (eventSchema === currentSchemaName && eventTable === currentTable.name) {
+            tablesBodyRef.current?.onDataChange(events)
+        }
     }, [currentSchemaName, currentTable])
 
     useEffect(async () => {
