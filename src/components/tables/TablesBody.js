@@ -450,7 +450,7 @@ function TablesBody(props, ref) {
                     $(`.${pcn('__row')}--new`).css('opacity', 1)
                     removeAccentTimer.current = setTimeout(() => {
                         $(`.${pcn('__row')}--new`).removeClass(`${pcn('__row')}--new-accent`)
-                    }, 2000)
+                    }, 200)
                 }, 10)
             }
         }
