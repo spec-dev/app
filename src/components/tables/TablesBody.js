@@ -30,8 +30,6 @@ import constants from '../../utils/constants'
 const className = 'tables-body'
 const pcn = getPCN(className)
 
-const nextPageObserverId = 'fetch-next-page'
-
 export const tableStatus = {
     BACKFILLING: {
         id: 'backfilling',
@@ -180,6 +178,10 @@ function TablesBody(props, ref) {
     const nextPageFetchOffset = useRef(null)
     const appliedStatus = useRef(null)
     const seedsReceivedData = useRef(new Set())
+    const mainRef = useRef()
+    const recordsRef = useRef()
+    const prevScrollY = useRef(0)
+    const resetScroll = useRef(false)
 
     const addTransform = useCallback(liveObjectSpec => {
         window.liveObjectSpec = liveObjectSpec
@@ -250,6 +252,7 @@ function TablesBody(props, ref) {
     }, [schema, table.name, sortRules, primaryKeyColNames, records?.length])
 
     const fetchNextPage = useCallback(async () => {
+        if (!records?.length) return
         if (nextPageFetchOffset.current && records.length <= nextPageFetchOffset.current) {
             return
         }
@@ -330,31 +333,23 @@ function TablesBody(props, ref) {
         }
     }, [loadPageRecords, status, schema, table, count])
 
-    const createFetchNextPageObserver = useCallback(() => {
-        const observer = new IntersectionObserver( entries => {
-            if (entries && entries[0] && entries[0].isIntersecting) {
-                fetchNextPage()
-            }
-        }, { threshold: 0 })
+    const onScroll = useCallback(() => {
+        if (!recordsRef.current || !mainRef.current) return
+        const recordsHeight = recordsRef.current.offsetHeight
+        const scrollY = mainRef.current.scrollTop
+        const prevScrollYValue = prevScrollY.current
+        prevScrollY.current = scrollY
 
-        const el = document.querySelector( `#${nextPageObserverId}` )
-        el && observer.observe( el )
+        if (scrollY <= prevScrollYValue || (scrollY / recordsHeight < 0.73)) {
+            return
+        }
+
+        fetchNextPage()
     }, [fetchNextPage])
 
     useImperativeHandle(ref, () => ({
         onDataChange: events => onDataChange(events),
     }), [onDataChange])
-
-    useEffect(() => {
-        if (!records?.length) return
-        setTimeout(() => {
-            if (isElementInView(`#${nextPageObserverId}`)) {
-                fetchNextPage()
-            } else {
-                createFetchNextPageObserver()
-            }
-        }, 5)
-    }, [records, createFetchNextPageObserver, fetchNextPage])
 
     useEffect(() => {
         if (!props.table) return
@@ -384,6 +379,7 @@ function TablesBody(props, ref) {
             prevCount.current = nextCount
             setCount(nextCount)
             setSortRules(defaultSortRules(primaryKeyColNames))
+            resetScroll.current = true
             setRecords(null)
             return
         }
@@ -403,6 +399,17 @@ function TablesBody(props, ref) {
             loadAllLiveObjects()
         }
     }, [table, records, count, loadPageRecords, loadRecordCount])
+
+    useEffect(() => {
+        if (resetScroll.current) {
+            resetScroll.current = false
+            prevScrollY.current = 0
+            if (mainRef.current) {
+                $(mainRef.current).scrollLeft(0)
+                $(mainRef.current).scrollTop(0)
+            }
+        }
+    }, [records?.length])
 
     useEffect(() => {
         if (props.seedCursor) {
@@ -623,22 +630,6 @@ function TablesBody(props, ref) {
         const delay = (isNew ? Math.max((i - fadeInRowIndexesRange.current[0]), 0) : 0) * timing.rowFadeInDelay
         const isInSync = givenStatus === tableStatus.IN_SYNC.id
 
-        const extraProps = {}
-
-        if (i + 9 === records.length && (records.length % constants.RECORDS_PER_PAGE) === 0) {
-            const pageIndex = parseInt(i / constants.RECORDS_PER_PAGE)
-            let addFetchNextPageMarker = false
-            if (count === null) {
-                addFetchNextPageMarker = true
-            } else {
-                const finalPageIndex = parseInt(count / constants.RECORDS_PER_PAGE)
-                addFetchNextPageMarker = pageIndex < finalPageIndex
-            }
-            if (addFetchNextPageMarker) {
-                extraProps.id = nextPageObserverId
-            }
-        }
-
         return (
             <div
                 key={i}
@@ -654,8 +645,7 @@ function TablesBody(props, ref) {
                         ...(isInSync ? { opacity: 0 } : {}),
                     } 
                     : { gridTemplateColumns: gridTemplateColumnsValue } 
-                }
-                {...extraProps}>
+                }>
                 { cells }
             </div>
         )
@@ -716,12 +706,12 @@ function TablesBody(props, ref) {
                     </div>
                 </div>
             </div>
-            <div className={pcn('__main')}>
+            <div className={pcn('__main')} onScroll={onScroll} ref={mainRef}>
                 <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
                     { status === tableStatus.BACKFILLING.id && renderTableLoading() }
                     { renderColHeaders(appliedStatus.current) }
                 </div>
-                <div className={pcn('__records')}>
+                <div className={pcn('__records')} ref={recordsRef}>
                     { renderRecords(appliedStatus.current) }
                 </div>
             </div>
