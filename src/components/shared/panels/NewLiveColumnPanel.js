@@ -109,8 +109,8 @@ function NewLiveColumnPanel(props, ref) {
     useEffect(() => {
         if (state.status === status.SAVING && !!state.payload) {
             pendingSeeds.add(state.payload.tablePath)
-            onSave()
             save()
+            setTimeout(onSave, 10)
         }
     }, [state.status, save, onSave])
 

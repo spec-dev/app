@@ -70,22 +70,25 @@ function DashboardPage(props) {
             eventsBySeedCursorId[seedCursorId] = event
         }
         
+        const currentSeedCursorIds = seedCursors.map(sc => sc.id)
         const newSeedCursors = []
         for (const seedCursor of seedCursors) {
             const event = eventsBySeedCursorId[seedCursor.id]
             if (!event) {
                 newSeedCursors.push(seedCursor)
-                continue
-            }
-
-            if (event.operation === 'UPDATE') {
-                newSeedCursors.push(event.data)
             }
         }
 
-        events.filter(e => e.operation === 'INSERT').forEach(event => {
+        events.filter(
+            e => e.operation === 'INSERT' && 
+            e.data?.job_type === 'seed-table'
+        ).forEach(event => {
             newSeedCursors.push(event.data)
         })  
+
+        if (currentSeedCursorIds.sort().join(',') === newSeedCursors.map(sc => sc.id).sort().join(',')) {
+            return
+        }
 
         setSeedCursors(newSeedCursors)
     }, [seedCursors])
