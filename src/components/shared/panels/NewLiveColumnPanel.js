@@ -58,7 +58,7 @@ function NewLiveColumnPanel(props, ref) {
         from: { opacity: 0 },
         enter: { opacity: 1 },
         leave: { opacity: 0 },
-        config: { tension: 400, friction: 32 },
+        config: { tension: 425, friction: 33 },
     })
 
     useImperativeHandle(ref, () => ({
@@ -144,15 +144,7 @@ function NewLiveColumnPanel(props, ref) {
                         state.status === 'saving' ? '__footer-button--show-loader' : ''
                     )}
                     onClick={onClickApply}>
-                        <span>Apply</span>
-                    {/* { state.status === 'saving'
-                        ? (
-                            <span
-                                className='svg-spinner svg-spinner--chasing-tail'
-                                dangerouslySetInnerHTML={{ __html: spinner }}>    
-                            </span>
-                        ) : <span>Apply</span>
-                    } */}
+                    <span>Apply</span>
                 </button>
             </div>
         </div>

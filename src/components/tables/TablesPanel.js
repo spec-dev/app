@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from 'react'
 import { getPCN } from '../../utils/classes'
 import { paths } from '../../utils/nav'
 import { Link } from 'react-router-dom'
+import NewTableDropdown from '../shared/dropdowns/NewTableDropdown'
 import dropdownCaretsIcon from '../../svgs/dropdown-carets'
 
 const className = 'tables-panel'
@@ -43,6 +44,18 @@ function TablesPanel(props) {
                         { renderTableItems() }
                     </div>
                 </div>
+            </div>
+            <div className={pcn('__new-table-button')}>
+                <span id='newTableDropdownTarget' onClick={() => {}}>
+                    <span>+</span>
+                    <span>New Table</span>
+                </span>
+                <NewTableDropdown
+                    key='newTableDropdown'
+                    id='newTableDropdown'
+                    onSelectOption={() => {}}
+                    ref={() => {}}
+                />
             </div>
         </div>
     )

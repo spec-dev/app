@@ -266,7 +266,7 @@ $backfillFetchDuration: 2s;
     justify-content: center;
     padding: 0 10px;
     border-radius: 12.5px;
-    background-color: adjust-color($backgroundMedium, $alpha: -0.15);
+    background-color: #16152f;
     color: adjust-color($lightGray, $alpha: -0.1);
     font-size: 11px;
     margin-right: 24px;
@@ -618,7 +618,7 @@ $backfillFetchDuration: 2s;
 
 // Header cells
 .tables-body__col-header {
-    background-color: #111129;
+    background-color: #13122b;
     display: flex;
     flex-direction: row;
     align-items: center;

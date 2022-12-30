@@ -1,13 +1,17 @@
 import React, { useMemo, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { getPCN, cn } from '../../../utils/classes'
 import { noop } from '../../../utils/nodash'
+import { s3 } from '../../../utils/path'
 import EditableLiveColumns from './EditableLiveColumns'
 import LiveColumnFilters from './LiveColumnFilters'
+import Toggle from '../inputs/Toggle'
 import UniqueMappings from './UniqueMappings'
-import { caretDownIcon, filterIcon, linkIcon } from '../../../svgs/icons'
+import { caretDownIcon, filterIcon, linkIcon, githubIcon } from '../../../svgs/icons'
 import hljs from 'highlight.js/lib/core'
 import typescript from 'highlight.js/lib/languages/typescript'
 import { camelToSnake } from '../../../utils/formatters'
+import { sortInts } from '../../../utils/math'
+import { chainNames } from '../../../utils/chains'
 hljs.registerLanguage('typescript', typescript)
 
 const className = 'new-live-column-specs'
@@ -16,7 +20,7 @@ const pcn = getPCN(className)
 const docsHeaderTabs = [
     {
         id: 'def',
-        name: 'Type Definition',
+        name: 'Interface',
     },
     {
         id: 'example',
@@ -24,9 +28,18 @@ const docsHeaderTabs = [
     },
 ]
 
-const docsHeight = {
-    COLLAPSED: 430,
-    EXPANDED_OFFSET: 58,
+const sizing = {
+    ICON_LENGTH: 70,
+    ICON_OFFSET_RIGHT: 21,
+    LINKS_OFFSET_LEFT: 20,
+    DOCS_HEADER_HEIGHT: 40 + 15 + 16,
+    DOCS_PADDING_BOTTOM: 36,
+    DOCS_INTERFACE_PADDING: 22 + 22 + 1 + 1,
+    DOCS_INTERFACE_LINE_HEIGHT: 20,
+    DOCS_COLLAPSED_BOTTOM_OFFSET: 13,
+    DOCS_COLLAPSED_MAX_HEIGHT: 400,
+    DOCS_HEIGHT_EXPANDED_OFFSET: 36,
+    NSP_CHAR_WIDTH: 7,
 }
 
 const buildInterfaceCode = liveObjectVersion => {
@@ -72,6 +85,7 @@ function NewLiveColumnSpecs(props, ref) {
     // State
     const [docsExpanded, setDocsExpanded] = useState(false)
     const [selectedDocsIndex, setSelectedDocsIndex] = useState(0)
+    const [useFilters, setUseFilters] = useState(false)
 
     // Refs
     const editableLiveColumnsRef = useRef()
@@ -93,7 +107,21 @@ function NewLiveColumnSpecs(props, ref) {
     }, [table])
     const propertyNames = useMemo(() => liveObjectVersion?.properties?.map(p => p.name) || [], [liveObjectVersion])
     const defaultLiveColumns = useMemo(() => guessDefaultLiveColumns(columnNames, propertyNames, columnOrder), [columnNames, propertyNames])
-    
+    const supportedChainIds = useMemo(() => sortInts(
+        Object.keys(liveObjectVersion?.config?.chains || {}).map(v => parseInt(v))
+    ).map(v => v.toString()), [liveObjectVersion])
+    const supportedChainNames = useMemo(() => supportedChainIds.map(chainId => chainNames[chainId]).filter(v => !!v), [supportedChainIds])
+    const collapsedHeight = useMemo(() => Math.min(
+        (
+            sizing.DOCS_HEADER_HEIGHT + 
+            sizing.DOCS_INTERFACE_PADDING + 
+            sizing.DOCS_PADDING_BOTTOM +
+            sizing.DOCS_INTERFACE_LINE_HEIGHT * (2 + propertyNames.length)
+            + 15
+        ),
+        sizing.DOCS_COLLAPSED_MAX_HEIGHT
+    ), [propertyNames])
+
     const getLiveColumns = useCallback(() => editableLiveColumnsRef.current?.serialize() || [], [])
     const getFilters = useCallback(() => liveColumnFiltersRef.current?.serialize() || [], [])
     const getUniqueMappings = useCallback(() => uniqueMappingsRef.current?.serialize() || [], [])
@@ -122,7 +150,7 @@ function NewLiveColumnSpecs(props, ref) {
         if (expandedDocsHeight.current || !ref) return
         setTimeout(() => {
             if (ref.offsetHeight) {
-                expandedDocsHeight.current = ref.offsetHeight + docsHeight.EXPANDED_OFFSET
+                expandedDocsHeight.current = ref.offsetHeight + sizing.DOCS_HEIGHT_EXPANDED_OFFSET
             }
         }, 10)
     }, [])
@@ -136,8 +164,8 @@ function NewLiveColumnSpecs(props, ref) {
 
     const renderDocsSection = useCallback(() => (
         <div className={pcn('__docs')} ref={calculateExpandedDocsHeight}>
-            <div className={pcn('__doc-object-name')}>
-                <span>{ liveObjectVersion.name }</span><span>&mdash;</span><span>Live Object</span>
+            <div className={pcn('__version')}>
+                <span>v{liveObjectVersion.version}</span>
             </div>
             <div className={pcn('__doc-properties')}>
                 { renderProperties() }
@@ -179,18 +207,72 @@ function NewLiveColumnSpecs(props, ref) {
         </div>
     ), [liveObjectVersion, selectedDocsIndex, interfaceCode, exampleObjectCode])
 
+    const renderPrimaryDetails = useCallback(() => {
+        const nsp = `@${liveObjectVersion.nsp}`
+        const mainWidthOffset = (
+            sizing.ICON_LENGTH + 
+            sizing.ICON_OFFSET_RIGHT + 
+            sizing.LINKS_OFFSET_LEFT + 
+            (nsp.length * sizing.NSP_CHAR_WIDTH)
+        )
+        return (
+            <div className={pcn('__primary-details')}>
+                <div className={pcn('__primary-details-liner')}>
+                    <div className={pcn('__primary-details-icon')}>
+                        <img
+                            src={s3(`${liveObject.id}.jpg`)}
+                            alt=""
+                        />
+                    </div>
+                    <div className={pcn('__primary-details-main')} style={{ maxWidth: `calc(100% - ${mainWidthOffset}px)`}}>
+                        <div className={pcn('__primary-details-main-top')}>
+                            <div className={pcn('__primary-details-name')}>
+                                <span>{liveObject.name}</span>
+                            </div>
+                            { supportedChainNames.length &&
+                                <div className={pcn('__primary-details-chains')}>
+                                    { supportedChainNames.map((chain, i) => (
+                                        <div key={i} className={pcn(
+                                            '__primary-details-chain', 
+                                            `__primary-details-chain--${chain.toLowerCase()}`
+                                        )}>
+                                            <span>{chain}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            }
+                        </div>
+                        <div className={pcn('__primary-details-desc')}>
+                            <span>{liveObject.desc}</span>
+                        </div>    
+                    </div>
+                    <div className={pcn('__primary-details-links')}>
+                        <a
+                            className={pcn('__primary-details-link', '__primary-details-link--gh')}
+                            target="_blank"
+                            dangerouslySetInnerHTML={{ __html: githubIcon }}>
+                        </a>
+                        <span className={pcn('__primary-details-link', '__primary-details-link--nsp')}>
+                            {nsp}
+                        </span>
+                    </div>    
+                </div>
+            </div>
+        )
+    }, [liveObjectVersion, liveObject, supportedChainNames])
+
     const renderTypeOverview = useCallback(() => (
         <div className={pcn('__type-overview', `__type-overview--${liveObjectVersion.name}`)}>
             <div
                 style={{ height: docsExpanded && expandedDocsHeight.current 
-                    ? expandedDocsHeight.current : docsHeight.COLLAPSED 
+                    ? expandedDocsHeight.current : collapsedHeight 
                 }}
                 className={pcn(
                     '__type-overview-liner', 
                     docsExpanded ? '__type-overview-liner--expanded' : '',
                 )}>
-                { renderDocsSection() }
                 { renderInterfaceSection() }
+                { renderDocsSection() }
             </div>
             <span
                 className={pcn('__expand', docsExpanded ? '__expand--expanded' : '')}
@@ -198,7 +280,7 @@ function NewLiveColumnSpecs(props, ref) {
                 dangerouslySetInnerHTML={{ __html: caretDownIcon }}>
             </span>
         </div>
-    ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection])
+    ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection, collapsedHeight])
 
     const renderLiveColumnsSection = useCallback(() => (
         <div className={pcn('__section', '__section--live-columns')}>
@@ -229,18 +311,31 @@ function NewLiveColumnSpecs(props, ref) {
                 </span>
                 <span>Filters</span>
             </div>
-            <div className={pcn('__section-subtitle')}>
-                Get all {liveObjectVersion.name}s where...
-            </div>
             <div className={pcn('__section-main')}>
-                <LiveColumnFilters
-                    liveObjectVersion={liveObjectVersion}
-                    schema={schema}
-                    ref={liveColumnFiltersRef}
-                />
+                <div className={pcn('__filters-question')}>
+                    <div className={pcn('__section-subtitle')}>
+                        Which {liveObject.name} do you need?
+                    </div>
+                    <div className={pcn('__filters-toggle-container')}>
+                        <Toggle
+                            falseText='All'
+                            trueText='Filter By'
+                            value={useFilters}
+                            onChange={setUseFilters}
+                        />
+                    </div>
+                </div>
+                <div className={pcn('__filters-container')}>
+                    <LiveColumnFilters
+                        liveObjectVersion={liveObjectVersion}
+                        useFilters={useFilters}
+                        schema={schema}
+                        ref={liveColumnFiltersRef}
+                    />
+                </div>
             </div>
         </div>
-    ), [liveObjectVersion, liveObject, schema])
+    ), [liveObjectVersion, liveObject, schema, useFilters])
 
     const renderMappingsSection = useCallback(() => (
         <div className={pcn('__section', '__section--mapping')}>
@@ -273,10 +368,10 @@ function NewLiveColumnSpecs(props, ref) {
 
     return (
         <div className={className}>
+            { renderPrimaryDetails() }
             { renderTypeOverview() }
-            { renderLiveColumnsSection() }
             { renderFiltersSection() }
-            { renderMappingsSection() }
+            { renderLiveColumnsSection() }
         </div>
     )
 }

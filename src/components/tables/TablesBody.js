@@ -701,7 +701,7 @@ function TablesBody(props, ref) {
                 <div className={pcn('__header-right')}>
                     <div className={pcn('__header-right-liner')}>
                         <div className={pcn('__header-right-bottom')}>
-                            { renderHistoryButton() }
+                            {/* { renderHistoryButton() } */}
                         </div>
                     </div>
                 </div>

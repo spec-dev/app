@@ -39,7 +39,7 @@ function UniqueMappings(props, ref) {
         // Check if can auto-select column path using property.
         if (key === 'property' && !newMappings[idx].columnPath) {
             let columnPath = ((getFilters() || []).find(filter => (
-                filter.property === value && (!filter.op || filter.op === filterOps.IN)
+                filter.property === value && (!filter.op || filter.op === filterOps.IN_COLUMN)
             )) || {}).value
 
             if (!columnPath) {

@@ -21,6 +21,8 @@ function SelectInput(props, ref) {
         validator = notNull,
         isRequired = false,
         updateFromAbove = false,
+        comps = {},
+        disabledOptions = [],
     } = props
     const inputRef = useRef()
     const [data, setData] = useState({
@@ -96,23 +98,24 @@ function SelectInput(props, ref) {
         props.className,
     )
 
+    comps.DropdownIndicator = comps.DropdownIndicator || renderDropdownIcon
+
     return (
         <div className={classes}>
             <Select
                 classNamePrefix={classNamePrefix}
                 placeholder={placeholder}
                 options={options}
-                value={formattedValue}
+                value={formattedValue || ''}
                 menuPlacement='auto'
                 isDisabled={disabled}
+                isOptionDisabled={option => disabledOptions.includes(option.value)}
                 openMenuOnFocus={true}
                 menuShouldScrollIntoView={true}
                 tabSelectsValue={true}
                 noOptionsMessage={() => 'No Results' }
                 onChange={e => !disabled && handleChange(e)}
-                components={{
-                    DropdownIndicator: renderDropdownIcon,
-                }}
+                components={comps}
                 ref={inputRef}
             />
         </div>

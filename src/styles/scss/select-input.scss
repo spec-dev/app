@@ -5,8 +5,8 @@
     justify-self: center;
 
     svg {
-        height: 7px;
-        width: auto;
+        width: 10px;
+        height: auto;
         opacity: 0.5;
         margin-right: 11px;
         pointer-events: none;
@@ -17,7 +17,7 @@
 
 .spec__control {
     min-height: unset !important;
-    background-color: adjust-color($backgroundLight, $alpha: -0.5) !important;
+    background-color: adjust-color($backgroundLight, $alpha: -0.6) !important;
     border: 1px solid adjust-color($gray, $alpha: -0.9) !important;
     border-radius: 5px;
     outline: none !important;
@@ -29,6 +29,7 @@
     font-size: 12px;
     letter-spacing: 0.1px;
     cursor: pointer !important;
+    transition: all 0.15s ease !important;
 }
 
 .select-input {
@@ -55,12 +56,37 @@
         margin-top: 6px;
         background-color: $backgroundLight;
         border-radius: 4px !important;
-        // border: 1px solid adjust-color($gray, $alpha: -0.9);
-        box-shadow: 0 0 20px adjust-color($backgroundDark, $alpha: -0.4);
+        border: 1px solid adjust-color($gray, $alpha: -0.9);
+        box-shadow: 0 0 20px adjust-color($backgroundDark, $alpha: -0.35);
     }
 
     .spec__menu-list {
-        max-height: 120px;
+        max-height: 125px;
+        scrollbar-width: thin;
+        overflow: overlay;
+
+        &::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+    
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    
+        &::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            border-radius: 2.5px;
+            transition: all 1s ease;
+        }
+    
+        &:hover {
+            scrollbar-color: adjust-color($backgroundDark, $alpha: -0.7) transparent;
+    
+            &::-webkit-scrollbar-thumb {
+                background-color: adjust-color($backgroundDark, $alpha: -0.7);
+            }
+        }    
     }
 
     .spec__option {
@@ -84,6 +110,11 @@
             &.spec__option--is-focused {
                 background-color: adjust-color($backgroundMedium, $alpha: -0.75);
             }
+        }
+
+        &.spec__option--is-disabled {
+            cursor: default;
+            opacity: 0.25;
         }
     }
 

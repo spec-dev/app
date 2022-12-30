@@ -1,7 +1,7 @@
 .live-column-filters {
     display: block;
     width: 100%;
-    margin-top: 11px;
+    overflow: hidden;
 
     button {
         background-color: transparent;
@@ -24,12 +24,55 @@
     justify-content: flex-start;
     align-items: flex-start;
     width: 100%;
+    padding-top: 17px;
+    padding-bottom: 23px;
+    position: relative;
+
+    &:before {
+        content: 'or';
+        display: inline-block;
+        position: absolute;
+        top: -6px;
+        left: 1px;
+        font-size: 10px;
+        letter-spacing: 0.45px;
+        color: $gray;
+        opacity: 0.5;
+        text-transform: uppercase;        
+    }
+
+    &:after {
+        content: '';
+        display: block;
+        position: absolute;
+        right: 1px;
+        top: 0;
+        left: 26px;
+        background-color: adjust-color($gray, $alpha: -0.93);
+        height: 1px;
+    }
+
+    &:first-child {
+        margin-top: 25px;
+
+        &:before {
+            content: 'filter by';
+        }
+
+        &:after {
+            left: 60px;
+        }
+    }
+
+    &:last-child {
+        padding-bottom: 0;
+    }
 }
 
 .live-column-filters__filter-input {
     position: relative;
     display: flex;
-    height: 54px;
+    height: 49px;
     flex-direction: row;
     justify-content: flex-start;
     align-items: center;
@@ -53,24 +96,114 @@
         font-family: CodeRegular;
     }
 
+    .spec__control:hover {
+        background-color: adjust-color($backgroundLight, $alpha: -0.47) !important;
+    }
+
     &.live-column-filters__filter-input-field--property {
-        width: calc($liveObjectFilterInputWidth / 1.3);
+        width: calc($liveObjectFilterInputWidth / 1.2);
     }
 
     &.live-column-filters__filter-input-field--value {
-        width: calc($liveObjectFilterInputWidth * 1.3);
+        width: calc($liveObjectFilterInputWidth * 1.2);
+
+        .spec__indicators {
+            display: none;
+        }
+
+        .spec__single-value {
+            grid-area: 1/1/2/3;
+            margin-left: 2px;
+            margin-right: 2px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+
+            span:first-child {
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            span:last-child {
+                position: relative;
+                margin-right: 10px;
+                font-size: 10px;
+                color: adjust-color($gray, $alpha: -0.2);
+                padding-left: 12px;
+                margin-left: 9px;
+
+                &:after {
+                    position: absolute;
+                    top: -4px;
+                    bottom: -4px;
+                    width: 1px;
+                    background-color: adjust-color($gray, $alpha: -0.9);
+                    content: '';
+                    display: block;
+                    left: 0;
+                }
+            }
+        }
+
+        .spec__option {
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+
+            span:first-child {
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            span:last-child {
+                position: relative;
+                margin-right: 3px;
+                font-size: 10px;
+                color: adjust-color($gray, $alpha: -0.2);
+                padding-left: 8px;
+                margin-left: 8px;
+            }
+        }
     }
 
     &.live-column-filters__filter-input-field--op {
         width: $liveObjectFilterOpWidth;
         margin: 0 $newLiveColInputGutter;
-    }
 
-    &.live-column-filters__filter-input-field--property,
-    &.live-column-filters__filter-input-field--value {
-        .spec__control {
-            border: 1px solid adjust-color($gray, $alpha: -0.75) !important;
-            background-color: transparent !important;
+        .select-input__dropdown-icon svg {
+            margin-right: 9px;
+            top: 1.5px;
+        }
+
+        &.select-input {
+            .spec__single-value,
+            .spec__placeholder,
+            .spec__input-container,
+            .spec__option,
+            .spec__input > * {
+                font-size: 12px;
+                font-family: Regular;
+            }
+            .spec__value-container {
+                padding-left: 6px !important;
+            }
+        }
+
+        input, .input {
+            font-size: 11px;
         }
     }
 
@@ -114,7 +247,7 @@
         padding-left: 13px;
         text-overflow: ellipsis;
         padding-right: 13px;
-        font-size: 12px;
+        font-size: 11px;
         letter-spacing: 0.1px;
     }
 
@@ -162,10 +295,14 @@
         }
 
         .spec__option {
-            font-size: 11.5px;
+            font-size: 11px;
             color: adjust-color($lightGray, $alpha: -0.2);
             height: 26px;
             line-height: 26px;
+
+            &.spec__option--is-selected {
+                color: $tealAccent;
+            }
         }
 
         .spec__control {
@@ -178,7 +315,7 @@
 
         .spec__single-value,
         .spec__placeholder {
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 0.1px;
         }
     }
@@ -209,6 +346,7 @@
     cursor: pointer;
     justify-self: flex-end;
     transition: all 0.08s ease;
+    opacity: 0.7;
 
     svg {
         transition: all 0.08s ease;
@@ -230,7 +368,6 @@
 
     &.live-column-filters__filter-input-icon-button--remove {
         margin-left: 12px;
-        
 
         svg {
             width: 20px;
@@ -240,7 +377,7 @@
 }
 
 .live-column-filters__action-buttons {
-    margin-top: 9px;
+    margin-top: 8px;
     display: flex;
     flex-direction: row;
     width: 100%;
@@ -256,19 +393,18 @@
         border: 1px solid adjust-color($gray, $alpha: -0.8);
         border-radius: 5px;
         color: adjust-color($white, $alpha: -0.1);
-        height: 30px;
-        padding: 0 11px 1px;
-        cursor: pointer;
+        height: 28px;
+        padding: 0 10px 1px;
+        cursor: pointer; 
         transition: background-color .15s ease;
-        margin-right: 9px;
+        margin-right: 10px;
 
         span {
-            font-size: 11px;
+            font-size: 10px;
             letter-spacing: 0.11px;
         }
         
-        &:hover,
-        &:focus {
+        &:hover {
             background-color: adjust-color($backgroundLight, $alpha: -0.75);
         }
     }

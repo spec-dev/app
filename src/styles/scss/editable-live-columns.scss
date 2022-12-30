@@ -341,9 +341,10 @@
     cursor: pointer;
     justify-self: flex-end;
     transition: all 0.08s ease;
+    opacity: 0.7;
 
     svg {
-        transition: all 0.08s ease;
+
     }
 
     &:hover {
@@ -362,8 +363,7 @@
 
     &.editable-live-columns__col-input-icon-button--remove {
         margin-left: 12px;
-        
-
+    
         svg {
             width: 20px;
             height: auto;

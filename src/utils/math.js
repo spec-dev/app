@@ -9,3 +9,5 @@ export const sum = (arr = []) => {
     arr.forEach(item => { total += item })
     return total
 }
+
+export const sortInts = (arr = []) => arr.sort((a, b) => a - b)
