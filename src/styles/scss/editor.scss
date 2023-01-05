@@ -36,6 +36,19 @@
     }
 }
 
+.hljs-keyword, .hljs-literal { 
+    color: $purpleAccent; 
+}
+.hljs-title, .hljs-built_in { 
+    color: $tealAccent; 
+}
+.hljs-string {
+    color: $blueAccent;
+}
+.hljs-number {
+    color: #dfd2af;
+}
+
 .editor {
     .editor__v-scroll,
     .interface {

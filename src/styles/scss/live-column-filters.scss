@@ -37,7 +37,7 @@
         font-size: 10px;
         letter-spacing: 0.45px;
         color: $gray;
-        opacity: 0.5;
+        opacity: 0.53;
         text-transform: uppercase;        
     }
 
@@ -101,11 +101,7 @@
     }
 
     &.live-column-filters__filter-input-field--property {
-        width: calc($liveObjectFilterInputWidth / 1.2);
-    }
-
-    &.live-column-filters__filter-input-field--value {
-        width: calc($liveObjectFilterInputWidth * 1.2);
+        width: calc($liveObjectFilterInputWidth / 1.1);
 
         .spec__indicators {
             display: none;
@@ -125,31 +121,24 @@
             align-items: center;
             justify-content: space-between;
 
-            span:first-child {
-                width: 100%;
+            & > span:first-child {
+                width: calc(100% - 80px);
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
-            span:last-child {
+            & > span:last-child {
                 position: relative;
                 margin-right: 10px;
-                font-size: 10px;
-                color: adjust-color($gray, $alpha: -0.2);
-                padding-left: 12px;
-                margin-left: 9px;
-
-                &:after {
-                    position: absolute;
-                    top: -4px;
-                    bottom: -4px;
-                    width: 1px;
-                    background-color: adjust-color($gray, $alpha: -0.9);
-                    content: '';
-                    display: block;
-                    left: 0;
-                }
+                font-size: 9.5px;
+                color: adjust-color($gray, $alpha: -0.5);
+                letter-spacing: 0;
+                width: 70px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                text-align: right;
             }
         }
 
@@ -161,20 +150,113 @@
             align-items: center;
             justify-content: space-between;
 
-            span:first-child {
+            & > span:first-child {
+                width: calc(100% - 70px);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            & > span:last-child {
+                position: relative;
+                margin-right: 0;
+                font-size: 9.5px;
+                color: adjust-color($gray, $alpha: -0.4);
+                letter-spacing: 0;
+                width: 70px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                text-align: right;
+            }
+        }
+    }
+
+    &.live-column-filters__filter-input-field--value {
+        width: calc($liveObjectFilterInputWidth * 1.1);
+
+        .spec__indicators {
+            display: none;
+        }
+
+        .spec__single-value {
+            grid-area: 1/1/2/3;
+            margin-left: 2px;
+            margin-right: 2px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+
+            & > span:first-child {
                 width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
-            span:last-child {
+            & > span:last-child {
+                position: relative;
+                margin-right: 10px;
+                font-size: 9.5px;
+                color: adjust-color($gray, $alpha: -0.5);
+                letter-spacing: 0;
+                margin-left: 9px;
+            }
+        }
+
+        .spec__option {
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+
+            & > span:first-child {
+                width: 100%;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            & > span:last-child {
                 position: relative;
                 margin-right: 3px;
                 font-size: 10px;
-                color: adjust-color($gray, $alpha: -0.2);
+                color: adjust-color($gray, $alpha: -0.4);
                 padding-left: 8px;
                 margin-left: 8px;
+                letter-spacing: 0;
+            }
+        }
+
+        &.live-column-filters__disabled-value-ph {
+            background-color: adjust-color($backgroundLight, $alpha: -0.6);
+            transition: background-color 0.15 ease;
+            border: 1px solid adjust-color($gray, $alpha: -0.9);
+            border-radius: 4px;
+            position: relative;
+            opacity: 0.4;
+            cursor: default;
+
+            span {
+                position: absolute;
+                font-size: 11px;
+                display: block;
+                left: 12px;
+                top: 10px;
+                font-family: CodeRegular;
+                white-space: nowrap;
+                overflow: hidden;
+                pointer-events: none;
+                right: 10px;
+                color: adjust-color($gray, $alpha: -0.2);
             }
         }
     }
@@ -196,6 +278,7 @@
             .spec__input > * {
                 font-size: 12px;
                 font-family: Regular;
+                letter-spacing: 0.1px;
             }
             .spec__value-container {
                 padding-left: 6px !important;
@@ -204,6 +287,24 @@
 
         input, .input {
             font-size: 11px;
+        }
+
+        .spec__single-value {
+            grid-area: 1/1/2/3;
+            margin-left: 2px;
+            margin-right: 2px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            box-sizing: border-box;
+            display: block;
+        }
+
+        .spec__option {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
         }
     }
 
@@ -234,7 +335,7 @@
         }
     }
 
-    input,
+    &:not(.live-column-filters__timestamp-input-field) input,
     .input {
         background-color: adjust-color($backgroundLight, $alpha: -0.5);
         border: 1px solid adjust-color($gray, $alpha: -0.9);
@@ -290,13 +391,14 @@
         .spec__placeholder,
         .spec__input-container,
         .spec__option,
+        .spec__multi-value__label,
         .spec__input > * {
             font-family: CodeRegular;
         }
 
         .spec__option {
             font-size: 11px;
-            color: adjust-color($lightGray, $alpha: -0.2);
+            color: $lightGray;
             height: 26px;
             line-height: 26px;
 
@@ -311,12 +413,45 @@
 
         .spec__value-container {
             padding-left: 7px !important;
+
+            &.spec__value-container--is-multi.spec__value-container--has-value {
+                padding-left: 1px !important;
+            }
+
+            &.spec__value-container--is-multi {
+                flex-wrap: nowrap;
+                scrollbar-width: thin;
+                overflow: overlay;
+        
+                &::-webkit-scrollbar {
+                    width: 5px;
+                    height: 5px;
+                }
+            
+                &::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+            
+                &::-webkit-scrollbar-thumb {
+                    background-color: transparent;
+                    border-radius: 2.5px;
+                    transition: all 1s ease;
+                }
+            
+                &:hover {
+                    scrollbar-color: adjust-color($backgroundDark, $alpha: -0.5) transparent;
+            
+                    &::-webkit-scrollbar-thumb {
+                        background-color: adjust-color($backgroundDark, $alpha: -0.5);
+                    }
+                } 
+            }
         }
 
         .spec__single-value,
+        .spec__multi-value__label,
         .spec__placeholder {
             font-size: 11px;
-            letter-spacing: 0.1px;
         }
     }
 
@@ -332,6 +467,81 @@
         &::-moz-placeholder {
             color: adjust-color($gray, $alpha: -0.2);
         }
+    }
+
+    &.live-column-filters__code-input-field {
+        position: relative;
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-top: 7.5px;
+        background-color: adjust-color($backgroundLight, $alpha: -0.6);
+        transition: background-color 0.15 ease;
+        border: 1px solid adjust-color($gray, $alpha: -0.9);
+        cursor: text;
+        border-radius: 4px;
+
+        &:hover {
+            background-color: adjust-color($backgroundLight, $alpha: -0.47);
+        }
+
+        .code-input__ph {
+            position: absolute;
+            font-size: 11px;
+            display: block;
+            left: 12px;
+            top: 10px;
+            font-family: CodeRegular;
+            white-space: nowrap;
+            overflow: hidden;
+            right: 10px;
+            pointer-events: none;
+            color: adjust-color($gray, $alpha: -0.2);
+        }
+
+        .editor-widget {
+            display: none;
+        }
+    }
+
+    &.live-column-filters__timestamp-input-field {
+        background-color: adjust-color($backgroundLight, $alpha: -0.5);
+        border: 1px solid adjust-color($gray, $alpha: -0.9);
+        border-radius: 5px;
+        outline: none !important;
+        box-shadow: none !important;
+        color: $white;
+        padding-left: 13px;
+        padding-right: 13px;
+        font-size: 11px;
+        letter-spacing: 0.1px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        font-family: CodeRegular;
+
+        input {
+            display: inline-block;
+            color: inherit;
+            font-size: inherit;
+            letter-spacing: inherit;
+            font-family: inherit;
+            background-color: transparent;
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            width: 14px;
+
+            &.timestamp-input__year-input {
+                width: 28px;
+            }
+        }
+
+        span {
+            display: inline-block;
+            margin: 0 2px;
+            color: adjust-color($gray, $alpha: -0.2);
+        }        
     }
 }
 
@@ -404,8 +614,9 @@
             letter-spacing: 0.11px;
         }
         
+        &:focus,
         &:hover {
-            background-color: adjust-color($backgroundLight, $alpha: -0.75);
+            background-color: adjust-color($backgroundLight, $alpha: -0.65);
         }
     }
 }

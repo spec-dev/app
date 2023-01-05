@@ -441,19 +441,6 @@ a.new-live-column-specs__primary-details-link {
         font-size: 12px;
         line-height: 20px;
         color: #eee;
-
-        .hljs-keyword { 
-            color: $purpleAccent; 
-        }
-        .hljs-title, .hljs-built_in, .hljs-literal { 
-            color: $tealAccent; 
-        }
-        .hljs-string {
-            color: $blueAccent;
-        }
-        .hljs-number {
-            color: #dfd2af;
-        }
     }
 }
 
@@ -682,11 +669,6 @@ a.new-live-column-specs__primary-details-link {
 .new-live-column-specs__filters-toggle-container {
     display: inline-block;
     width: 165px;
-
-    .toggle__side,
-    .toggle__slider {
-        transition-delay: 5ms;
-    }
 }
 
 .new-live-column-specs__filters-container {

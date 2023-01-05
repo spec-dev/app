@@ -9,7 +9,8 @@ import { getSchema, resolveSchema } from '../../utils/schema'
 import { updateTableCountWithEvents } from '../../utils/counts'
 import { getSeedCursors } from '../../utils/queries'
 import { getConfig } from '../../utils/config'
-
+import styles from '../../utils/styles'
+import { loader } from '@monaco-editor/react'
 import {
     barChartIcon,
     blistIcon,
@@ -50,6 +51,7 @@ function DashboardPage(props) {
     const [tables, setTables] = useState(getSchema(currentSchemaName))
     const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
     const tablesBodyRef = useRef()
+    const monaco = useRef()
 
     const currentTable = useMemo(() => {
         if (currentSection !== sections.TABLES) return null
@@ -107,6 +109,16 @@ function DashboardPage(props) {
         }
     }, [currentSchemaName, currentTable])
 
+    const loadMonaco = useCallback(async () => {
+        if (monaco.current) return
+        monaco.current = await loader.init()
+        monaco.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+            noSemanticValidation: true,
+            noSyntaxValidation: true,
+        });
+        monaco.current.editor.defineTheme('spec', styles.editor.theme)
+    }, [])
+
     useEffect(async () => {
         if (currentSection === sections.TABLES && !tables) {
             const [tablesResult, seedCursorsResult, configData] = await Promise.all([
@@ -132,6 +144,8 @@ function DashboardPage(props) {
             setTables(tablesResult.data)
 
             api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
+
+            loadMonaco()
         }
         api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
         api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 

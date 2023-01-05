@@ -23,39 +23,70 @@ const styles = {
             (startLinesFolded ? EXTRA_PADDING_DUE_TO_FOLDING : 0) +
             (isStackedVertically ? VSTACKED_SNIPPET_OUTPUT_HEIGHT : 0)
         ),
-        options: () => {
-            const opts = {
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                automaticLayout: true,
-                scrollbar: {
-                    useShadows: false,
-                    verticalScrollbarSize: 0,
-                    horizontalScrollbarSize: 0,
-                },
-                // lineNumbers: 'off',
-                // glyphMargin: false,
-                // folding: false,
-                // lineDecorationsWidth: 0,
-                // lineNumbersMinChars: 0,
-                renderLineHighlight: false,
-                folding: false,
-                selectOnLineNumbers: false,
-                quickSuggestions: {
-                    other: false,
-                    comments: false,
-                    strings: false
-                },
-                parameterHints: {
-                    enabled: false
-                },
-                suggestOnTriggerCharacters: false,
-                acceptSuggestionOnEnter: 'off',
-                tabCompletion: 'off',
-                wordBasedSuggestions: false,
-            }
-            return opts
-        },
+        options: () => ({
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            scrollbar: {
+                useShadows: false,
+                verticalScrollbarSize: 0,
+                horizontalScrollbarSize: 0,
+            },
+            renderLineHighlight: false,
+            folding: false,
+            selectOnLineNumbers: false,
+            quickSuggestions: {
+                other: false,
+                comments: false,
+                strings: false
+            },
+            parameterHints: {
+                enabled: false
+            },
+            suggestOnTriggerCharacters: false,
+            acceptSuggestionOnEnter: 'off',
+            tabCompletion: 'off',
+            wordBasedSuggestions: false,
+        }),
+        singleLineOptions: () => ({
+            hPadding: 13,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            automaticLayout: true,
+            scrollbar: {
+                useShadows: false,
+                verticalScrollbarSize: 0,
+                horizontalScrollbarSize: 0,
+            },
+            fontSize: '11px',
+            fontFamily: 'CodeRegular',
+            lineNumbers: 'off',
+            glyphMargin: false,
+            folding: false,
+            lineDecorationsWidth: 0,
+            lineNumbersMinChars: 0,
+            renderLineHighlight: false,
+            folding: false,
+            selectOnLineNumbers: false,
+            quickSuggestions: {
+                other: false,
+                comments: false,
+                strings: false
+            },
+            parameterHints: {
+                enabled: false
+            },
+            matchBrackets: 'never',
+            overviewRulerLanes: 0,
+            overviewRulerBorder: false,
+            suggestOnTriggerCharacters: false,
+            acceptSuggestionOnEnter: 'off',
+            tabCompletion: 'off',
+            wordBasedSuggestions: false,
+            scrollBeyondLastColumn: 0,
+            hideCursorInOverviewRuler: true,
+            find: {addExtraSpaceOnTop: false, autoFindInSelection: 'never', seedSearchStringFromSelection: false},
+        }),
         theme: {
             base: 'vs-dark',
             inherit: true,
@@ -68,7 +99,7 @@ const styles = {
                 { token: 'variable.parameter', foreground: 'FFFFFF' },
                 { token: 'constant', foreground: '6874FF' },
                 { token: 'comment', foreground: '727A92' },
-                { token: 'number', foreground: 'FAE9B880' },
+                { token: 'number', foreground: 'dfd2af' },
                 { token: 'number.hex', foreground: '5BB498' },
                 { token: 'regexp', foreground: 'B46695' },
                 { token: 'annotation', foreground: 'cc6666' },
@@ -96,8 +127,8 @@ const styles = {
 
                 { token: 'attribute.name', foreground: '9CDCFE' },
                 { token: 'attribute.value', foreground: 'CE9178' },
-                { token: 'attribute.value.number.css', foreground: 'FAE9B880' },
-                { token: 'attribute.value.unit.css', foreground: 'FAE9B880' },
+                { token: 'attribute.value.number.css', foreground: 'dfd2af' },
+                { token: 'attribute.value.unit.css', foreground: 'dfd2af' },
                 { token: 'attribute.value.hex.css', foreground: 'EEEEEE' },
 
                 { token: 'string', foreground: '0dcefd' },
@@ -117,7 +148,7 @@ const styles = {
             colors: {
                 'editor.background': '#00000000',
                 'editor.foreground': '#EEEEEE',
-                'editor.inactiveSelectionBackground': '#E5EBF1',
+                'editor.inactiveSelectionBackground': '#00000000',
                 'editorIndentGuide.background': '#8193B235',
                 'editor.selectionHighlightBackground': '#ADD6FF4D',
                 'editorLineNumber.foreground': '#818690',
