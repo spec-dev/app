@@ -486,7 +486,6 @@ a.new-live-column-specs__primary-details-link {
 
         .new-live-column-specs__section-subtitle {
             padding-left: 2px;
-            color: adjust-color($lightGray, $alpha: -0.15);
             margin-top: 0;
         }
     }
@@ -523,7 +522,7 @@ a.new-live-column-specs__primary-details-link {
     letter-spacing: 0.16px;
     display: inline-block;
     margin-top: 12px;
-    color: adjust-color($lightGray, $alpha: -0.5);
+    color: adjust-color($lightGray, $alpha: -0.2);
 }
 
 .new-live-column-specs__section-icon {

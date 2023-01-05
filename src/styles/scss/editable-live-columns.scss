@@ -33,9 +33,10 @@
 
     span {
         display: inline-block;
-        font-size: 11px;
-        letter-spacing: 0.16px;
-        color: adjust-color($white, $alpha: -0.1);
+        font-size: 10.5px;
+        letter-spacing: 0.1px;
+        font-family: CodeRegular;
+        color: adjust-color($gray, $alpha: -0.2);
         width: $newLiveColInputWidth;
 
         &:nth-child(1) {
@@ -43,7 +44,7 @@
         }
         
         &:first-child {
-            margin-right: $newLiveColArrowWidth;
+            margin-right: calc(#{$newLiveColArrowWidth} - 8px);
         }
     }
 }

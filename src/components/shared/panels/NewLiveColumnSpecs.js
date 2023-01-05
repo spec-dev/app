@@ -327,6 +327,7 @@ function NewLiveColumnSpecs(props, ref) {
             </div>
             <div className={pcn('__section-main')}>
                 <EditableLiveColumns
+                    table={table}
                     liveObjectVersion={liveObjectVersion}
                     liveColumns={defaultLiveColumns?.length ? defaultLiveColumns : [{}]}
                     columnNames={columnNames}
@@ -334,7 +335,7 @@ function NewLiveColumnSpecs(props, ref) {
                 />
             </div>
         </div>
-    ), [liveObjectVersion, liveObject])
+    ), [liveObjectVersion, liveObject, table])
 
     const renderFiltersSection = useCallback(() => (
         <div className={pcn('__section', '__section--filters')}>

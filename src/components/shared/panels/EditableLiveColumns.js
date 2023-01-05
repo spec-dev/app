@@ -13,11 +13,13 @@ const className = 'editable-live-columns'
 const pcn = getPCN(className)
 
 function EditableLiveColumns(props, ref) {
-    const { liveObjectVersion = {}, columnNames = [] } = props
+    const { table = {}, liveObjectVersion = {}, columnNames = [] } = props
     const [liveColumns, setLiveColumns] = useState(props.liveColumns || [{}])
+
     const propertyOptions = useMemo(() => (liveObjectVersion.properties || []).map(p => (
         { value: p.name, label: `.${p.name}` }
     )), [liveObjectVersion])
+
     const columnNameOptions = useMemo(() => columnNames?.map(name => (
         { value: name, label: name }
     ) || []), [columnNames])
@@ -110,8 +112,8 @@ function EditableLiveColumns(props, ref) {
             <div className={pcn('__liner')}>
                 { liveColumns.length > 0 && 
                     <div className={pcn('__header')}>
-                        <span>{liveObjectVersion.name} (Source)</span>
-                        <span>Column (Destination)</span>
+                        <span>{liveObjectVersion.name}</span>
+                        <span>{table.name}</span>
                     </div>
                 }
                 <div className={pcn('__col-inputs')}>
