@@ -116,7 +116,6 @@ function LiveColumnFilters(props, ref) {
                         newFilters[i][j].value = null
                     }
                 } else if (property.type === 'Timestamp') {
-
                     if (columnOps.has(prevOp) !== columnOps.has(newOp) && prevOpWasMulti !== newOpIsMulti) {
                         newFilters[i][j].value = null
                     }

@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react'
+import React, { useMemo, useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { getPCN, cn } from '../../../utils/classes'
+import $ from 'jquery'
 import { noop } from '../../../utils/nodash'
 import { s3 } from '../../../utils/path'
 import EditableLiveColumns from './EditableLiveColumns'
@@ -16,6 +17,12 @@ hljs.registerLanguage('typescript', typescript)
 
 const className = 'new-live-column-specs'
 const pcn = getPCN(className)
+
+const observerScrollRoot = 'newLiveColumnSpecsScrollRoot'
+const observerScrollTarget = 'newLiveColumnSpecsScrollTarget'
+const panelScrollHeader = 'panelScrollHeader'
+const scrollMod = '--scrolled'
+const panelIndex1Class = 'new-live-column-panel__header-title-container--1'
 
 const docsHeaderTabs = [
     {
@@ -92,6 +99,7 @@ function NewLiveColumnSpecs(props, ref) {
     const liveColumnFiltersRef = useRef()
     const uniqueMappingsRef = useRef()
     const expandedDocsHeight = useRef(null)
+    const createdHeaderIntersectionObserver = useRef(false)
 
     // Derived
     const liveObjectVersion = useMemo(() => liveObject?.latestVersion || {}, [liveObject])
@@ -155,6 +163,31 @@ function NewLiveColumnSpecs(props, ref) {
         }, 10)
     }, [])
 
+    const createHeaderIntersectionObserver = useCallback(() => {
+        const observer = new IntersectionObserver(entries => {
+            if (!entries || !entries[0]) return
+            const primaryDetailsShown = entries[0].isIntersecting
+            const $header = $(`#${panelScrollHeader}`)
+            if (!$header.length) return
+            const hasScrollClass = $header.hasClass(scrollMod)
+
+            if (primaryDetailsShown && hasScrollClass) {
+                $header.removeClass(scrollMod)
+            } else if (!primaryDetailsShown && !hasScrollClass && $header.hasClass(panelIndex1Class)) {
+                $header.addClass(scrollMod)
+            }
+        }, { threshold: 0, root: document.querySelector(`#${observerScrollRoot}`) })
+
+        const el = document.querySelector(`#${observerScrollTarget}`)
+        el && observer.observe(el)
+    }, [])
+
+    useEffect(() => {
+        if (createdHeaderIntersectionObserver.current) return
+        createdHeaderIntersectionObserver.current = true
+        window.IntersectionObserver && createHeaderIntersectionObserver()
+    }, [createHeaderIntersectionObserver])
+
     const renderProperties = useCallback(() => liveObjectVersion.properties.map((p, i) => (
         <div key={i} className={pcn('__doc-property')}>
             <div><span>{p.name}</span><span>{p.type}</span></div>
@@ -216,7 +249,7 @@ function NewLiveColumnSpecs(props, ref) {
             (nsp.length * sizing.NSP_CHAR_WIDTH)
         )
         return (
-            <div className={pcn('__primary-details')}>
+            <div id={observerScrollTarget} className={pcn('__primary-details')}>
                 <div className={pcn('__primary-details-liner')}>
                     <div className={pcn('__primary-details-icon')}>
                         <img
@@ -262,7 +295,8 @@ function NewLiveColumnSpecs(props, ref) {
     }, [liveObjectVersion, liveObject, supportedChainNames])
 
     const renderTypeOverview = useCallback(() => (
-        <div className={pcn('__type-overview', `__type-overview--${liveObjectVersion.name}`)}>
+        <div
+            className={pcn('__type-overview', `__type-overview--${liveObjectVersion.name}`)}>
             <div
                 style={{ height: docsExpanded && expandedDocsHeight.current 
                     ? expandedDocsHeight.current : collapsedHeight 
@@ -367,7 +401,7 @@ function NewLiveColumnSpecs(props, ref) {
     }
 
     return (
-        <div className={className}>
+        <div className={className} id={observerScrollRoot}>
             { renderPrimaryDetails() }
             { renderTypeOverview() }
             { renderFiltersSection() }

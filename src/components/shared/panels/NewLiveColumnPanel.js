@@ -4,14 +4,17 @@ import LiveObjectSearch from './LiveObjectSearch'
 import NewLiveColumnSpecs from './NewLiveColumnSpecs'
 import { animated, useTransition } from 'react-spring'
 import { noop } from '../../../utils/nodash'
+import $ from 'jquery'
 import api from '../../../utils/api'
 import { toNamespacedVersion } from '../../../utils/formatters'
 import spinner from '../../../svgs/chasing-tail-spinner'
+import { s3 } from '../../../utils/path'
 import { getAllLiveObjects } from '../../../utils/liveObjects'
 import { pendingSeeds } from '../../../utils/pendingSeeds'
 
 const className = 'new-live-column-panel'
 const pcn = getPCN(className)
+const panelScrollHeader = 'panelScrollHeader'
 
 const status = {
     DEFAULT: 'default',
@@ -117,8 +120,19 @@ function NewLiveColumnPanel(props, ref) {
     const renderHeader = useCallback(() => (
         <div className={pcn('__header')}>
             <div className={pcn('__header-liner')}>
-                <div className={pcn('__header-title')}>
-                    <span>{getHeaderTitle(state.index)}</span>
+                <div
+                    className={pcn('__header-title-container', `__header-title-container--${state.index}`)}
+                    key={state.index}
+                    id={panelScrollHeader}>
+                    <div className={pcn('__header-title')}>
+                        <span>{getHeaderTitle(state.index)}</span>
+                    </div>
+                    { state.index === 1 && state.liveObject && (
+                        <div className={pcn('__spec-header')}>
+                            <img src={s3(`${state.liveObject.id}.jpg`)} alt="" />
+                            <span>{state.liveObject.name}</span>
+                        </div>
+                    )}
                 </div>
                 <div className={pcn('__header-bc', `__header-bc--${state.index}`)}>
                     <span></span>
@@ -126,7 +140,7 @@ function NewLiveColumnPanel(props, ref) {
                 </div>
             </div>
         </div>
-    ), [table, state.index])
+    ), [table, state.liveObject, state.index])
 
     const renderFooter = useCallback(() => (
         <div className={pcn('__footer')}>
