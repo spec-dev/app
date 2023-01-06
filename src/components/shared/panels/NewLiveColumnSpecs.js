@@ -68,21 +68,20 @@ const buildExampleObjectCode = liveObjectVersion => {
     ).value
 }
 
-const guessDefaultLiveColumns = (columnNames, propertyNames, columnOrder) => {
-    const liveColumns = []
+const guessDefaultLiveColumns = (columnNames, propertyNames) => {
+    const liveColumns = {}
     const columnNamesSet = new Set(columnNames)
     for (const propertyName of propertyNames) {
         const exactMatch = columnNamesSet.has(propertyName)
         const columnName = exactMatch ? propertyName : camelToSnake(propertyName)
 
         if (exactMatch || columnNamesSet.has(columnName)) {
-            liveColumns.push({
+            liveColumns[columnName] = {
                 property: propertyName,
-                columnName: columnName,
-            })
+            }
         }
     }
-    return liveColumns.sort((a, b) => columnOrder[a.columnName] - columnOrder[b.columnName])
+    return liveColumns
 }
 
 function NewLiveColumnSpecs(props, ref) {
@@ -106,15 +105,8 @@ function NewLiveColumnSpecs(props, ref) {
     const interfaceCode = useMemo(() => liveObjectVersion ? buildInterfaceCode(liveObjectVersion) : '', [liveObjectVersion])
     const exampleObjectCode = useMemo(() => liveObjectVersion ? buildExampleObjectCode(liveObjectVersion) : '', [liveObjectVersion])
     const columnNames = useMemo(() => table?.columns?.map(c => c.name) || [], [table])
-    const columnOrder = useMemo(() => {
-        const order = {}
-        for (const col of table?.columns || []) {
-            order[col.name] = col.ordinal_position
-        }
-        return order
-    }, [table])
     const propertyNames = useMemo(() => liveObjectVersion?.properties?.map(p => p.name) || [], [liveObjectVersion])
-    const defaultLiveColumns = useMemo(() => guessDefaultLiveColumns(columnNames, propertyNames, columnOrder), [columnNames, propertyNames])
+    const defaultLiveColumns = useMemo(() => guessDefaultLiveColumns(columnNames, propertyNames), [columnNames, propertyNames])
     const supportedChainIds = useMemo(() => sortInts(
         Object.keys(liveObjectVersion?.config?.chains || {}).map(v => parseInt(v))
     ).map(v => v.toString()), [liveObjectVersion])
@@ -328,14 +320,13 @@ function NewLiveColumnSpecs(props, ref) {
             <div className={pcn('__section-main')}>
                 <EditableLiveColumns
                     table={table}
+                    liveColumns={defaultLiveColumns || {}}
                     liveObjectVersion={liveObjectVersion}
-                    liveColumns={defaultLiveColumns?.length ? defaultLiveColumns : [{}]}
-                    columnNames={columnNames}
                     ref={editableLiveColumnsRef}
                 />
             </div>
         </div>
-    ), [liveObjectVersion, liveObject, table])
+    ), [liveObjectVersion, defaultLiveColumns, liveObject, table])
 
     const renderFiltersSection = useCallback(() => (
         <div className={pcn('__section', '__section--filters')}>
