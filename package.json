@@ -19,6 +19,7 @@
         "react-select": "^5.3.2",
         "react-spring": "^9.2.4",
         "react-use-measure": "^2.1.1",
+        "short-uuid": "^4.2.0",
         "typewriter-effect": "^2.18.0"
     },
     "resolutions": {

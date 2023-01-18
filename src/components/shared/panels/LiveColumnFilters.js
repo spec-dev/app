@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useCallback, useState, forwardRef, useImperativ
 import { getPCN, cn } from '../../../utils/classes'
 import $ from 'jquery'
 import SelectInput from '../../shared/inputs/SelectInput'
-import { columnOps, filterOpEnglish, filterOptions, multiValueOps } from '../../../utils/filters'
+import { columnOps, filterOptions, filterOps, multiValueOps } from '../../../utils/filters'
 import { propertyIsEnum, formatPropertyOptionsForSelection, resolvedPropertyType } from '../../../utils/liveObjects'
 import closeIcon from '../../../svgs/close'
 import { getSchema } from '../../../utils/schema'
@@ -10,32 +10,36 @@ import useMeasure from 'react-use-measure'
 import { animated, useSpring } from 'react-spring'
 import { cloneDeep } from 'lodash-es'
 import hljs from 'highlight.js/lib/core'
-import TextInput from '../inputs/TextInput'
 import TimestampInput from '../inputs/TimestampInput'
-import { noMod } from '../../../utils/formatters'
 import { parse, stringify } from '../../../utils/json'
 import CodeInput from '../inputs/CodeInput'
+import {
+    NUMBER,
+    STRING,
+    BOOLEAN,
+    TIMESTAMP,
+} from '../../../utils/propertyTypes'
 
 const className = 'live-column-filters'
 const pcn = getPCN(className)
 
 const filterablePropertyTypes = new Set([
-    'number',
-    'string',
-    'boolean',
-    'enum',
-    'Timestamp',
+    NUMBER,
+    STRING,
+    BOOLEAN,
+    TIMESTAMP,
+    'enum'
 ])
 
 const getFilterOptions = propertyType => {
-    return propertyType === 'Timestamp'
+    return propertyType === TIMESTAMP
         ? filterOptions.filter(opt => !multiValueOps.has(opt.value))
         : filterOptions
 }
 
 function LiveColumnFilters(props, ref) {
     const { liveObjectVersion = {}, schema, useFilters } = props
-    const [filters, setFilters] = useState(props.filters || [[{}]])
+    const [filters, setFilters] = useState(props.filters || [[{ op: filterOps.IN_COLUMN }]])
     const useFiltersRef = useRef(useFilters)
     const overflow = useRef('hidden')
     const containerRef = useRef()
@@ -76,7 +80,7 @@ function LiveColumnFilters(props, ref) {
     }).filter(v => !!v), [liveObjectVersion])
     
     const columnPathOptions = useMemo(() => (getSchema(schema) || [])
-        .map(table => table.columns.map(c => [table.name, c.name].join('.')))
+        .map(table => table.columns.map(c => [schema, table.name, c.name].join('.')))
         .flat()
         .map(colPath => ({ value: colPath, label: colPath })), 
     [schema])
@@ -95,7 +99,7 @@ function LiveColumnFilters(props, ref) {
 
         if (key === 'op') {
             const filter = newFilters[i][j]
-            const prevOp = newFilters[i][j].op || filterOpEnglish.IN_COLUMN
+            const prevOp = newFilters[i][j].op
             const filterValue = newFilters[i][j].value
             const newOp = value
             const prevOpWasMulti = multiValueOps.has(prevOp)
@@ -115,7 +119,7 @@ function LiveColumnFilters(props, ref) {
                     } else if (prevOpWasMulti !== newOpIsMulti) {
                         newFilters[i][j].value = null
                     }
-                } else if (property.type === 'Timestamp') {
+                } else if (property.type === TIMESTAMP) {
                     if (columnOps.has(prevOp) !== columnOps.has(newOp) && prevOpWasMulti !== newOpIsMulti) {
                         newFilters[i][j].value = null
                     }
@@ -206,7 +210,7 @@ function LiveColumnFilters(props, ref) {
     }, [filters])
 
     const renderColumnValueSingleValue = useCallback(({ innerProps, data }) => {
-        const [table, column] = (data?.value || '').split('.')
+        const [_, table, column] = (data?.value || '').split('.')
         return (
             <span
                 className='spec__single-value'
@@ -218,7 +222,7 @@ function LiveColumnFilters(props, ref) {
     }, [])
 
     const renderColumnValueOption = useCallback(({ innerRef, innerProps, data, isFocused, isSelected }) => {
-        const [table, column] = (data?.value || '').split('.')
+        const [_, table, column] = (data?.value || '').split('.')
         return (
             <span
                 className={cn(
@@ -234,19 +238,19 @@ function LiveColumnFilters(props, ref) {
         )
     }, [])
 
-    const renderOpValue = useCallback(({ innerProps, children }) => {
+    const renderOpValue = useCallback(({ innerProps, data, children }) => {
         return (
             <span
                 className={cn(
                     'spec__single-value',
                 )}
                 { ...innerProps }>
-                { children }
+                { data.displayLabel }
             </span>
         )
     }, [])
 
-    const renderOpOption = useCallback(({ innerRef, innerProps, children, isFocused, isSelected }) => {
+    const renderOpOption = useCallback(({ innerRef, innerProps, data, children, isFocused, isSelected }) => {
         return (
             <span
                 className={cn(
@@ -256,7 +260,7 @@ function LiveColumnFilters(props, ref) {
                 )}
                 { ...innerProps }
                 ref={innerRef}>
-                { children }
+                { data.displayLabel }
             </span>
         )
     }, [])
@@ -482,7 +486,7 @@ function LiveColumnFilters(props, ref) {
     ), [setFilterData, setInputRef])
 
     const renderValueInput = useCallback((filter, i, j) => {
-        const op = filter.op || filterOpEnglish.IN_COLUMN
+        const op = filter.op
 
         // Column selection
         if (columnOps.has(op)) {
@@ -520,7 +524,7 @@ function LiveColumnFilters(props, ref) {
         }
 
         // Timestamps.
-        if (property.type === 'Timestamp') {
+        if (property.type === TIMESTAMP) {
             return renderTimestampInput(filter, i, j)
         }
 
@@ -572,7 +576,7 @@ function LiveColumnFilters(props, ref) {
                         '__filter-input-field--op', 
                     )}
                     classNamePrefix='spec'
-                    value={filter.op || filterOpEnglish.IN_COLUMN}
+                    value={filter.op}
                     options={getFilterOptions(property?.type)}
                     placeholder='op'
                     isRequired={true}
@@ -614,7 +618,7 @@ function LiveColumnFilters(props, ref) {
                     ref={r => setAndButtonRef(i, r)}
                     onClick={() => {
                         const newFilters = cloneDeep(filters)
-                        newFilters[i].push({})
+                        newFilters[i].push({ op: filterOps.IN_COLUMN })
                         focusOnLastPropertyInput.current = i
                         setFilters(newFilters)
                     }}>
@@ -622,7 +626,7 @@ function LiveColumnFilters(props, ref) {
                 </button>
                 <button onClick={() => {
                     const newFilters = cloneDeep(filters)
-                    newFilters.splice(i + 1, 0, [{}])
+                    newFilters.splice(i + 1, 0, [{ op: filterOps.IN_COLUMN }])
                     focusOnLastPropertyInput.current = i + 1
                     setFilters(newFilters)
                 }}>

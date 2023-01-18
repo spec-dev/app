@@ -5,11 +5,12 @@ import Slider from '../shared/sliders/Slider'
 import SelectLiveColumnFormatterPanel from '../shared/panels/SelectLiveColumnFormatterPanel'
 import TransformObjectPanel from '../shared/panels/TransformObjectPanel'
 import HookPanel from '../shared/panels/HookPanel'
-import NewLiveColumnPanel from '../shared/panels/NewLiveColumnPanel'
+import NewLiveColumnPanel, { referrers } from '../shared/panels/NewLiveColumnPanel'
 import CountUp from 'react-countup'
+import NewColumnDropdown from '../shared/dropdowns/NewColumnDropdown'
 import { getPageRecords, getTableCount } from '../../utils/queries'
-import { abbrevColType } from '../../utils/formatters'
 import { sum } from '../../utils/math'
+import { displayColType } from '../../utils/colTypes'
 import { getNewCount, tableCounts } from '../../utils/counts'
 import { loadAllLiveObjects } from '../../utils/liveObjects'
 import { isElementInView } from '../../utils/doc'
@@ -26,6 +27,7 @@ import {
 import Flipper from '../shared/Flipper'
 import { pendingSeeds } from '../../utils/pendingSeeds'
 import constants from '../../utils/constants'
+import { noop } from '../../utils/nodash'
 
 const className = 'tables-body'
 const pcn = getPCN(className)
@@ -50,6 +52,7 @@ const colWidthConfig = {
     PIXELS_PER_CHAR: 7,
     IDEAL_NAME_TYPE_GUTTER: 35,
     CHECK_COLUMN_WIDTH: 47,
+    NEW_COLUMN_WIDTH: 105,
     MIN_WIDTH: 100,
 }
 
@@ -91,6 +94,21 @@ const compileLiveColumnDataForTable = (table, config) => {
     return liveColumns
 }
 
+const didColumnsChange = (newCols, oldCols) => {
+    if (newCols.length !== oldCols.length) return true
+    
+    for (let i = 0; i < newCols.length; i++) {
+        const newCol = newCols[i]
+        const oldCol = oldCols[i]
+        
+        if (newCol.name !== oldCol.name || newCol.data_type !== oldCol.data_type) {
+            return true
+        }
+    }
+    
+    return false
+}
+
 const getColumnWidths = (table, liveColumns) => {
     if (!table?.columns) return []
     
@@ -98,7 +116,7 @@ const getColumnWidths = (table, liveColumns) => {
     for (const col of table.columns) {
         let numChars = col.name.length
         const liveColumnData = liveColumns[col.name]
-        const numColTypeChars = (liveColumnData?.givenName || abbrevColType(col.data_type)).length
+        const numColTypeChars = (liveColumnData?.givenName || displayColType(col.data_type)).length
         numChars += numColTypeChars
         const colWidth = (
             colWidthConfig.DEFAULT_OFFSET +
@@ -111,7 +129,13 @@ const getColumnWidths = (table, liveColumns) => {
     return widths
 }
 
-const defaultInitialStatus = (initialSeedCursor) => {
+const defaultInitialStatus = (initialSeedCursor, schema, tableName) => {
+    const tablePath = [schema, tableName].join('.')
+    if (pendingSeeds.has(tablePath)) {
+        pendingSeeds.delete(tablePath)
+        return tableStatus.BACKFILLING.id
+    }
+
     if (!initialSeedCursor) return tableStatus.IN_SYNC.id
     return initialSeedCursor.cursor && initialSeedCursor.cursor > 0
         ? tableStatus.POPULATING.id
@@ -123,18 +147,19 @@ const defaultSortRules = (primaryKeyColNames) => (
 ) 
 
 const timing = {
-    rowFadeInDelay: 35,
+    rowFadeInDelay: 34,
 }
 
 function TablesBody(props, ref) {
     // Props.
-    const { schema, config = {} } = props
+    const { schema, config = {}, refetchTables = noop } = props
 
     // State.
     const [table, setTable] = useState(props.table || {})
-    const [status, setStatus] = useState(props.status || defaultInitialStatus(props.seedCursor))
+    const [status, setStatus] = useState(props.status || defaultInitialStatus(props.seedCursor, schema, table?.name))
     const [records, setRecords] = useState(props.records || null)
     const [count, setCount] = useState(table?.name ? (tableCounts[[schema, table.name].join('.')] || null) : null)
+    const [liveDataPanelReferrer, setLiveDataPanelReferrer] = useState(referrers.ADD_LIVE_DATA)
 
     // Constraints.
     const primaryKeyColNames = useMemo(() => new Set((table?.primary_keys || []).map(pk => pk.name)), [table])
@@ -153,14 +178,24 @@ function TablesBody(props, ref) {
     // Sizing.
     const columnWidths = useMemo(() => getColumnWidths(table, liveColumns), [table, liveColumns])
     const gridTemplateColumnsValue = useMemo(() => [
-        colWidthConfig.CHECK_COLUMN_WIDTH, ...columnWidths
+        colWidthConfig.CHECK_COLUMN_WIDTH,
+        ...columnWidths,
+        colWidthConfig.NEW_COLUMN_WIDTH,
     ].map(w => `${w}px`).join(' '), [columnWidths])
+    const mainWidth = useMemo(() => sum([
+        colWidthConfig.CHECK_COLUMN_WIDTH,
+        ...columnWidths,
+        colWidthConfig.NEW_COLUMN_WIDTH,
+    ], [columnWidths]))
 
     // Refs.
     const newLiveColumnSliderRef = useRef()
     const newLiveColumnPanelRef = useRef()
     const selectLiveColumnFormatterPanelRef = useRef()
     const selectLiveColumnFormatterSliderRef = useRef()
+    const newColumnDropdownRef = useRef()
+    const shouldShowLiveDataPanel = useRef(false)
+    const extendTableDropdownRef = useRef()
     const configureLiveColumnFormatterArgs = useRef([])
     const transformObjectSliderRef = useRef()
     const transformObjectPanelRef = useRef()
@@ -197,11 +232,30 @@ function TablesBody(props, ref) {
         newLiveColumnSliderRef.current?.hide()
     }, [])
 
+    const showLiveDataPanel = useCallback((referrer) => {
+        if (liveDataPanelReferrer === referrer) {
+            newLiveColumnSliderRef.current?.show()
+        } else {
+            shouldShowLiveDataPanel.current = true
+            setLiveDataPanelReferrer(referrer)
+        }
+    }, [liveDataPanelReferrer])
+
     const onNewLiveColumnSliderShown = useCallback(() => {
         setTimeout(() => {
             newLiveColumnPanelRef.current?.focusSearchBar()
         }, 400)
     }, [])
+
+    const onClickExtendTable = useCallback(() => {
+        extendTableDropdownRef.current?.show()
+    }, [])
+
+    const onSelectNewColumnType = useCallback(({ id }) => {
+        if (id === 'live') {
+            showLiveDataPanel(referrers.NEW_LIVE_COLUMN)
+        }
+    }, [showLiveDataPanel])
 
     const selectLiveColumnFormatter = useCallback((liveObjectSpec, property, cb) => {
         if (selectLiveColumnFormatterPanelRef.current) {
@@ -297,6 +351,7 @@ function TablesBody(props, ref) {
 
     const onDataChange = useCallback(async (events) => {
         seedCursor.current && seedsReceivedData.current.add(seedCursor.current.id)
+
         const tablePath = [schema, table.name].join('.')
         if (!tableCounts.hasOwnProperty(tablePath)) {
             tableCounts[tablePath] = getNewCount(count, events)
@@ -335,12 +390,13 @@ function TablesBody(props, ref) {
 
     const onScroll = useCallback(() => {
         if (!recordsRef.current || !mainRef.current) return
+
         const recordsHeight = recordsRef.current.offsetHeight
         const scrollY = mainRef.current.scrollTop
         const prevScrollYValue = prevScrollY.current
         prevScrollY.current = scrollY
 
-        if (scrollY <= prevScrollYValue || (scrollY / recordsHeight < 0.73)) {
+        if (scrollY <= prevScrollYValue || (scrollY / recordsHeight < 0.75)) {
             return
         }
 
@@ -349,7 +405,8 @@ function TablesBody(props, ref) {
 
     useImperativeHandle(ref, () => ({
         onDataChange: events => onDataChange(events),
-    }), [onDataChange])
+        onNewLiveTable: () => showLiveDataPanel(referrers.NEW_LIVE_TABLE)
+    }), [onDataChange, showLiveDataPanel])
 
     useEffect(() => {
         if (!props.table) return
@@ -374,7 +431,7 @@ function TablesBody(props, ref) {
             fadeInRowIndexesRange.current = []
             nextPageFetchOffset.current = null
             setTable(props.table)
-            setStatus(defaultInitialStatus(props.seedCursor))
+            setStatus(defaultInitialStatus(props.seedCursor, schema, props.table.name))
             const nextCount = props.table.name ? (tableCounts[[schema, props.table.name].join('.')] || null) : null
             prevCount.current = nextCount
             setCount(nextCount)
@@ -382,8 +439,37 @@ function TablesBody(props, ref) {
             resetScroll.current = true
             setRecords(null)
             return
+        } else if (didColumnsChange(props.table.columns, table.columns)) {
+            if (backfillingTimer.current) {
+                clearTimeout(backfillingTimer.current)
+                backfillingTimer.current = null
+                backfillingCallback.current = null
+            }
+            if (fadeInTimer.current) {
+                clearTimeout(fadeInTimer.current)
+                fadeInTimer.current = null
+            }
+            if (removeAccentTimer.current) {
+                clearTimeout(removeAccentTimer.current)
+                removeAccentTimer.current = null
+            }
+            if (removePopulatingTimer.current) {
+                clearTimeout(removePopulatingTimer.current)
+                removePopulatingTimer.current = null
+            }
+            fadeInRowIndexesRange.current = []
+            nextPageFetchOffset.current = null
+
+            const newColsExist = props.table.columns.length > table.columns.length
+
+            setTable(props.table)
+            setStatus(defaultInitialStatus(props.seedCursor, schema, props.table.name))
+
+            if (newColsExist) {
+                setTimeout(() => mainRef.current && $(mainRef.current).scrollLeft(mainWidth), 10)
+            }
         }
-    }, [schema, table, props.table, props.seedCursor, primaryKeyColNames])
+    }, [schema, table, props.table, props.seedCursor, primaryKeyColNames, mainWidth])
     
     useEffect(() => {
         if (table?.name && records === null) {
@@ -394,7 +480,7 @@ function TablesBody(props, ref) {
             }
             loadPageRecords()
         }
-        if (table?.name && !hasEagerLoadedAllLiveObjects.current) {
+        if (!hasEagerLoadedAllLiveObjects.current) {
             hasEagerLoadedAllLiveObjects.current = true
             loadAllLiveObjects()
         }
@@ -423,7 +509,7 @@ function TablesBody(props, ref) {
                     backfillingTimer.current = null
                     backfillingCallback.current && backfillingCallback.current()
                     backfillingCallback.current = null
-                }, 2100)
+                }, 2000)
             }
             // Seed updated.
             else if (seedCursor.current.id === props.seedCursor.id) {
@@ -441,6 +527,13 @@ function TablesBody(props, ref) {
             }
         }
     }, [props.seedCursor])
+
+    useEffect(() => {
+        if (shouldShowLiveDataPanel.current) {
+            shouldShowLiveDataPanel.current = false
+            newLiveColumnSliderRef.current?.show()
+        }
+    })
 
     useEffect(() => {
         if (status === tableStatus.IN_SYNC.id) {
@@ -521,12 +614,12 @@ function TablesBody(props, ref) {
 
     const renderLinkObjectButton = useCallback(() => (
         <div className={pcn('__header-new-col-button')}>
-            <span id='newColDropdownTarget' onClick={() => newLiveColumnSliderRef.current?.show() }>
+            <span id='newColDropdownTarget' onClick={() => showLiveDataPanel(referrers.ADD_LIVE_DATA)}>
                 <span>+</span>
                 <span>Add Live Data</span>
             </span>
         </div>
-    ), [])
+    ), [showLiveDataPanel])
 
     const renderHistoryButton = useCallback(() => (
         <div className={pcn('__history-button')}>
@@ -549,7 +642,7 @@ function TablesBody(props, ref) {
             const isPrimaryKey = primaryKeyColNames.has(col.name)
             const isForeignKey = foreignKeyColNames.has(col.name)
             const [icon, mod] = getColHeaderIcon(isLinkColumn, isPrimaryKey, isForeignKey)
-            const colType = liveColumnData?.givenName || abbrevColType(col.data_type)
+            const colType = liveColumnData?.givenName || displayColType(col.data_type)
             
             colHeaders.push((
                 <div
@@ -580,8 +673,22 @@ function TablesBody(props, ref) {
             ))
         })
         
+        colHeaders.push((
+            <div key='add' className={pcn('__col-header', '__col-header--new-col')}>
+                <span id='extendTableDropdownTarget' onClick={onClickExtendTable}>
+                    <span>+</span>
+                </span>
+                <NewColumnDropdown
+                    key='extendTableDropdown'
+                    id='extendTableDropdown'
+                    onSelectOption={onSelectNewColumnType}
+                    ref={extendTableDropdownRef}
+                />
+            </div>
+        ))
+
         return colHeaders
-    }, [table, liveColumns])
+    }, [table, liveColumns, onSelectNewColumnType, onClickExtendTable])
 
     const renderRecords = useCallback((givenStatus) => records?.map((record, i) => {
         const cells = [(
@@ -622,6 +729,8 @@ function TablesBody(props, ref) {
             ))
         })
 
+        cells.push((<div key='empty' className={pcn('__cell')}></div>))
+
         const isNew = fadeInRowIndexesRange.current 
             && fadeInRowIndexesRange.current.length 
             && i >= fadeInRowIndexesRange.current[0] 
@@ -644,7 +753,9 @@ function TablesBody(props, ref) {
                         gridTemplateColumns: gridTemplateColumnsValue,
                         ...(isInSync ? { opacity: 0 } : {}),
                     } 
-                    : { gridTemplateColumns: gridTemplateColumnsValue } 
+                    : { 
+                        gridTemplateColumns: gridTemplateColumnsValue,
+                    } 
                 }>
                 { cells }
             </div>
@@ -652,17 +763,16 @@ function TablesBody(props, ref) {
     }) || [], [table, records, count, hasLiveColumns, liveColumns, gridTemplateColumnsValue])
 
     const renderTableLoading = useCallback(() => {
-        const maxWidth = sum([colWidthConfig.CHECK_COLUMN_WIDTH, ...columnWidths])
+        let maxWidth = mainWidth
+        if (mainRef.current) {
+            maxWidth = Math.min(mainRef.current.offsetWidth, maxWidth)
+        }
         return (
             <div className={pcn('__table-loading')} style={{ maxWidth: `${maxWidth}px` }}>
                 <div className='indeterminate'></div>
             </div>
         )
-    }, [columnWidths])
-
-    if (!table || !Object.keys(table).length) {
-        return <div className={className}></div>
-    }
+    }, [mainWidth])
 
     if (table?.name && pendingSeeds.has([schema, table.name].join('.'))) {
         appliedStatus.current = tableStatus.BACKFILLING.id
@@ -678,43 +788,49 @@ function TablesBody(props, ref) {
             appliedStatus.current === tableStatus.POPULATING.id ? `${className}--populating-page` : '',
             records === null ? `${className}--loading` : '',
         )} ref={tablesBodyRef}>
-            <div className={pcn('__header')}>
-                <div className={pcn('__header-left')}>
-                    <div className={pcn('__header-left-liner')}>
-                        <div className={pcn('__header-left-top')}>
-                            <div className={pcn('__table-name')}>
-                                <span>{ table.name }</span>
+            { table?.name && (
+                <div className={pcn('__header')}>
+                    <div className={pcn('__header-left')}>
+                        <div className={pcn('__header-left-liner')}>
+                            <div className={pcn('__header-left-top')}>
+                                <div className={pcn('__table-name')}>
+                                    <span>{ table.name }</span>
+                                </div>
+                                <div className={pcn('__table-desc')}>
+                                    <span>{ table.comment || <i>No description</i> }</span>
+                                </div>
                             </div>
-                            <div className={pcn('__table-desc')}>
-                                <span>{ table.comment || <i>No description</i> }</span>
+                            <div className={pcn('__header-left-bottom')}>
+                                { hasLiveColumns && renderStatus() }
+                                { renderNumRecords('header') }
+                                { renderFilterButton() }
+                                { renderSortButton() }
+                                { renderLinkObjectButton() }
                             </div>
                         </div>
-                        <div className={pcn('__header-left-bottom')}>
-                            { hasLiveColumns && renderStatus() }
-                            { renderNumRecords('header') }
-                            { renderFilterButton() }
-                            { renderSortButton() }
-                            { renderLinkObjectButton() }
+                    </div>
+                    <div className={pcn('__header-right')}>
+                        <div className={pcn('__header-right-liner')}>
+                            <div className={pcn('__header-right-bottom')}>
+                                {/* { renderHistoryButton() } */}
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div className={pcn('__header-right')}>
-                    <div className={pcn('__header-right-liner')}>
-                        <div className={pcn('__header-right-bottom')}>
-                            {/* { renderHistoryButton() } */}
+            )}
+            { table?.name && (  
+                <div className={pcn('__main')} onScroll={onScroll} ref={mainRef}>
+                    <div style={{ height: 'auto', width: mainWidth + 46 }}>
+                        <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
+                            { status === tableStatus.BACKFILLING.id && renderTableLoading() }
+                            { renderColHeaders(appliedStatus.current) }
+                        </div>
+                        <div className={pcn('__records')} ref={recordsRef}>
+                            { renderRecords(appliedStatus.current) }
                         </div>
                     </div>
                 </div>
-            </div>
-            <div className={pcn('__main')} onScroll={onScroll} ref={mainRef}>
-                <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
-                    { status === tableStatus.BACKFILLING.id && renderTableLoading() }
-                    { renderColHeaders(appliedStatus.current) }
-                </div>
-                <div className={pcn('__records')} ref={recordsRef}>
-                    { renderRecords(appliedStatus.current) }
-                </div>
-            </div>
+            )}
             <Slider
                 id='newLiveColumnSlider'
                 ref={newLiveColumnSliderRef}
@@ -722,43 +838,16 @@ function TablesBody(props, ref) {
                 <NewLiveColumnPanel
                     table={table}
                     schema={schema}
+                    config={config}
+                    tableLiveColumns={liveColumns}
+                    referrer={liveDataPanelReferrer}
                     onSave={onSaveLiveColumns}
                     onCancel={() => newLiveColumnSliderRef.current?.hide()}
                     selectLiveColumnFormatter={selectLiveColumnFormatter}
                     addTransform={addTransform}
                     addHook={addHook}
+                    refetchTables={refetchTables}
                     ref={newLiveColumnPanelRef}
-                />
-            </Slider>
-            <Slider
-                id='selectLiveColumnFormatterSlider'
-                ref={selectLiveColumnFormatterSliderRef}>
-                <SelectLiveColumnFormatterPanel
-                    onDone={() => selectLiveColumnFormatterSliderRef.current?.hide()}
-                    ref={r => {
-                        selectLiveColumnFormatterPanelRef.current = r
-                        if (selectLiveColumnFormatterPanelRef.current &&
-                            configureLiveColumnFormatterArgs.current?.length > 0) {
-                            selectLiveColumnFormatterPanelRef.current.configure(...configureLiveColumnFormatterArgs.current)
-                        }
-                    }}
-                />
-            </Slider>
-            <Slider
-                id='transformObjectSlider'
-                ref={transformObjectSliderRef}>
-                <TransformObjectPanel
-                    onCancel={() => transformObjectSliderRef.current?.hide()}
-                    onDone={() => transformObjectSliderRef.current?.hide()}
-                    ref={transformObjectPanelRef}
-                />
-            </Slider>
-            <Slider
-                id='hookSlider'
-                ref={hookSliderRef}>
-                <HookPanel
-                    onCancel={() => hookSliderRef.current?.hide()}
-                    onDone={() => hookSliderRef.current?.hide()}
                 />
             </Slider>
         </div>

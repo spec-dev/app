@@ -5,9 +5,11 @@ import { noop } from '../../../utils/nodash'
 import { s3 } from '../../../utils/path'
 import EditableLiveColumns from './EditableLiveColumns'
 import LiveColumnFilters from './LiveColumnFilters'
+import { referrers as purposes } from './NewLiveColumnPanel'
 import Toggle from '../inputs/Toggle'
+import NewTableBasicInputs from './NewTableBasicInputs'
 import UniqueMappings from './UniqueMappings'
-import { caretDownIcon, filterIcon, linkIcon, githubIcon } from '../../../svgs/icons'
+import { caretDownIcon, filterIcon, linkIcon, githubIcon, tableEditorIcon } from '../../../svgs/icons'
 import hljs from 'highlight.js/lib/core'
 import typescript from 'highlight.js/lib/languages/typescript'
 import { camelToSnake } from '../../../utils/formatters'
@@ -68,25 +70,29 @@ const buildExampleObjectCode = liveObjectVersion => {
     ).value
 }
 
-const guessDefaultLiveColumns = (columnNames, propertyNames) => {
-    const liveColumns = {}
-    const columnNamesSet = new Set(columnNames)
-    for (const propertyName of propertyNames) {
-        const exactMatch = columnNamesSet.has(propertyName)
-        const columnName = exactMatch ? propertyName : camelToSnake(propertyName)
-
-        if (exactMatch || columnNamesSet.has(columnName)) {
-            liveColumns[columnName] = {
-                property: propertyName,
-            }
-        }
+const getLiveColumnsSectionTitle = purpose => {
+    switch (purpose) {
+        case purposes.NEW_LIVE_TABLE:
+            return 'New Live Table'
+        default:
+            return 'Live Columns'
     }
-    return liveColumns
+}
+
+const getLiveColumnsSectionSubtitle = (purpose, liveObjectVersion) => {
+    switch (purpose) {
+        case purposes.NEW_LIVE_COLUMN:
+            return `Stream ${liveObjectVersion.name} properties into your columns.`
+        case purposes.NEW_LIVE_TABLE:
+            return `Stream ${liveObjectVersion.name} properties into your columns.`
+        default:
+            return `Stream ${liveObjectVersion.name} properties into your columns.`
+    }
 }
 
 function NewLiveColumnSpecs(props, ref) {
     // Props
-    const { liveObject, table, schema } = props
+    const { liveObject, table, config, schema, purpose } = props
 
     // State
     const [docsExpanded, setDocsExpanded] = useState(false)
@@ -96,17 +102,17 @@ function NewLiveColumnSpecs(props, ref) {
     // Refs
     const editableLiveColumnsRef = useRef()
     const liveColumnFiltersRef = useRef()
+    const newTableDetailsRef = useRef()
     const uniqueMappingsRef = useRef()
     const expandedDocsHeight = useRef(null)
     const createdHeaderIntersectionObserver = useRef(false)
 
     // Derived
+    const isNewTable = useMemo(() => purpose === purposes.NEW_LIVE_TABLE, [purpose])
     const liveObjectVersion = useMemo(() => liveObject?.latestVersion || {}, [liveObject])
     const interfaceCode = useMemo(() => liveObjectVersion ? buildInterfaceCode(liveObjectVersion) : '', [liveObjectVersion])
     const exampleObjectCode = useMemo(() => liveObjectVersion ? buildExampleObjectCode(liveObjectVersion) : '', [liveObjectVersion])
-    const columnNames = useMemo(() => table?.columns?.map(c => c.name) || [], [table])
     const propertyNames = useMemo(() => liveObjectVersion?.properties?.map(p => p.name) || [], [liveObjectVersion])
-    const defaultLiveColumns = useMemo(() => guessDefaultLiveColumns(columnNames, propertyNames), [columnNames, propertyNames])
     const supportedChainIds = useMemo(() => sortInts(
         Object.keys(liveObjectVersion?.config?.chains || {}).map(v => parseInt(v))
     ).map(v => v.toString()), [liveObjectVersion])
@@ -122,29 +128,18 @@ function NewLiveColumnSpecs(props, ref) {
         sizing.DOCS_COLLAPSED_MAX_HEIGHT
     ), [propertyNames])
 
-    const getLiveColumns = useCallback(() => editableLiveColumnsRef.current?.serialize() || [], [])
     const getFilters = useCallback(() => liveColumnFiltersRef.current?.serialize() || [], [])
     const getUniqueMappings = useCallback(() => uniqueMappingsRef.current?.serialize() || [], [])
 
     useImperativeHandle(ref, () => ({
         serialize: () => {
-            const liveColumns = getLiveColumns().filter(liveColumn => (
-                !!liveColumn.property && !!liveColumn.columnName
-            ))
-            const filters = getFilters().filter(filter => (
-                !!filter.property && !!filter.value
-            ))
-            const uniqueMappings = getUniqueMappings().filter(mapping => (
-                !!mapping.property && !!mapping.columnPath
-            ))
-
-            return {
-                liveColumns,
-                filters,
-                uniqueMappings,
-            }
+            const filters = useFilters ? getFilters() : []
+            const newTable = isNewTable ? newTableDetailsRef.current?.serialize() : null
+            const [newColumns, liveColumns] = editableLiveColumnsRef.current?.serialize()
+            const uniqueBy = (liveObjectVersion.config.uniqueBy || [])[0] || []
+            return { filters, newTable, newColumns, liveColumns, uniqueBy }
         }
-    }), [getLiveColumns, getFilters, getUniqueMappings])
+    }), [getFilters, getUniqueMappings, useFilters, liveObjectVersion, isNewTable])
 
     const calculateExpandedDocsHeight = useCallback(ref => {
         if (expandedDocsHeight.current || !ref) return
@@ -308,26 +303,6 @@ function NewLiveColumnSpecs(props, ref) {
         </div>
     ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection, collapsedHeight])
 
-    const renderLiveColumnsSection = useCallback(() => (
-        <div className={pcn('__section', '__section--live-columns')}>
-            <div className={pcn('__section-title')}>
-                <span className='blink-indicator'><span></span></span>
-                <span>Live Columns</span>
-            </div>
-            <div className={pcn('__section-subtitle')}>
-                Stream {liveObjectVersion.name} properties directly into your columns.
-            </div>
-            <div className={pcn('__section-main')}>
-                <EditableLiveColumns
-                    table={table}
-                    liveColumns={defaultLiveColumns || {}}
-                    liveObjectVersion={liveObjectVersion}
-                    ref={editableLiveColumnsRef}
-                />
-            </div>
-        </div>
-    ), [liveObjectVersion, defaultLiveColumns, liveObject, table])
-
     const renderFiltersSection = useCallback(() => (
         <div className={pcn('__section', '__section--filters')}>
             <div className={pcn('__section-title')}>
@@ -363,37 +338,43 @@ function NewLiveColumnSpecs(props, ref) {
         </div>
     ), [liveObjectVersion, liveObject, schema, useFilters])
 
-    const renderMappingsSection = useCallback(() => (
-        <div className={pcn('__section', '__section--mapping')}>
+    const renderLiveColumnsSection = useCallback(() => (
+        <div className={pcn('__section', '__section--live-columns')}>
             <div className={pcn('__section-title')}>
-                <span
-                    className={pcn('__section-icon')}
-                    dangerouslySetInnerHTML={{ __html: linkIcon }}>
-                </span>
-                <span>1:1 Unique Mapping</span>
+                <span className='blink-indicator'><span></span></span>
+                <span>{getLiveColumnsSectionTitle(purpose)}</span>
             </div>
             <div className={pcn('__section-subtitle')}>
-                Something something something...
+                {getLiveColumnsSectionSubtitle(purpose, liveObjectVersion)}
             </div>
             <div className={pcn('__section-main')}>
-                <UniqueMappings
+                { isNewTable && 
+                    <NewTableBasicInputs
+                        values={{
+                            name: liveObjectVersion.config?.tableName,
+                            desc: liveObject.desc,
+                        }}
+                        onNameChange={val => editableLiveColumnsRef.current?.updateTableName(val)}
+                        ref={newTableDetailsRef}
+                    />
+                }
+                <EditableLiveColumns
+                    table={table}
+                    config={config}
                     liveObjectVersion={liveObjectVersion}
-                    schema={schema}
-                    tableName={table.name}
-                    getLiveColumns={getLiveColumns}
-                    getFilters={getFilters}
-                    ref={uniqueMappingsRef}
+                    purpose={purpose}
+                    ref={editableLiveColumnsRef}
                 />
             </div>
         </div>
-    ), [liveObjectVersion, liveObject])
+    ), [isNewTable, liveObjectVersion, liveObject, table, purpose])
 
     if (!liveObjectVersion.name) {
         return <div className={className}></div>
     }
 
     return (
-        <div className={className} id={observerScrollRoot}>
+        <div className={cn(className, `${className}--${purpose}`)} id={observerScrollRoot}>
             { renderPrimaryDetails() }
             { renderTypeOverview() }
             { renderFiltersSection() }

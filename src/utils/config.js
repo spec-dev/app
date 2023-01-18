@@ -141,3 +141,7 @@ export function splitLiveObjectId(id) {
 
     return [nsp, name, version]
 }
+
+export function formatLiveObjectId(nsp, name, version) {
+    return `${nsp}.${name}@${version}`
+}

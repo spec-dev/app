@@ -1,7 +1,9 @@
 import barChartIcon from './bar-chart'
 import blistIcon from './blist'
 import bookIcon from './book'
+import booleanIcon from './boolean'
 import bubbleIcon from './bubble'
+import calendarIcon from './calendar'
 import caretDownIcon from './caret-down'
 import chasingTailSpinner from './chasing-tail-spinner'
 import checkIcon from './check'
@@ -12,6 +14,7 @@ import dbIcon from './db'
 import documentIcon from './document'
 import dropdownCaretsIcon from './dropdown-carets'
 import filterIcon from './filter'
+import filterControlsIcon from './filter-controls'
 import flowDiagramIcon from './flow-diagram'
 import flowIcon from './flow'
 import fxWhiteIcon from './fx-white'
@@ -33,6 +36,7 @@ import modelRelationshipIcon from './model-relationship'
 import newColIcon from './new-col'
 import newLiveColIcon from './new-live-col'
 import npmIcon from './npm'
+import numberIcon from './number'
 import searchIcon from './search'
 import shuffleIcon from './shuffle'
 import slideArrowIcon from './slide-arrow'
@@ -41,6 +45,7 @@ import subIcon from './sub'
 import tableEditorIcon from './table-editor'
 import tableIcon from './table'
 import terminalIcon from './terminal'
+import textIcon from './text'
 import transformCodeIcon from './transform-code'
 import transformIcon from './transform'
 import triangleIcon from './triangle'
@@ -51,7 +56,9 @@ export {
     barChartIcon,
     blistIcon,
     bookIcon,
+    booleanIcon,
     bubbleIcon,
+    calendarIcon,
     caretDownIcon,
     chasingTailSpinner,
     checkIcon,
@@ -62,6 +69,7 @@ export {
     documentIcon,
     dropdownCaretsIcon,
     filterIcon,
+    filterControlsIcon,
     flowDiagramIcon,
     flowIcon,
     fxWhiteIcon,
@@ -83,6 +91,7 @@ export {
     newColIcon,
     newLiveColIcon,
     npmIcon,
+    numberIcon,
     searchIcon,
     shuffleIcon,
     slideArrowIcon,
@@ -91,6 +100,7 @@ export {
     tableEditorIcon,
     tableIcon,
     terminalIcon,
+    textIcon,
     transformCodeIcon,
     transformIcon,
     triangleIcon,

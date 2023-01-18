@@ -140,7 +140,7 @@ function TextInput(props, ref) {
                     onKeyUp,
                 }}
             />
-            { renderAfter() }
+            { renderAfter(formattedValue || placeholder || '') }
         </div>
     )
 }

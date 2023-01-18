@@ -1,4 +1,4 @@
-$backfillFetchDuration: 2s;
+$loaderTime: 2.3s;
 
 @keyframes indeterminate {
     0% {
@@ -477,33 +477,36 @@ $backfillFetchDuration: 2s;
     overflow-y: overlay;
     overflow-x: overlay;
     scrollbar-width: thin;
+    scrollbar-color: $lightGray transparent;
 
-    &::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
+    // &::-webkit-scrollbar {
+    //     width: 7px;
+    //     height: 7px;
+    // }
 
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
+    // &::-webkit-scrollbar-track {
+    //     background: transparent;
+    // }
 
-    &::-webkit-scrollbar-thumb {
-        background-color: transparent;
-        border-radius: 4px;
-        transition: all 1s ease;
-    }
+    // &::-webkit-scrollbar-thumb {
+    //     background-color: $lightGray;
+    //     border-radius: 3.5px;
+    //     transition: all 1s ease;
+    // }
 
-    &::-webkit-scrollbar-corner {
-        background: transparent;
-    }
+    // &::-webkit-scrollbar-corner {
+    //     background: transparent;
+    // }
 
-    &:hover {
-        scrollbar-color: rgba(24, 22, 49, 0.7) transparent;
+    // &:hover {
+    //     // scrollbar-color: rgba(24, 22, 49, 0.7) transparent;
+    //     scrollbar-color: adjust-color($lightGray, $alpha: -0) transparent;
 
-        &::-webkit-scrollbar-thumb {
-            background-color: rgba(24, 22, 49, 0.7);
-        }
-    }
+    //     &::-webkit-scrollbar-thumb {
+    //         background-color: adjust-color($lightGray, $alpha: -0);
+    //         // background-color: rgba(24, 22, 49, 0.7);
+    //     }
+    // }
 }
 
 // All rows
@@ -527,8 +530,8 @@ $backfillFetchDuration: 2s;
 
 .tables-body__col-headers {
     position: sticky;
-    top: 0;
     z-index: 8;
+    top: 0;
 }
 
 .tables-body__table-loading {
@@ -542,7 +545,8 @@ $backfillFetchDuration: 2s;
     overflow: hidden;
     opacity: 0;
     z-index: 9;
-    animation: show-loader 2.5s linear forwards;
+    animation: show-loader $loaderTime linear forwards;
+    animation-delay: 10ms;
 
     &:before {
         content: '';
@@ -552,7 +556,8 @@ $backfillFetchDuration: 2s;
         left: 0;
         bottom: 0;
         will-change: left, right;
-        animation: indeterminate 2.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        animation: indeterminate $loaderTime cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        animation-delay: 10ms;
     }
 
     &:after {
@@ -563,8 +568,14 @@ $backfillFetchDuration: 2s;
         left: 0;
         bottom: 0;
         will-change: left, right;
-        animation: indeterminate-short 2.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-        animation-delay: 1.3s;
+        animation: indeterminate-short $loaderTime cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+        animation-delay: calc(#{$loaderTime} * 0.48 + 10ms);
+    }
+}
+
+.tables-body__row {
+    &>div:last-child {
+        width: $tableNewColumnWidth;
     }
 }
 
@@ -618,7 +629,8 @@ $backfillFetchDuration: 2s;
 
 // Header cells
 .tables-body__col-header {
-    background-color: #13122b;
+    background-color: #14132d;
+    // background-color: adjust-color($backgroundMedium, $alpha: -0.35);
     display: flex;
     flex-direction: row;
     align-items: center;

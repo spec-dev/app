@@ -11,6 +11,7 @@ import { getSeedCursors } from '../../utils/queries'
 import { getConfig } from '../../utils/config'
 import styles from '../../utils/styles'
 import { loader } from '@monaco-editor/react'
+import { useHistory } from 'react-router-dom'
 import {
     barChartIcon,
     blistIcon,
@@ -40,18 +41,22 @@ const getSidePanelHeaderTitle = section => {
 }
 
 function DashboardPage(props) {
+    const history = useHistory()
     const params = (props.match || {}).params || {}
     const projectId = useMemo(() => params.projectId, [params])
     const currentSection = useMemo(() => params.section || sections.TABLES, [params])
     const currentSubSection = useMemo(() => params.subSection || null, [params])
     const currentProject = useMemo(() => getCurrentProject(), [projectId])
+
     const [config, setConfig] = useState(null)
     const [seedCursors, setSeedCursors] = useState([])
     const [currentSchemaName, _] = useState(getCurrentSchemaName())
     const [tables, setTables] = useState(getSchema(currentSchemaName))
+
     const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
     const tablesBodyRef = useRef()
     const monaco = useRef()
+    const navToTable = useRef()
 
     const currentTable = useMemo(() => {
         if (currentSection !== sections.TABLES) return null
@@ -63,6 +68,20 @@ function DashboardPage(props) {
         if (!tableNames || !currentTable) return 0
         return Math.max(tableNames.indexOf(currentTable.name), 0)
     }, [tableNames, currentTable])
+
+    const refetchTables = useCallback(async (andNavToTable) => {
+        const result = await resolveSchema(currentSchemaName)
+        if (!result.ok) {
+            // Show error
+            return
+        }
+
+        if (andNavToTable) {
+            navToTable.current = andNavToTable
+        }
+
+        setTables(result.data)
+    }, [currentSchemaName])
 
     const onSeedCursorsChange = useCallback(events => {
         const eventsBySeedCursorId = {}
@@ -81,6 +100,7 @@ function DashboardPage(props) {
             }
         }
 
+        // We only care about newly inserted "seed-table" seed cursors.
         events.filter(
             e => e.operation === 'INSERT' && 
             e.data?.job_type === 'seed-table'
@@ -88,6 +108,7 @@ function DashboardPage(props) {
             newSeedCursors.push(event.data)
         })  
 
+        // Ignore updates to existing seed cursors 'cursor' position.
         if (currentSeedCursorIds.sort().join(',') === newSeedCursors.map(sc => sc.id).sort().join(',')) {
             return
         }
@@ -151,6 +172,14 @@ function DashboardPage(props) {
         api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
     }, [projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
 
+    useEffect(() => {
+        if (navToTable.current) {
+            const toPath = paths.toTable(projectId, navToTable.current.name)
+            navToTable.current = null
+            history.push(toPath)
+        }
+    })
+
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
             <div className={pcn('__side-nav-liner')}>
@@ -187,6 +216,7 @@ function DashboardPage(props) {
                         tableNames={tableNames}
                         currentTableIndex={currentTableIndex}
                         seedCursors={seedCursors}
+                        onNewLiveTable={() => tablesBodyRef.current?.onNewLiveTable()}
                     />
                 )
             default:
@@ -215,6 +245,7 @@ function DashboardPage(props) {
                         schema={currentSchemaName}
                         table={currentTable}
                         config={config}
+                        refetchTables={refetchTables}
                         seedCursor={(seedCursors || []).find(sc => (
                             sc.spec.table_path === `${currentSchemaName}.${currentTable?.name}`
                         ))}
@@ -224,7 +255,7 @@ function DashboardPage(props) {
             default:
                 return null
         }
-    }, [currentSection, currentTable, config, seedCursors, currentSchemaName])
+    }, [currentSection, currentTable, config, seedCursors, currentSchemaName, refetchTables])
 
     const renderHeaderProjectPath = useCallback(() => currentProject?.org && currentProject?.name ? (
         <div className={pcn('__project-path')}>

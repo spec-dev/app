@@ -1,11 +1,13 @@
 import React, { useCallback, useState, useImperativeHandle, forwardRef } from 'react'
 import { getPCN } from '../../../utils/classes'
 import TextInput from '../../shared/inputs/TextInput'
+import { noop } from '../../../utils/nodash'
 
 const className = 'new-table-basic-inputs'
 const pcn = getPCN(className)
 
 function NewTableBasicInputs(props, ref) {
+    const { onNameChange = noop } = props
     const [values, setValues] = useState(props.values || { name: null, desc: null })
 
     useImperativeHandle(ref, () => ({
@@ -14,30 +16,27 @@ function NewTableBasicInputs(props, ref) {
 
     return (
         <div className={className}>
-            <div className={pcn('__input')}>
-                <span>Table Name:</span>
-                <TextInput
-                    className={pcn('__input-field', '__input-field--table-name')}
-                    value={values.name || ''}
-                    placeholder='table_name'
-                    isRequired={true}
-                    updateFromAbove={true}
-                    spellCheck={false}
-                    onChange={value => setValues(prevState => ({ ...prevState, name: value }))}
-                />
-            </div>
-            <div className={pcn('__input')}>
-                <span>Table Description:</span>
-                <TextInput
-                    className={pcn('__input-field', '__input-field--table-desc')}
-                    value={values.desc || ''}
-                    placeholder='Description'
-                    isRequired={true}
-                    updateFromAbove={true}
-                    spellCheck={false}
-                    onChange={value => setValues(prevState => ({ ...prevState, desc: value }))}
-                />
-            </div>
+            <TextInput
+                className={pcn('__input-field', '__input-field--name')}
+                value={values.name || ''}
+                placeholder='table_name'
+                isRequired={true}
+                updateFromAbove={true}
+                spellCheck={false}
+                onChange={value => {
+                    setValues(prevState => ({ ...prevState, name: value }))
+                    onNameChange(value)
+                }}
+            />
+            <TextInput
+                className={pcn('__input-field', '__input-field--desc')}
+                value={values.desc || ''}
+                placeholder='Optional'
+                isRequired={true}
+                updateFromAbove={true}
+                spellCheck={false}
+                onChange={value => setValues(prevState => ({ ...prevState, desc: value }))}
+            />
         </div>
     )
 }

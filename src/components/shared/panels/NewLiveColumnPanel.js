@@ -4,6 +4,7 @@ import LiveObjectSearch from './LiveObjectSearch'
 import NewLiveColumnSpecs from './NewLiveColumnSpecs'
 import { animated, useTransition } from 'react-spring'
 import { noop } from '../../../utils/nodash'
+import { camelToSnake } from '../../../utils/formatters'
 import $ from 'jquery'
 import api from '../../../utils/api'
 import { toNamespacedVersion } from '../../../utils/formatters'
@@ -21,12 +22,22 @@ const status = {
     SAVING: 'saving',
 }
 
-const getHeaderTitle = index => {
+export const referrers = {
+    ADD_LIVE_DATA: 'addLiveData',
+    NEW_LIVE_COLUMN: 'newLiveColumn',
+    NEW_LIVE_TABLE: 'newLiveTable',
+}
+
+const getHeaderTitle = (index, referrer) => {
     switch (index) {
         case 0:
             return 'Select Live Object'
         case 1:
-            return 'Apply Live Columns'
+            return {
+                [referrers.ADD_LIVE_DATA]: 'Create Live Columns',
+                [referrers.NEW_LIVE_COLUMN]: 'New Live Columns',
+                [referrers.NEW_LIVE_TABLE]: 'New Live Table',
+            }[referrer] || ''
     }
 }
 
@@ -35,11 +46,14 @@ function NewLiveColumnPanel(props, ref) {
     const {
         table = {},
         schema,
+        config = {},
+        referrer = referrers.ADD_LIVE_DATA,
         onCancel = noop,
         onSave = noop,
         selectLiveColumnFormatter = noop,
         addTransform = noop,
         addHook = noop,
+        refetchTables = noop,
     } = props
     const liveObjects = getAllLiveObjects()
 
@@ -54,6 +68,11 @@ function NewLiveColumnPanel(props, ref) {
     // Refs.
     const liveObjectSearchRef = useRef()
     const newLiveColumnSpecsRef = useRef()
+    const watchForTable = useRef()
+    const saveLiveColumnsPayload = useRef()
+    const migrationTimer = useRef(null)
+    const migrationCallback = useRef()
+    const saveCalled = useRef(false)
 
     // Transitions.
     const transitions = useTransition(state.index, {
@@ -75,11 +94,17 @@ function NewLiveColumnPanel(props, ref) {
 
     const onClickApply = useCallback(() => {
         let payload = newLiveColumnSpecsRef.current?.serialize()
-        if (!payload) return
+        if (!payload || (!payload.newTable && !payload.newColumns?.length && !Object.keys(payload.liveColumns).length)) {
+            return
+        }
+
+        const tablePath = payload.newTable?.name 
+            ? [schema, payload.newTable.name].join('.') 
+            : [schema, table.name].join('.')
 
         payload = {
             ...payload,
-            tablePath: [schema, table.name].join('.'),
+            tablePath,
             liveObjectVersionId: toNamespacedVersion(
                 state.liveObject?.latestVersion || {},
             ),
@@ -100,22 +125,166 @@ function NewLiveColumnPanel(props, ref) {
         setState(prevState => ({ ...prevState, index: 1, liveObject }))
     }, [])
 
-    const save = useCallback(async () => {
-        const { data, ok } = await api.meta.liveColumns(state.payload)
+    const saveLiveColumns = useCallback(async (payload) => {
+        const {
+            tablePath, 
+            liveObjectVersionId, 
+            liveColumns,
+            filters, 
+            uniqueBy,
+        } = (payload || state.payload)
+
+        const { ok } = await api.meta.liveColumns({
+            tablePath, 
+            liveObjectVersionId,
+            liveColumns,
+            filters,
+            uniqueBy,
+        })
+
         if (!ok) {
             // TODO: Show error
+            saveCalled.current = false
             setState(prevState => ({ ...prevState, status: status.DEFAULT }))
             return
         }
-    }, [state])
+
+        setTimeout(onSave, 50)
+    }, [state.payload, onSave])
+
+    const createNewTable = useCallback(async () => {
+        const { 
+            newTable, 
+            newColumns, 
+            tablePath, 
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        } = state.payload
+
+        migrationTimer.current = setTimeout(() => {
+            migrationCallback.current && migrationCallback.current()
+            migrationTimer.current = null
+        }, 700)
+
+        const { ok } = await api.meta.createTable({
+            schema,
+            name: newTable.name,
+            desc: newTable.desc,
+            columns: newColumns || [],
+            uniqueBy: [
+                (uniqueBy || []).map(camelToSnake), // HACK
+            ]
+        })
+
+        if (!ok) {
+            clearTimeout(migrationTimer.current)
+            saveCalled.current = false
+            setState(prevState => ({ ...prevState, status: status.DEFAULT }))
+            return
+        }
+        
+        watchForTable.current = {
+            schema: schema,
+            name: newTable.name,
+        }
+
+        saveLiveColumnsPayload.current = {
+            tablePath,
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        }
+
+        pendingSeeds.add(tablePath)
+
+        if (migrationTimer.current !== null) {
+            migrationCallback.current = () => refetchTables(watchForTable.current)
+        } else {
+            refetchTables(watchForTable.current)
+        }
+    }, [schema, state.payload, refetchTables])
+
+    const createNewColumns = useCallback(async () => {
+        const {
+            newColumns, 
+            tablePath, 
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        } = state.payload
+
+        migrationTimer.current = setTimeout(() => {
+            migrationCallback.current && migrationCallback.current()
+            migrationTimer.current = null
+        }, 700)
+
+        const { ok } = await api.meta.addColumns({
+            schema,
+            table: table.name,
+            columns: newColumns || [],
+        })
+
+        if (!ok) {
+            clearTimeout(migrationTimer.current)
+            saveCalled.current = false
+            setState(prevState => ({ ...prevState, status: status.DEFAULT }))
+            return
+        }
+        
+        watchForTable.current = {
+            schema: schema,
+            name: table.name,
+        }
+
+        saveLiveColumnsPayload.current = {
+            tablePath,
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        }
+
+        pendingSeeds.add(tablePath)
+
+        if (migrationTimer.current !== null) {
+            migrationCallback.current = () => refetchTables()
+        } else {
+            refetchTables()
+        }
+    }, [schema, table, state.payload, refetchTables])
 
     useEffect(() => {
-        if (state.status === status.SAVING && !!state.payload) {
-            pendingSeeds.add(state.payload.tablePath)
-            save()
-            setTimeout(onSave, 10)
+        if (state.status === status.SAVING && !!state.payload && !saveCalled.current) {
+            saveCalled.current = true
+
+            if (state.payload.newTable) {
+                createNewTable()
+            } else if (state.payload.newColumns?.length) {
+                createNewColumns()
+            } else {
+                saveLiveColumns()
+            }
         }
-    }, [state.status, save, onSave])
+    }, [state.status, state.payload, createNewTable, createNewColumns, saveLiveColumns])
+
+    useEffect(() => {
+        if (!watchForTable.current || !table?.name) return
+
+        if (schema === watchForTable.current.schema && table.name === watchForTable.current.name) {
+            if (saveLiveColumnsPayload.current) {
+                const payload = { ...saveLiveColumnsPayload.current }
+                saveLiveColumns(payload)
+            } else {
+                onSave()
+            }
+            watchForTable.current = null
+            saveLiveColumnsPayload.current = null
+        }
+    })
 
     const renderHeader = useCallback(() => (
         <div className={pcn('__header')}>
@@ -125,7 +294,7 @@ function NewLiveColumnPanel(props, ref) {
                     key={state.index}
                     id={panelScrollHeader}>
                     <div className={pcn('__header-title')}>
-                        <span>{getHeaderTitle(state.index)}</span>
+                        <span>{getHeaderTitle(state.index, referrer)}</span>
                     </div>
                     { state.index === 1 && state.liveObject && (
                         <div className={pcn('__spec-header')}>
@@ -140,7 +309,7 @@ function NewLiveColumnPanel(props, ref) {
                 </div>
             </div>
         </div>
-    ), [table, state.liveObject, state.index])
+    ), [state.liveObject, state.index, referrer])
 
     const renderFooter = useCallback(() => (
         <div className={pcn('__footer')}>
@@ -158,11 +327,14 @@ function NewLiveColumnPanel(props, ref) {
                         state.status === 'saving' ? '__footer-button--show-loader' : ''
                     )}
                     onClick={onClickApply}>
-                    <span>Apply</span>
+                    { state.status === status.SAVING
+                        ? <span className='svg-spinner svg-spinner--chasing-tail' dangerouslySetInnerHTML={{ __html: spinner }}></span>
+                        : <span>{ referrer === referrers.ADD_LIVE_DATA ? 'Apply' : 'Create' }</span>
+                    }
                 </button>
             </div>
         </div>
-    ), [onClickCancel, onClickApply, state.index, onClickBack, state.status])
+    ), [onClickCancel, onClickApply, state.index, onClickBack, state.status, referrer])
 
     return (
         <div className={className}>
@@ -189,6 +361,8 @@ function NewLiveColumnPanel(props, ref) {
                                 <NewLiveColumnSpecs
                                     table={table}
                                     schema={schema}
+                                    config={config}
+                                    purpose={referrer}
                                     liveObject={state.liveObject}
                                     selectLiveColumnFormatter={selectLiveColumnFormatter}
                                     addTransform={addTransform}

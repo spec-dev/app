@@ -1,4 +1,5 @@
 import api from './api'
+import { TIMESTAMP, BOOLEAN, STRING, NUMBER } from './propertyTypes'
 
 export const liveObjects = {
     all: []
@@ -15,10 +16,10 @@ export async function loadAllLiveObjects() {
 
 export const getAllLiveObjects = () => liveObjects.all || []
 
-export const propertyIsEnum = property => property.options?.length || property.type === 'boolean'
+export const propertyIsEnum = property => property.options?.length || property.type === BOOLEAN
 
 export const formatPropertyOptionsForSelection = property => {
-    if (property.type === 'boolean') {
+    if (property.type === BOOLEAN) {
         return [
             {
                 value: true,
@@ -40,24 +41,23 @@ export const formatPropertyOptionsForSelection = property => {
     }))
 }
 
-const primitiveTypes = new Set([
-    'boolean',
-    'string',
-    'number',
-])
-
 export const resolvedPropertyType = (property, exampleValue = null) => {
-    if (primitiveTypes.has(property.type) || property.type === 'Timestamp') {
-        return property.type
-    }
+    const primitiveTypes = new Set([BOOLEAN, STRING, NUMBER])
+
     if (property.options?.length) {
         return 'enum'
     }
+
+    if (primitiveTypes.has(property.type) || property.type?.toLowerCase() === TIMESTAMP.toLowerCase()) {
+        return property.type
+    }
+
     if (exampleValue !== null) {
         const exampleType = typeof exampleValue
         if (primitiveTypes.has(exampleType)) {
             return exampleType
         }
     }
+    
     return property.type
 }
