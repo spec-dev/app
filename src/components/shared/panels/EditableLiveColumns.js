@@ -131,6 +131,8 @@ function EditableLiveColumns(props, ref) {
         }
         return fks
     }, [table])
+    const uniqueColGroups = useMemo(() => table.unique_columns || [], [table])
+    const nonUniqueIndexes = useMemo(() => table.non_unique_indexes || [], [table])
 
     const [tableName, setTableName] = useState(isNewTable ? liveObjectVersion.config?.tableName : table.name)
     const [columns, setColumns] = useState(formatInitialColumns(
@@ -351,6 +353,15 @@ function EditableLiveColumns(props, ref) {
 
     const renderExistingColumn = useCallback((col) => {
         const property = col.liveColumn?.property
+        const constraints = []
+
+        const uniqueColGroup = uniqueColGroups.find(colGroup => colGroup.includes(col.name))
+        const isUnique = !!uniqueColGroup
+        isUnique && !col.isPrimaryKey && constraints.push('unique')
+
+        const indexColGroup = nonUniqueIndexes.find(colGroup => colGroup.includes(col.name))
+        const isIndexed = !!indexColGroup
+        isIndexed && !col.isPrimaryKey && constraints.push('index')
 
         let colIcon = colTypeIcon(col.data_type)
         if (col.isPrimaryKey) {
@@ -368,6 +379,18 @@ function EditableLiveColumns(props, ref) {
                     </div>
                     <div className={pcn('__existing-col-name')}>
                         { col.name }
+                    </div>
+                    <div className={pcn('__existing-col-constraint-labels')}>
+                        { constraints.map(c => (
+                            <div
+                                key={c}
+                                className={pcn(
+                                    '__existing-col-constraint-label',
+                                    `__existing-col-constraint-label--${c}`
+                                )}>
+                                <span>{c[0]}</span>
+                            </div>
+                        ))}
                     </div>
                     <div className={pcn('__existing-col-type')}>
                         { col.isSerial ? SERIAL : displayColType(col.data_type) }

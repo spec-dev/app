@@ -133,23 +133,30 @@
             justify-content: space-between;
 
             & > span:first-child {
-                width: calc(100% - 80px);
+                width: calc(100% - 70px);
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+                font-size: 11px;
             }
 
-            & > span:last-child {
-                position: relative;
-                margin-right: 10px;
+            & > span:nth-child(2) {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
                 font-size: 9.5px;
-                color: adjust-color($gray, $alpha: -0.5);
+                color: adjust-color($gray, $alpha: -0.4);
                 letter-spacing: 0;
-                width: 70px;
+                display: inline-block;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 text-align: right;
+                padding-left: 8px;
+                transition: opacity 0.15s ease;
+                width: 70px;
+                opacity: 0;
             }
         }
 
@@ -172,13 +179,23 @@
                 position: relative;
                 margin-right: 0;
                 font-size: 9.5px;
-                color: adjust-color($gray, $alpha: -0.4);
+                color: adjust-color($gray, $alpha: -0.35);
                 letter-spacing: 0;
                 width: 70px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 text-align: right;
+            }
+        }
+
+        &:not(.select-input--disabled) {
+            .spec__control:hover {
+                .spec__single-value {
+                    & > span:nth-child(2) {
+                        opacity: 1;
+                    }
+                }
             }
         }
     }
@@ -211,7 +228,7 @@
                 position: relative;
                 margin-right: 10px;
                 font-size: 9.5px;
-                color: adjust-color($gray, $alpha: -0.5);
+                color: adjust-color($gray, $alpha: -0.4);
                 letter-spacing: 0;
                 margin-left: 9px;
             }
@@ -236,7 +253,7 @@
                 position: relative;
                 margin-right: 3px;
                 font-size: 10px;
-                color: adjust-color($gray, $alpha: -0.4);
+                color: adjust-color($gray, $alpha: -0.35);
                 padding-left: 8px;
                 margin-left: 8px;
                 letter-spacing: 0;

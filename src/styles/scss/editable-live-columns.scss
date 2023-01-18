@@ -199,7 +199,7 @@ $disabledOpacity: 0.35;
                 top: 50%;
                 transform: translateY(-50%);
                 font-size: 9.5px;
-                color: adjust-color($gray, $alpha: -0.5);
+                color: adjust-color($gray, $alpha: -0.4);
                 letter-spacing: 0;
                 display: inline-block;
                 overflow: hidden;
@@ -240,7 +240,7 @@ $disabledOpacity: 0.35;
                 position: relative;
                 margin-right: 0;
                 font-size: 9.5px;
-                color: adjust-color($gray, $alpha: -0.4);
+                color: adjust-color($gray, $alpha: -0.35);
                 letter-spacing: 0;
                 width: 70px;
                 overflow: hidden;
@@ -653,6 +653,47 @@ $disabledOpacity: 0.35;
         &::-moz-placeholder {
             color: adjust-color($gray, $alpha: -0.25);
         }
+    }
+}
+
+.editable-live-columns__existing-col-constraint-labels {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    margin-left: 8px;
+}
+
+.editable-live-columns__existing-col-constraint-label {
+    height: 14px;
+    width: 14px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: default;
+    color: $white;
+    background-color: adjust-color($backgroundLight, $alpha: -0.5);
+    margin-right: 5px;
+
+    span {
+        display: inline-block;
+        font-size: 8px;
+        font-family: CodeRegular;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    &.editable-live-columns__existing-col-constraint-label--unique {
+        color: adjust-color($blueAccent, $alpha: -0.2);
+        background-color: adjust-color($blueAccent, $alpha: -0.925);
+    }
+
+    &.editable-live-columns__existing-col-constraint-label--index {
+        color: adjust-color(#ffe46a, $alpha: -0.2);
+        background-color: adjust-color(#ffe46a, $alpha: -0.925);
     }
 }
 

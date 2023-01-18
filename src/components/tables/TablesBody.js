@@ -699,7 +699,7 @@ function TablesBody(props, ref) {
 
         table.columns.forEach(col => {
             let value = record[col.name]
-            if (value === null) {
+            if (value === null || !record.hasOwnProperty(col.name)) {
                 value = 'NULL'
             } else if (value === true || value === false) {
                 value = value.toString()
@@ -820,7 +820,7 @@ function TablesBody(props, ref) {
             )}
             { table?.name && (  
                 <div className={pcn('__main')} onScroll={onScroll} ref={mainRef}>
-                    <div style={{ height: 'auto', width: mainWidth + 46 }}>
+                    <div style={{ height: 'auto', width: mainWidth + ROW_HEIGHT }}>
                         <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
                             { status === tableStatus.BACKFILLING.id && renderTableLoading() }
                             { renderColHeaders(appliedStatus.current) }

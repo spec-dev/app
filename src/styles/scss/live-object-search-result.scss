@@ -68,8 +68,51 @@
     margin-bottom: 7px;
 }
 
+.live-object-search-result__chains {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    margin-bottom: 9px;
+}
+
+.live-object-search-result__chain {
+    height: 17px;
+    width: 17px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: default;
+    color: $white;
+    background-color: adjust-color($backgroundLight, $alpha: -0.5);
+    margin-left: 4px;
+
+    span {
+        display: inline-block;
+        font-size: 8.5px;
+        line-height: 12px;
+        font-family: Regular;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    &.live-object-search-result__chain--ethereum {
+        color: $blueAccent;
+        background-color: adjust-color($blueAccent, $alpha: -0.9);
+    }
+
+    &.live-object-search-result__chain--polygon,
+    &.live-object-search-result__chain--mumbai {
+        color: $purpleAccent;
+        background-color: adjust-color($purpleAccent, $alpha: -0.9);
+    }
+}
+
 .live-object-search-result__desc {
-    color: adjust-color(#D2D2E6, $alpha: -0.3);
+    color: adjust-color($lightGray, $alpha: -0.35);
     font-family: Regular;
     letter-spacing: 0.11px;
     font-size: 12px;
@@ -101,11 +144,13 @@
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
+    padding-right: 1px;
 
     span:first-child {
         font-size: 12px;
         letter-spacing: 0.1px;
         display: inline-block;
         color: $gray;
+        opacity: 0.6;
     }
 }

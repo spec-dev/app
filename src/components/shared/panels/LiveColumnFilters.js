@@ -233,7 +233,7 @@ function LiveColumnFilters(props, ref) {
                 { ...innerProps }
                 ref={innerRef}>
                 <span>{column}</span>
-                <span>{table}</span>
+                <span title={table}>{table}</span>
             </span>
         )
     }, [])
@@ -345,6 +345,7 @@ function LiveColumnFilters(props, ref) {
             className={pcn(
                 '__filter-input-field', 
                 '__filter-input-field--value', 
+                '__filter-input-field--col-value',
             )}
             classNamePrefix='spec'
             value={filter.value}

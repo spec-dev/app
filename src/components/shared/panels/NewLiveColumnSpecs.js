@@ -373,6 +373,8 @@ function NewLiveColumnSpecs(props, ref) {
         return <div className={className}></div>
     }
 
+    console.log(table)
+
     return (
         <div className={cn(className, `${className}--${purpose}`)} id={observerScrollRoot}>
             { renderPrimaryDetails() }
