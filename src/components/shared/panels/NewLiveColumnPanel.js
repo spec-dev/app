@@ -326,7 +326,7 @@ function NewLiveColumnPanel(props, ref) {
                         state.index > 0 ? '__footer-button--final' : '',
                         state.status === 'saving' ? '__footer-button--show-loader' : ''
                     )}
-                    onClick={onClickApply}>
+                    onClick={state.status === status.DEFAULT ? onClickApply : noop}>
                     { state.status === status.SAVING
                         ? <span className='svg-spinner svg-spinner--chasing-tail' dangerouslySetInnerHTML={{ __html: spinner }}></span>
                         : <span>{ referrer === referrers.ADD_LIVE_DATA ? 'Apply' : 'Create' }</span>

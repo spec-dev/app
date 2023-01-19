@@ -466,7 +466,7 @@ function TablesBody(props, ref) {
             setStatus(defaultInitialStatus(props.seedCursor, schema, props.table.name))
 
             if (newColsExist) {
-                setTimeout(() => mainRef.current && $(mainRef.current).scrollLeft(mainWidth), 10)
+                // setTimeout(() => mainRef.current && $(mainRef.current).scrollLeft(mainWidth), 10)
             }
         }
     }, [schema, table, props.table, props.seedCursor, primaryKeyColNames, mainWidth])
