@@ -1,0 +1,39 @@
+$flipperDuration: 240ms;
+
+.flipper {
+    display: inline-block;
+}
+
+.flipper__liner {
+    display: inline-block;
+
+    .initial {
+        display: inline-flex;
+        opacity: 1;
+        transform: translate3d(0, 0px, 0);
+        transition: opacity calc((#{$flipperDuration} / 2) + 50ms) ease, transform calc((#{$flipperDuration} / 2) + 50ms) ease, color .4s ease;
+        transition-delay: 0ms, 0ms, 0ms;
+    }
+
+    .wait-down {
+        display: inline-flex;
+        opacity: 0;
+        transform: translate3d(0, 16px, 0);
+    }
+
+    .up {
+        display: inline-flex;
+        opacity: 0;
+        transform: translate3d(0, -15px, 0);
+        transition: opacity calc(#{$flipperDuration} / 2) ease, transform calc(#{$flipperDuration} / 2) ease, color .4s ease;
+    }
+
+    .flipped {
+        color: $tealAccent;
+
+        &.flipped-done {
+            color: adjust-color($white, $alpha: -0.1);
+            transition-delay: 0ms, 0ms, 2.5s;
+        }
+    }
+}

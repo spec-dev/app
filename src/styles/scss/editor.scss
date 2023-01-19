@@ -29,12 +29,24 @@
     }
     color: $white;
 
-
     span {
         font-family: CodeRegular;
         font-size: 12px;
         line-height: 20px;
     }
+}
+
+.hljs-keyword, .hljs-literal { 
+    color: $purpleAccent; 
+}
+.hljs-title, .hljs-built_in { 
+    color: $tealAccent; 
+}
+.hljs-string {
+    color: $blueAccent;
+}
+.hljs-number {
+    color: #d7cfb9;
 }
 
 .editor {

@@ -1,4 +1,4 @@
-$backfillFetchDuration: 2s;
+$loaderTime: 2.3s;
 
 @keyframes indeterminate {
     0% {
@@ -58,104 +58,27 @@ $backfillFetchDuration: 2s;
     width: 100%;
     position: relative;
 
-    &.tables-body--wallets {
-        .tables-body__table-loading {
-            left: 567px;
-            animation: show-loader 2s linear forwards;
-        }
-    }
-
-    &.tables-body--nfts,
-    &.tables-body--marketplace_listings,
-    &.tables-body--asset_sales,
-    &.tables-body--assets,
-    &.tables-body--compound_markets {
-        .tables-body__table-loading {
-            right: auto;
-            width: 100%;
-            max-width: calc(100vw - #{$sideNavWidth} - #{$sidePanelWidth} - 1px);    
-            animation: show-loader 2.5s linear forwards;
-
-            &:before {
-                animation: indeterminate 2.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
-            }
-
-            &:after {
-                animation: indeterminate-short 2.5s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-                animation-delay: 1.3s;
-            }
-        }
-    }
-
-    &:not(.tables-body--live-table) {
-        .tables-body__cell.tables-body__cell--live:not(.tables-body__cell--live-link) {
-            span {
+    &.tables-body--backfilling {
+        .tables-body__row {
+            &.tables-body__row--new {
                 opacity: 0;
-                will-change: opacity, color;
-                transition: opacity 0.25s ease 30ms, color 0.25 ease 0ms;
             }
-        }
-    }
-
-    &.tables-body--live-table {
-        .tables-body__cell.tables-body__cell--live:not(.tables-body__cell--live-link) {
-            span {
-                opacity: 1;
-                will-change: opacity, color;
-                transition: opacity 0.25s ease 30ms, color 0.25 ease 0ms;
-            }
-
-            &.tables-body__cell--null {
-                span {
-                    opacity: 0.3;
-                }
-            }
-        }
-
-        .tables-body__row {
-            opacity: 0;
-            will-change: opacity;
-        }
-    }
-
-    &.tables-body--populating,
-    &.tables-body--in-sync {
-        .tables-body__cell.tables-body__cell--live:not(.tables-body__cell--live-link) {
-            span {
-                opacity: 1;
-            }
-        }
-
-        .tables-body__row {
-            opacity: 1;
         }
     }
 
     &.tables-body--populating {
-        .tables-body__cell.tables-body__cell--live:not(.tables-body__cell--live-link) {
-            span {
-                color: $tealAccent;
-            }
-
-            &.tables-body__cell--null {
-                span {
-                    opacity: 0.3;
-                }
+        .tables-body__row {
+            &.tables-body__row--new {
+                opacity: 1;
             }
         }
 
-        &.tables-body--live-table {
-            .tables-body__cell.tables-body__cell--live.tables-body__cell--live-link {
+        &.tables-body--populating-page {
+            .tables-body__cell {
                 span {
                     color: $tealAccent;
                 }
-    
-                &.tables-body__cell--null {
-                    span {
-                        opacity: 0.3;
-                    }
-                }
-            }    
+            }
         }
     }
 
@@ -228,7 +151,7 @@ $backfillFetchDuration: 2s;
 }
 
 .tables-body__header-left-top {
-    margin-bottom: 12.5px;
+    margin-bottom: 14px;
 }
 
 .tables-body__table-name {
@@ -239,17 +162,20 @@ $backfillFetchDuration: 2s;
     white-space: nowrap;
     position: relative;
     margin-left: 2px;
+    
+    & > span {
+        margin-top: -2px;
+    }
 
     &:after {
         position: absolute;
         content: '';
         display: block;
-        height: 13px;
+        height: 14px;
         width: 1px;
         background-color: $backgroundMedium;
-        top: 50%;
-        transform: translateY(calc(-50% + 1px));
-        right: -16px;
+        top: 7.5px;
+        right: -17px;
     }
 }
 
@@ -263,6 +189,7 @@ $backfillFetchDuration: 2s;
     text-overflow: ellipsis;
     overflow: hidden;
     opacity: 0.7;
+    margin-top: 3px;
 
     i {
         font-family: Regular;
@@ -336,13 +263,13 @@ $backfillFetchDuration: 2s;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 12px;
+    padding: 0 10px;
     border-radius: 12.5px;
-    background-color: adjust-color($backgroundMedium, $alpha: -0.15);
+    background-color: #16152f;
     color: adjust-color($lightGray, $alpha: -0.1);
     font-size: 11px;
     margin-right: 24px;
-    width: 80px;
+    min-width: 91px;
 
     & > span {
         & > span:first-child {
@@ -382,6 +309,8 @@ $backfillFetchDuration: 2s;
 }
 
 .tables-body__filter-button {
+    margin-left: 1px;
+
     span:first-child {
         svg {
             width: 13px;
@@ -468,8 +397,10 @@ $backfillFetchDuration: 2s;
 .tables-body__header-right-liner {
     display: inline-flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: flex-end;
+    height: 100%;
+    padding-bottom: 20px;
 }
 
 .tables-body__header-right-top,
@@ -538,88 +469,117 @@ $backfillFetchDuration: 2s;
     top: $tablesSectionHeaderHeight;
     left: 0;
     width: 100%;
-    bottom: $tablesSectionFooterHeight;
+    // bottom: $tablesSectionFooterHeight;
+    bottom: 0;
     display: block;
     border-top: 1px solid adjust-color($gray, $alpha: -0.92);
     overflow-y: overlay;
     overflow-x: overlay;
     scrollbar-width: thin;
+    scrollbar-color: $lightGray transparent;
 
-    &::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
+    // &::-webkit-scrollbar {
+    //     width: 7px;
+    //     height: 7px;
+    // }
 
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
+    // &::-webkit-scrollbar-track {
+    //     background: transparent;
+    // }
 
-    &::-webkit-scrollbar-thumb {
-        background-color: transparent;
-        border-radius: 4px;
-        transition: all 1s ease;
-    }
+    // &::-webkit-scrollbar-thumb {
+    //     background-color: $lightGray;
+    //     border-radius: 3.5px;
+    //     transition: all 1s ease;
+    // }
 
-    &::-webkit-scrollbar-corner {
-        background: transparent;
-    }
+    // &::-webkit-scrollbar-corner {
+    //     background: transparent;
+    // }
 
-    &:hover {
-        scrollbar-color: #181631 transparent;
+    // &:hover {
+    //     // scrollbar-color: rgba(24, 22, 49, 0.7) transparent;
+    //     scrollbar-color: adjust-color($lightGray, $alpha: -0) transparent;
 
-        &::-webkit-scrollbar-thumb {
-            background-color: #181631;
-        }
-    }
+    //     &::-webkit-scrollbar-thumb {
+    //         background-color: adjust-color($lightGray, $alpha: -0);
+    //         // background-color: rgba(24, 22, 49, 0.7);
+    //     }
+    // }
+}
+
+.tables-body__records {
+    padding-bottom: 2px;
 }
 
 // All rows
 .tables-body__col-headers,
 .tables-body__row {
-    display: inline-flex;
+    display: grid;
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
 }
 
+.tables-body__row {
+    &:hover {
+        .tables-body__cell {
+            transition: background-color 0.15s cubic-bezier(.4,0,.2,1);
+            background-color: #14132d;
+        }
+    }
+
+    &.tables-body__row--new-accent {
+        .tables-body__cell {
+            span {
+                color: $tealAccent;
+            }
+        }
+    }    
+}
+
 .tables-body__col-headers {
     position: sticky;
-    top: 0;
     z-index: 8;
+    top: 0;
+}
 
-    .tables-body__table-loading {
+.tables-body__table-loading {
+    position: fixed;
+    left: calc(#{$sideNavWidth} + #{$sidePanelWidth});
+    top: calc(#{$dashHeaderHeight} + #{$tablesSectionHeaderHeight});
+    height: 1px;
+    width: calc(100% - #{$sideNavWidth} - #{$sidePanelWidth});
+    display: block;
+    right: auto;
+    overflow: hidden;
+    opacity: 0;
+    z-index: 9;
+    animation: show-loader $loaderTime linear forwards;
+    animation-delay: 10ms;
+
+    &:before {
+        content: '';
         position: absolute;
+        background-color: $tealAccent;
+        top: 0;
         left: 0;
-        top: 0px;
-        height: 1px;
-        display: block;
-        right: $tableNewColumnWidth;
-        overflow: hidden;
-        opacity: 0;
-        z-index: 9;
+        bottom: 0;
+        will-change: left, right;
+        animation: indeterminate $loaderTime cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+        animation-delay: 10ms;
+    }
 
-        &:before {
-            content: '';
-            position: absolute;
-            background-color: $tealAccent;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            will-change: left, right;
-            animation: indeterminate 2s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
-        }
-    
-        &:after {
-            content: '';
-            position: absolute;
-            background-color: $tealAccent;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            will-change: left, right;
-            animation: indeterminate-short 2s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
-            animation-delay: 1.15s;
-        }
+    &:after {
+        content: '';
+        position: absolute;
+        background-color: $tealAccent;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        will-change: left, right;
+        animation: indeterminate-short $loaderTime cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+        animation-delay: calc(#{$loaderTime} * 0.48 + 10ms);
     }
 }
 
@@ -638,9 +598,13 @@ $backfillFetchDuration: 2s;
     padding-left: 15px;
     padding-right: 15px;
 
-    &:not(:first-child) {
-        min-width: 100px;
-    }
+    // &:not(:first-child) {
+    //     min-width: 100px;
+    // }
+}
+
+.tables-body__cell {
+    transition: all 0.25s ease;
 }
 
 // All check cells
@@ -675,7 +639,8 @@ $backfillFetchDuration: 2s;
 
 // Header cells
 .tables-body__col-header {
-    background-color: #111129;
+    background-color: #14132d;
+    // background-color: adjust-color($backgroundMedium, $alpha: -0.35);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -710,21 +675,24 @@ $backfillFetchDuration: 2s;
         }
 
         &:not(.tables-body__col-header--live-link) {
-            .blink-indicator {
-                transform: scale(0.8);
-            }
-
-            .tables-body__col-header-name {
-                margin-left: 18px;
-            }
-
             .tables-body__cell span {
                 transition: opacity .1s ease;
                 transition-delay: 0s;
                 opacity: 0;
             }
+
+            &:not(.tables-body__col-header--primary) {
+                .blink-indicator {
+                    transform: scale(0.8);
+                }
+    
+                .tables-body__col-header-name {
+                    margin-left: 18px;
+                }
+            }
         }
     }
+
     &.tables-body__col-header--force-green {
         .tables-body__col-header-type {
             color: $tealAccent;
@@ -844,6 +812,7 @@ $backfillFetchDuration: 2s;
     color: adjust-color($white, $alpha: -0.1);
     letter-spacing: 0.1px;
     padding-right: 10px;
+    cursor: default;
 
     span {
         overflow: hidden;
@@ -1096,7 +1065,6 @@ $backfillFetchDuration: 2s;
     border-radius: 12.5px;
     color: adjust-color($gray, $alpha: -0.2);
     font-size: 10.5px;
-    width: 80px;
     margin-top: -1.5px;
 
     & > span {

@@ -6,6 +6,10 @@ export const noMod = val => val
 
 export const camelToSnake = val => humps.decamelize(val || '')
 
+export const snakeToCamel = val => humps.camelize(val || '')
+
+export const toNamespacedVersion = ({ nsp, name, version }) => `${nsp}.${name}@${version}`
+
 export const withIndefiniteArticle = val => {
     const firstChar = ((val || '')[0] || '').toLowerCase()
     const startsWithVowel = vowels.has(firstChar)

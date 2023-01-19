@@ -3,8 +3,9 @@
     "version": "0.0.1",
     "private": true,
     "dependencies": {
-        "@craco/craco": "^6.2.0",
         "@monaco-editor/react": "^4.4.5",
+        "@spec.dev/event-client": "^0.0.8",
+        "highlight.js": "^11.6.0",
         "humps": "^2.0.1",
         "jquery": "^3.6.0",
         "lodash-es": "^4.17.21",
@@ -17,6 +18,8 @@
         "react-scripts": "4.0.3",
         "react-select": "^5.3.2",
         "react-spring": "^9.2.4",
+        "react-use-measure": "^2.1.1",
+        "short-uuid": "^4.2.0",
         "typewriter-effect": "^2.18.0"
     },
     "resolutions": {
@@ -26,7 +29,7 @@
         "react-error-overlay": "6.0.9"
     },
     "scripts": {
-        "start": "PORT=54322 react-scripts start",
+        "start": "react-scripts start",
         "build-prod": "react-scripts build",
         "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
         "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css"

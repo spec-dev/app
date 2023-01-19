@@ -46,7 +46,7 @@
         overflow: hidden;
         height: 300px;
         position: relative;
-        transition: height .6s $defaultTiming;
+        transition: height .9s $defaultTiming;
 
         &.new-live-table-specs__type-overview-liner--expanded {
             height: 705px;

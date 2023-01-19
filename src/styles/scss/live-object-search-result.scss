@@ -68,8 +68,50 @@
     margin-bottom: 7px;
 }
 
+.live-object-search-result__chains {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    position: relative;
+    margin-bottom: 9px;
+}
+
+.live-object-search-result__chain {
+    height: 17px;
+    width: 17px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    cursor: default;
+    color: $white;
+    background-color: adjust-color($backgroundLight, $alpha: -0.5);
+    margin-left: 4px;
+
+    span {
+        display: inline-block;
+        font-size: 9px;
+        font-family: Regular;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    &.live-object-search-result__chain--ethereum {
+        color: $blueAccent;
+        background-color: adjust-color($blueAccent, $alpha: -0.9);
+    }
+
+    &.live-object-search-result__chain--polygon,
+    &.live-object-search-result__chain--mumbai {
+        color: $purpleAccent;
+        background-color: adjust-color($purpleAccent, $alpha: -0.9);
+    }
+}
+
 .live-object-search-result__desc {
-    color: adjust-color(#D2D2E6, $alpha: -0.3);
+    color: adjust-color($lightGray, $alpha: -0.35);
     font-family: Regular;
     letter-spacing: 0.11px;
     font-size: 12px;
@@ -88,39 +130,26 @@
     justify-content: center;
 }
 
-.live-object-search-result__author {
+.live-object-search-result__version {
     font-size: 12px;
     letter-spacing: 0.1px;
     display: inline-block;
     color: $gray;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
-.live-object-search-result__likes {
+.live-object-search-result__nsp {
     display: inline-flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
+    padding-right: 1px;
 
     span:first-child {
         font-size: 12px;
         letter-spacing: 0.1px;
         display: inline-block;
         color: $gray;
-    }
-
-    span:last-child {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 15px;
-        height: auto;
-        margin-left: 6px;
-
-        svg {
-            width: 100%;
-            height: auto;
-            fill: $gray;
-        }
+        opacity: 0.6;
     }
 }

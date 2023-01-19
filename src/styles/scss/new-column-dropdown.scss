@@ -13,9 +13,10 @@
     z-index: 9;
     position: absolute;
     right: -3px;
-    top: calc(100% + 8px);
+    top: calc(100% + 7px);
     border-radius: 6px;
     box-shadow: 0 0 40px $boxShadowColor;
+    border: 1px solid adjust-color($gray, $alpha: -0.95);
     padding: 4px 0;
 }
 

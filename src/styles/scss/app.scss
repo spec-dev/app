@@ -8,6 +8,7 @@
 html {
     height: 100%;
     width: 100%;
+    color-scheme: dark;
 }
 
 body {
@@ -40,6 +41,14 @@ a, button {
 
 ul {
     list-style: none;
+}
+
+.icon--pk {
+    transform: rotate(44deg);
+}
+
+.icon--fk {
+    fill: currentColor;
 }
 
 #root, #app {

@@ -36,7 +36,7 @@ $dashSectionOutlineColor: #1A1A31;
 //=====================
 // Tables
 //=====================
-$tablesSectionHeaderHeight: 105px;
+$tablesSectionHeaderHeight: 110px;
 $tablesSectionFooterHeight: 31px;
 $tableRowHeight: 36px;
 $tableNewColumnWidth: 105px;
@@ -47,15 +47,22 @@ $tableNewColumnWidth: 105px;
 $sliderPanelHeaderHeight: 64px;
 $sliderPanelPadding: 30px;
 $sliderPanelFooterHeight: 60px;
-$typeOverviewGutterSpacing: 26px;
-$typeOverviewDocsWidth: calc(((100% - #{$typeOverviewGutterSpacing}) * .47));
-$typeOverviewInterfaceWidth: calc(((100% - #{$typeOverviewGutterSpacing}) * .51) - 4px);
-$newLiveColIconButtonSideLength: 22px;
+$typeOverviewGutterSpacing: 31px;
+$typeOverviewDocsWidth: calc(((100% - #{$typeOverviewGutterSpacing}) * 0.53));
+$typeOverviewInterfaceWidth: calc(((100% - #{$typeOverviewGutterSpacing}) * 0.47));
+
+$newLiveColIconButtonSideLength: 20px;
 $newLiveColIconButtonGutter: 12px;
 $newLiveColIconButtonLeftSpacing: 19px;
 $newLiveColInputGutter: 13px;
-$newLiveColArrowWidth: 20%;
-$newLiveColInputWidth: calc((100% - #{$newLiveColIconButtonSideLength} - #{$newLiveColIconButtonGutter} - #{$newLiveColIconButtonLeftSpacing} - #{$newLiveColArrowWidth}) / 2);
+$newLiveColArrowWidth: 18%;
+$newLiveColInputWidth: calc((100% - #{$newLiveColArrowWidth}) / 2);
+$liveObjectFilterOpWidth: 104px;
+$liveObjectFilterInputWidth: calc((100% - #{$newLiveColIconButtonSideLength} - #{$newLiveColIconButtonLeftSpacing} - #{$liveObjectFilterOpWidth}) / 2);
+$uniqueMappingIconWidth: 36px;
+$uniqueMappingInputWidth: calc((100% - #{$newLiveColIconButtonSideLength} - #{$newLiveColIconButtonLeftSpacing} - #{$uniqueMappingIconWidth}) / 2);
+
+// deprecated
 $newLiveRelIconButtonLeftSpacing: 20px;
 $newLiveRelInputRatio: .43;
 $newLiveRelFieldWidth: 33%;

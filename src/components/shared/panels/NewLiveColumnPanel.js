@@ -4,67 +4,304 @@ import LiveObjectSearch from './LiveObjectSearch'
 import NewLiveColumnSpecs from './NewLiveColumnSpecs'
 import { animated, useTransition } from 'react-spring'
 import { noop } from '../../../utils/nodash'
-import { specs } from '../../../data/specs'
+import { camelToSnake } from '../../../utils/formatters'
+import $ from 'jquery'
+import api from '../../../utils/api'
+import { toNamespacedVersion } from '../../../utils/formatters'
 import spinner from '../../../svgs/chasing-tail-spinner'
-import NewLiveColumnBehavior from './NewLiveColumnBehavior'
+import { s3 } from '../../../utils/path'
+import { getAllLiveObjects } from '../../../utils/liveObjects'
+import { pendingSeeds } from '../../../utils/pendingSeeds'
 
 const className = 'new-live-column-panel'
 const pcn = getPCN(className)
+const panelScrollHeader = 'panelScrollHeader'
 
-const getHeaderTitle = index => {
+const status = {
+    DEFAULT: 'default',
+    SAVING: 'saving',
+}
+
+export const referrers = {
+    ADD_LIVE_DATA: 'addLiveData',
+    NEW_LIVE_COLUMN: 'newLiveColumn',
+    NEW_LIVE_TABLE: 'newLiveTable',
+}
+
+const getHeaderTitle = (index, referrer) => {
     switch (index) {
         case 0:
             return 'Select Live Object'
         case 1:
-            return 'Create Live Columns'
-        case 2:
-            return 'Relationships & Hooks'
+            return {
+                [referrers.ADD_LIVE_DATA]: 'Create Live Columns',
+                [referrers.NEW_LIVE_COLUMN]: 'New Live Columns',
+                [referrers.NEW_LIVE_TABLE]: 'New Live Table',
+            }[referrer] || ''
     }
 }
 
 function NewLiveColumnPanel(props, ref) {
-    const { table = {}, onCancel = noop, onCreate = noop, selectLiveColumnFormatter = noop, addTransform = noop, addHook = noop } = props
-    const [state, setState] = useState({ index: 0, liveObjectSpec: {} })
-    const [result, setResult] = useState({ cols: null, status: 'default' })
+    // Props.
+    const {
+        table = {},
+        schema,
+        config = {},
+        referrer = referrers.ADD_LIVE_DATA,
+        onCancel = noop,
+        onSave = noop,
+        selectLiveColumnFormatter = noop,
+        addTransform = noop,
+        addHook = noop,
+        refetchTables = noop,
+    } = props
+    const liveObjects = getAllLiveObjects()
+
+    // State.
+    const [state, setState] = useState({
+        status: status.DEFAULT,
+        payload: null,
+        index: 0,
+        liveObject: {},
+    })
+
+    // Refs.
     const liveObjectSearchRef = useRef()
     const newLiveColumnSpecsRef = useRef()
-    const hasSaved = useRef(false)
+    const watchForTable = useRef()
+    const saveLiveColumnsPayload = useRef()
+    const migrationTimer = useRef(null)
+    const migrationCallback = useRef()
+    const saveCalled = useRef(false)
+
+    // Transitions.
     const transitions = useTransition(state.index, {
         initial: { opacity: 1 },
         from: { opacity: 0 },
         enter: { opacity: 1 },
         leave: { opacity: 0 },
-        config: { tension: 400, friction: 32 },
+        config: { tension: 425, friction: 33 },
     })
 
     useImperativeHandle(ref, () => ({
         focusSearchBar: () => liveObjectSearchRef.current?.focusSearchBar(),
-    }))
+        isSaving: () => state.status === status.SAVING,
+    }), [state.status])
 
     const onClickCancel = useCallback(() => {
         onCancel()
     }, [onCancel])
 
-    const onClickCreate = useCallback(() => {
-        setResult({
-            cols: newLiveColumnSpecsRef.current?.serialize(),
-            status: 'saving',
-        })
-    }, [])
+    const onClickApply = useCallback(() => {
+        let payload = newLiveColumnSpecsRef.current?.serialize()
+        if (!payload || (!payload.newTable && !payload.newColumns?.length && !Object.keys(payload.liveColumns).length)) {
+            return
+        }
+
+        const tablePath = payload.newTable?.name 
+            ? [schema, payload.newTable.name].join('.') 
+            : [schema, table.name].join('.')
+
+        payload = {
+            ...payload,
+            tablePath,
+            liveObjectVersionId: toNamespacedVersion(
+                state.liveObject?.latestVersion || {},
+            ),
+        }
+
+        setState(prevState => ({ 
+            ...prevState,
+            status: status.SAVING,
+            payload,
+        }))
+    }, [state.liveObject, schema, table])
 
     const onClickBack = useCallback(() => {
         setState(prevState => ({ ...prevState, index: 0 }))
     }, [])
 
-    const onSelectLiveObject = useCallback(result => {
-        setState({ index: 1, liveObjectSpec: specs[result.id] || {} })
+    const onSelectLiveObject = useCallback(liveObject => {
+        setState(prevState => ({ ...prevState, index: 1, liveObject }))
     }, [])
+
+    const saveLiveColumns = useCallback(async (payload) => {
+        const {
+            tablePath, 
+            liveObjectVersionId, 
+            liveColumns,
+            filters, 
+            uniqueBy,
+        } = (payload || state.payload)
+
+        const { ok } = await api.meta.liveColumns({
+            tablePath, 
+            liveObjectVersionId,
+            liveColumns,
+            filters,
+            uniqueBy,
+        })
+
+        if (!ok) {
+            // TODO: Show error
+            saveCalled.current = false
+            setState(prevState => ({ ...prevState, status: status.DEFAULT }))
+            return
+        }
+
+        setTimeout(onSave, 50)
+    }, [state.payload, onSave])
+
+    const createNewTable = useCallback(async () => {
+        const { 
+            newTable, 
+            newColumns, 
+            tablePath, 
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        } = state.payload
+
+        migrationTimer.current = setTimeout(() => {
+            migrationCallback.current && migrationCallback.current()
+            migrationTimer.current = null
+        }, 700)
+
+        const { ok } = await api.meta.createTable({
+            schema,
+            name: newTable.name,
+            desc: newTable.desc,
+            columns: newColumns || [],
+            uniqueBy: [
+                (uniqueBy || []).map(camelToSnake), // HACK
+            ]
+        })
+
+        if (!ok) {
+            clearTimeout(migrationTimer.current)
+            saveCalled.current = false
+            setState(prevState => ({ ...prevState, status: status.DEFAULT }))
+            return
+        }
+        
+        watchForTable.current = {
+            schema: schema,
+            name: newTable.name,
+        }
+
+        saveLiveColumnsPayload.current = {
+            tablePath,
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        }
+
+        pendingSeeds.add(tablePath)
+
+        if (migrationTimer.current !== null) {
+            migrationCallback.current = () => refetchTables(watchForTable.current)
+        } else {
+            refetchTables(watchForTable.current)
+        }
+    }, [schema, state.payload, refetchTables])
+
+    const createNewColumns = useCallback(async () => {
+        const {
+            newColumns, 
+            tablePath, 
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        } = state.payload
+
+        migrationTimer.current = setTimeout(() => {
+            migrationCallback.current && migrationCallback.current()
+            migrationTimer.current = null
+        }, 700)
+
+        const { ok } = await api.meta.addColumns({
+            schema,
+            table: table.name,
+            columns: newColumns || [],
+        })
+
+        if (!ok) {
+            clearTimeout(migrationTimer.current)
+            saveCalled.current = false
+            setState(prevState => ({ ...prevState, status: status.DEFAULT }))
+            return
+        }
+        
+        watchForTable.current = {
+            schema: schema,
+            name: table.name,
+        }
+
+        saveLiveColumnsPayload.current = {
+            tablePath,
+            liveObjectVersionId, 
+            liveColumns,
+            filters,
+            uniqueBy,
+        }
+
+        pendingSeeds.add(tablePath)
+
+        if (migrationTimer.current !== null) {
+            migrationCallback.current = () => refetchTables()
+        } else {
+            refetchTables()
+        }
+    }, [schema, table, state.payload, refetchTables])
+
+    useEffect(() => {
+        if (state.status === status.SAVING && !!state.payload && !saveCalled.current) {
+            saveCalled.current = true
+
+            if (state.payload.newTable) {
+                createNewTable()
+            } else if (state.payload.newColumns?.length) {
+                createNewColumns()
+            } else {
+                saveLiveColumns()
+            }
+        }
+    }, [state.status, state.payload, createNewTable, createNewColumns, saveLiveColumns])
+
+    useEffect(() => {
+        if (!watchForTable.current || !table?.name) return
+
+        if (schema === watchForTable.current.schema && table.name === watchForTable.current.name) {
+            if (saveLiveColumnsPayload.current) {
+                const payload = { ...saveLiveColumnsPayload.current }
+                saveLiveColumns(payload)
+            } else {
+                onSave()
+            }
+            watchForTable.current = null
+            saveLiveColumnsPayload.current = null
+        }
+    })
 
     const renderHeader = useCallback(() => (
         <div className={pcn('__header')}>
             <div className={pcn('__header-liner')}>
-                <div className={pcn('__header-title')}>
-                    <span>{getHeaderTitle(state.index)}</span>
+                <div
+                    className={pcn('__header-title-container', `__header-title-container--${state.index}`)}
+                    key={state.index}
+                    id={panelScrollHeader}>
+                    <div className={pcn('__header-title')}>
+                        <span>{getHeaderTitle(state.index, referrer)}</span>
+                    </div>
+                    { state.index === 1 && state.liveObject && (
+                        <div className={pcn('__spec-header')}>
+                            <img src={s3(`${state.liveObject.id}.jpg`)} alt="" />
+                            <span>{state.liveObject.name}</span>
+                        </div>
+                    )}
                 </div>
                 <div className={pcn('__header-bc', `__header-bc--${state.index}`)}>
                     <span></span>
@@ -72,9 +309,9 @@ function NewLiveColumnPanel(props, ref) {
                 </div>
             </div>
         </div>
-    ), [table, state.index])
+    ), [state.liveObject, state.index, referrer])
 
-    const renderFooter= useCallback(() => (
+    const renderFooter = useCallback(() => (
         <div className={pcn('__footer')}>
             <div className={pcn('__footer-liner')}>
                 <div
@@ -87,24 +324,17 @@ function NewLiveColumnPanel(props, ref) {
                         '__footer-button',
                         state.index > 0 ? '__footer-button--shown' : '',
                         state.index > 0 ? '__footer-button--final' : '',
-                        result.status === 'saving' ? '__footer-button--show-loader' : ''
+                        state.status === 'saving' ? '__footer-button--show-loader' : ''
                     )}
-                    onClick={onClickCreate}>
-                    { result.status === 'saving'
+                    onClick={state.status === status.DEFAULT ? onClickApply : noop}>
+                    { state.status === status.SAVING
                         ? <span className='svg-spinner svg-spinner--chasing-tail' dangerouslySetInnerHTML={{ __html: spinner }}></span>
-                        : <span>Create</span>
+                        : <span>{ referrer === referrers.ADD_LIVE_DATA ? 'Apply' : 'Create' }</span>
                     }
                 </button>
             </div>
         </div>
-    ), [onClickCancel, onClickCreate, state.index, onClickBack, result.status])
-
-    useEffect(() => {
-        if (result.status === 'saving' && !hasSaved.current) {
-            hasSaved.current = true
-            setTimeout(() => onCreate(state.liveObjectSpec, result.cols), 1000)
-        }
-    }, [result, state.liveObjectSpec, onCreate])
+    ), [onClickCancel, onClickApply, state.index, onClickBack, state.status, referrer])
 
     return (
         <div className={className}>
@@ -117,10 +347,11 @@ function NewLiveColumnPanel(props, ref) {
                                 className={pcn('__section', '__section--0')}
                                 style={{ opacity: opacity.to({ range: [0.0, 1.0], output: [0, 1] }) }}>
                                 <LiveObjectSearch
+                                    liveObjects={liveObjects}
                                     onSelectLiveObject={onSelectLiveObject}
                                     ref={liveObjectSearchRef}
                                 />
-                            </animated.div>  
+                            </animated.div>
                         )
                     case 1:
                         return (
@@ -129,7 +360,10 @@ function NewLiveColumnPanel(props, ref) {
                                 style={{ opacity: opacity.to({ range: [1.0, 0.0], output: [1, 0] }) }}>
                                 <NewLiveColumnSpecs
                                     table={table}
-                                    liveObjectSpec={state.liveObjectSpec}
+                                    schema={schema}
+                                    config={config}
+                                    purpose={referrer}
+                                    liveObject={state.liveObject}
                                     selectLiveColumnFormatter={selectLiveColumnFormatter}
                                     addTransform={addTransform}
                                     addHook={addHook}
@@ -137,46 +371,8 @@ function NewLiveColumnPanel(props, ref) {
                                 />
                             </animated.div>
                         )
-                    case 2:
-                        return (
-                            <animated.div
-                                className={pcn('__section', '__section--2')}
-                                style={{ opacity: opacity.to({ range: [1.0, 0.0], output: [1, 0] }) }}>
-                                <NewLiveColumnBehavior
-                                    table={table}
-                                    liveObjectSpec={state.liveObjectSpec}
-                                    selectLiveColumnFormatter={selectLiveColumnFormatter}
-                                    addTransform={addTransform}
-                                    ref={newLiveColumnSpecsRef}
-                                />
-                            </animated.div>                        
-                        )
                 }
             })}
-            {/* { transitions(({ opacity }, item) =>
-                item ? (
-                    <animated.div
-                        className={pcn('__section', '__section--0')}
-                        style={{ opacity: opacity.to({ range: [0.0, 1.0], output: [0, 1] }) }}>
-                        <LiveObjectSearch
-                            onSelectLiveObject={onSelectLiveObject}
-                            ref={liveObjectSearchRef}
-                        />
-                    </animated.div>
-                ) : (
-                    <animated.div
-                        className={pcn('__section', '__section--1')}
-                        style={{ opacity: opacity.to({ range: [1.0, 0.0], output: [1, 0] }) }}>
-                        <NewLiveColumnSpecs
-                            table={table}
-                            liveObjectSpec={state.liveObjectSpec}
-                            selectLiveColumnFormatter={selectLiveColumnFormatter}
-                            addTransform={addTransform}
-                            ref={newLiveColumnSpecsRef}
-                        />
-                    </animated.div>
-                )
-            )} */}
             { renderFooter() }
         </div>
     )

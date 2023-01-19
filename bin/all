@@ -1,8 +1,0 @@
-#!/bin/bash
-
-npm run sass:build
-npm run build-prod
-git add -A .
-git commit -m "build assets"
-git push origin master
-git push heroku master

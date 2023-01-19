@@ -63,13 +63,13 @@
     position: relative;
 
     &.editable-standard-columns__col-input-field--col-name,
-    &.editable-standard-columns__col-input-field--data-source {
+    &.editable-standard-columns__col-input-field--property {
         input, select {
             font-family: CodeRegular;
         }
     }
 
-    &.editable-standard-columns__col-input-field--data-source {
+    &.editable-standard-columns__col-input-field--property {
         position: relative;
 
         &:before {

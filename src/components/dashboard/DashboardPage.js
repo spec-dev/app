@@ -1,26 +1,32 @@
-import React, { useCallback } from 'react'
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 import { cn, getPCN } from '../../utils/classes'
-import { paths, sections, docsSubSections, liveObjectsSubSections } from '../../utils/nav'
+import { paths, sections } from '../../utils/nav'
 import TablesPanel from '../tables/TablesPanel'
 import TablesBody from '../tables/TablesBody'
-import barChartIcon from '../../svgs/bar-chart'
-import blistIcon from '../../svgs/blist'
-import dbIcon from '../../svgs/db'
-import docIcon from '../../svgs/document'
-import gearIcon from '../../svgs/gear'
-import homeIcon from '../../svgs/home'
-import tableEditorIcon from '../../svgs/table-editor'
-import terminalIcon from '../../svgs/terminal'
-import userIcon from '../../svgs/user'
-import specIcon from '../../svgs/spec-icon'
-import helpIcon from '../../svgs/help'
-import bubbleIcon from '../../svgs/bubble'
-import { getTable, orderedTableNames } from '../../data/dapps'
 import { Link } from 'react-router-dom'
-import DocsPanel from '../docs/DocsPanel'
-import DocsBody from '../docs/DocsBody'
-import LiveObjectsPanel from '../live-objects/LiveObjectsPanel'
-import LiveObjectsBody from '../live-objects/LiveObjectsBody'
+import { getCurrentProject, getCurrentSchemaName } from '../../utils/cache'
+import { getSchema, resolveSchema } from '../../utils/schema'
+import { updateTableCountWithEvents } from '../../utils/counts'
+import { getSeedCursors } from '../../utils/queries'
+import { getConfig } from '../../utils/config'
+import styles from '../../utils/styles'
+import { loader } from '@monaco-editor/react'
+import { useHistory } from 'react-router-dom'
+import {
+    barChartIcon,
+    blistIcon,
+    dbIcon,
+    documentIcon,
+    gearIcon,
+    homeIcon,
+    tableEditorIcon,
+    terminalIcon,
+    userIcon,
+    specIcon,
+    helpIcon,
+    bubbleIcon,
+} from '../../svgs/icons'
+import api from '../../utils/api'
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -28,25 +34,151 @@ const pcn = getPCN(className)
 const getSidePanelHeaderTitle = section => {
     switch (section) {
         case sections.TABLES:
-            return 'Table Editor'
-        case sections.DOCS:
-            return 'API Docs'
-        case sections.LIVE_OBJECTS:
-            return 'Live Objects'
+            return 'Tables'
         default:
             return ''
     }
 }
 
 function DashboardPage(props) {
+    const history = useHistory()
     const params = (props.match || {}).params || {}
-    const projectId = params.projectId
-    const currentSection = params.section || sections.TABLES
-    const currentSubSection = params.subSection || null
-    const currentMod = params.mod || null
-    const currentTableIndex = Math.max(currentSubSection ? orderedTableNames.indexOf(currentSubSection) : 0, 0)
-    const currentTableName = orderedTableNames[currentTableIndex]
-    const currentTable = getTable(currentTableName)
+    const projectId = useMemo(() => params.projectId, [params])
+    const currentSection = useMemo(() => params.section || sections.TABLES, [params])
+    const currentSubSection = useMemo(() => params.subSection || null, [params])
+    const currentProject = useMemo(() => getCurrentProject(), [projectId])
+
+    const [config, setConfig] = useState(null)
+    const [seedCursors, setSeedCursors] = useState([])
+    const [currentSchemaName, _] = useState(getCurrentSchemaName())
+    const [tables, setTables] = useState(getSchema(currentSchemaName))
+
+    const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
+    const tablesBodyRef = useRef()
+    const monaco = useRef()
+    const navToTable = useRef()
+
+    const currentTable = useMemo(() => {
+        if (currentSection !== sections.TABLES) return null
+        if (!tables) return null
+        return tables.find(t => t.name === currentSubSection) || tables[0]
+    }, [projectId, currentSection, currentSubSection, tables])
+    
+    const currentTableIndex = useMemo(() => {
+        if (!tableNames || !currentTable) return 0
+        return Math.max(tableNames.indexOf(currentTable.name), 0)
+    }, [tableNames, currentTable])
+
+    const refetchTables = useCallback(async (andNavToTable) => {
+        const result = await resolveSchema(currentSchemaName)
+        if (!result.ok) {
+            // Show error
+            return
+        }
+
+        if (andNavToTable) {
+            navToTable.current = andNavToTable
+        }
+
+        setTables(result.data)
+    }, [currentSchemaName])
+
+    const onSeedCursorsChange = useCallback(events => {
+        const eventsBySeedCursorId = {}
+        for (const event of events) {
+            const seedCursorId = event.data?.id
+            if (!seedCursorId) continue
+            eventsBySeedCursorId[seedCursorId] = event
+        }
+        
+        const currentSeedCursorIds = seedCursors.map(sc => sc.id)
+        const newSeedCursors = []
+        for (const seedCursor of seedCursors) {
+            const event = eventsBySeedCursorId[seedCursor.id]
+            if (!event) {
+                newSeedCursors.push(seedCursor)
+            }
+        }
+
+        // We only care about newly inserted "seed-table" seed cursors.
+        events.filter(
+            e => e.operation === 'INSERT' && 
+            e.data?.job_type === 'seed-table'
+        ).forEach(event => {
+            newSeedCursors.push(event.data)
+        })  
+
+        // Ignore updates to existing seed cursors 'cursor' position.
+        if (currentSeedCursorIds.sort().join(',') === newSeedCursors.map(sc => sc.id).sort().join(',')) {
+            return
+        }
+
+        setSeedCursors(newSeedCursors)
+    }, [seedCursors])
+
+    const onTableDataChange = useCallback(events => {
+        if (!currentSchemaName || !currentTable?.name) return
+        
+        const firstEvent = events[0] || {}
+        const eventSchema = firstEvent.schema
+        const eventTable = firstEvent.table
+
+        updateTableCountWithEvents(events, [eventSchema, eventTable].join('.'))
+
+        if (eventSchema === currentSchemaName && eventTable === currentTable.name) {
+            tablesBodyRef.current?.onDataChange(events)
+        }
+    }, [currentSchemaName, currentTable])
+
+    const loadMonaco = useCallback(async () => {
+        if (monaco.current) return
+        monaco.current = await loader.init()
+        monaco.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+            noSemanticValidation: true,
+            noSyntaxValidation: true,
+        });
+        monaco.current.editor.defineTheme('spec', styles.editor.theme)
+    }, [])
+
+    useEffect(async () => {
+        if (currentSection === sections.TABLES && !tables) {
+            const [tablesResult, seedCursorsResult, configData] = await Promise.all([
+                resolveSchema(getCurrentSchemaName()),
+                getSeedCursors(),
+                getConfig(),
+            ])
+            if (!tablesResult.ok) {
+                // TODO: Show error.
+                return
+            }
+            if (!seedCursorsResult.ok) {
+                // TODO: Show error.
+                return
+            }
+            if (!configData) {
+                // TODO: Show error
+                return
+            }
+
+            setSeedCursors(seedCursorsResult.data)
+            setConfig(configData)
+            setTables(tablesResult.data)
+
+            api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
+
+            loadMonaco()
+        }
+        api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
+        api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
+    }, [projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
+
+    useEffect(() => {
+        if (navToTable.current) {
+            const toPath = paths.toTable(projectId, navToTable.current.name)
+            navToTable.current = null
+            history.push(toPath)
+        }
+    })
 
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
@@ -57,11 +189,10 @@ function DashboardPage(props) {
                 <Link
                     className={ currentSection === sections.TABLES ? '--selected' : '' } 
                     dangerouslySetInnerHTML={{ __html: tableEditorIcon }}
-                    to={paths.toTable('marketplace_listings')}>
+                    // TODO: This needs to be set to the last visited table
+                    to={paths.toTables(projectId)}>
                 </Link>
-                <Link
-                    className={ currentSection === sections.LIVE_OBJECTS ? '--selected' : '' } 
-                    to={paths.toLiveObjects(liveObjectsSubSections.OBJECT_ECOSYSTEM)}>
+                <Link>
                     <span>{'{}'}</span>
                 </Link>
                 <Link dangerouslySetInnerHTML={{ __html: terminalIcon }}></Link>
@@ -69,42 +200,29 @@ function DashboardPage(props) {
                 <span></span>
                 <Link dangerouslySetInnerHTML={{ __html: blistIcon }}></Link>
                 <Link dangerouslySetInnerHTML={{ __html: barChartIcon }}></Link>
-                <Link
-                    className={ currentSection === sections.DOCS ? '--selected' : '' } 
-                    dangerouslySetInnerHTML={{ __html: docIcon }}
-                    to={paths.toDocs(docsSubSections.REST_API)}>
-                </Link>
+                <Link dangerouslySetInnerHTML={{ __html: documentIcon }}></Link>
                 <Link dangerouslySetInnerHTML={{ __html: gearIcon }}></Link>
                 <Link dangerouslySetInnerHTML={{ __html: userIcon }}></Link>
             </div>
         </div>
-    ), [currentSection])
+    ), [currentSection, projectId])
 
     const renderSidePanelBodyComp = useCallback(() => {
         switch (currentSection) {
             case sections.TABLES:
                 return (
                     <TablesPanel
-                        tableNames={orderedTableNames}
+                        projectId={projectId}
+                        tableNames={tableNames}
                         currentTableIndex={currentTableIndex}
-                    />
-                )
-            case sections.DOCS:
-                return (
-                    <DocsPanel
-                        currentSubSection={currentSubSection}
-                    />
-                )
-            case sections.LIVE_OBJECTS:
-                return (
-                    <LiveObjectsPanel
-                        currentSubSection={currentSubSection}
+                        seedCursors={seedCursors}
+                        onNewLiveTable={() => tablesBodyRef.current?.onNewLiveTable()}
                     />
                 )
             default:
                 return null
         }
-    }, [orderedTableNames, currentTableIndex, currentSection, currentSubSection, currentMod])
+    }, [currentSection, tableNames, currentTableIndex])
 
     const renderSidePanel = useCallback(() => (
         <div className={pcn('__side-panel')}>
@@ -122,38 +240,37 @@ function DashboardPage(props) {
     const renderContentBodyComp = useCallback(() => {
         switch (currentSection) {
             case sections.TABLES:
-                return <TablesBody table={currentTable} />
-            case sections.DOCS:
                 return (
-                    <DocsBody currentSubSection={currentSubSection} />
-                )
-            case sections.LIVE_OBJECTS:
-                return (
-                    <LiveObjectsBody
-                        currentSubSection={currentSubSection}
-                        currentMod={currentMod}
+                    <TablesBody
+                        schema={currentSchemaName}
+                        table={currentTable}
+                        config={config}
+                        refetchTables={refetchTables}
+                        seedCursor={(seedCursors || []).find(sc => (
+                            sc.spec.table_path === `${currentSchemaName}.${currentTable?.name}`
+                        ))}
+                        ref={tablesBodyRef}
                     />
                 )
             default:
                 return null
         }
-    }, [currentTable, currentSection, currentSubSection, currentMod])
+    }, [currentSection, currentTable, config, seedCursors, currentSchemaName, refetchTables])
+
+    const renderHeaderProjectPath = useCallback(() => currentProject?.org && currentProject?.name ? (
+        <div className={pcn('__project-path')}>
+            <span>{ currentProject.org }</span>
+            <span>/</span>
+            <span>{ currentProject.name }</span>
+        </div>
+    ) : null, [currentProject])
 
     const renderContent = useCallback(() => (
         <div className={pcn('__content')}>
             <div className={pcn('__content-liner')}>
                 <div className={pcn('__content-header')}>
                     <div className={pcn('__content-header-left')}>
-                        <div className={pcn('__project-path')}>
-                            <span>my-org</span>
-                            <span>/</span>
-                            <span>my-project</span>
-                        </div>
-                        { currentMod === 'flow' &&
-                            <div className={pcn('__side-panel-header')}>
-                                <span>Live Object &mdash; Data Flow</span>
-                            </div>
-                        }
+                        { renderHeaderProjectPath() }
                     </div>
                     <div className={pcn('__content-header-right')}>
                         <div className={pcn('__header-buttons')}>
@@ -173,10 +290,10 @@ function DashboardPage(props) {
                 </div>
             </div>
         </div>
-    ), [currentTable, renderContentBodyComp, currentMod])
+    ), [currentTable, renderHeaderProjectPath, renderContentBodyComp])
 
     return (
-        <div className={cn(className, currentMod === 'flow' ? pcn('--no-side-panel') : '')}>
+        <div className={className}>
             <div className={pcn('__liner')}>
                 { renderSideNav() }
                 { renderSidePanel() }

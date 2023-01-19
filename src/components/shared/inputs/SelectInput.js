@@ -21,6 +21,9 @@ function SelectInput(props, ref) {
         validator = notNull,
         isRequired = false,
         updateFromAbove = false,
+        isMulti = false,
+        comps = {},
+        disabledOptions = [],
     } = props
     const inputRef = useRef()
     const [data, setData] = useState({
@@ -58,16 +61,30 @@ function SelectInput(props, ref) {
     }, [sanitizer])
 
     const handleChange = useCallback(value => {
-        const parsedValue = parseSelectValue(value)
+        const parsedValue = isMulti 
+            ? (value?.map(v => parseSelectValue(v)) || []).filter(v => v !== null)
+            : parseSelectValue(value)
+
         setData({ value: parsedValue, isValid: true })
-        setTimeout(() => onChange(parsedValue), 5)
-    }, [onChange, parseSelectValue])
+        onChange(parsedValue)
+    }, [onChange, parseSelectValue, isMulti])
 
     const getFormattedValue = useCallback(value => {
         if (value === null) return null
         const formattedValue = formatter(value)
+
+        if (isMulti) {
+            const optionsByValue = {}
+            for (const opt of options) {
+                optionsByValue[opt.value] = opt
+            }
+            const useValue = formattedValue || []
+            if (!Array.isArray(useValue)) return []
+            return useValue.map(val => optionsByValue[val]).filter(v => !!v)
+        }
+
         return options.find(opt => opt.value === formattedValue)
-    }, [options, formatter])
+    }, [options, formatter, isMulti])
 
     const renderDropdownIcon = useCallback(({ innerProps }) => (
         <span
@@ -96,23 +113,25 @@ function SelectInput(props, ref) {
         props.className,
     )
 
+    comps.DropdownIndicator = comps.DropdownIndicator || renderDropdownIcon
+
     return (
         <div className={classes}>
             <Select
                 classNamePrefix={classNamePrefix}
                 placeholder={placeholder}
                 options={options}
-                value={formattedValue}
+                value={formattedValue || ''}
                 menuPlacement='auto'
                 isDisabled={disabled}
+                isOptionDisabled={option => disabledOptions.includes(option.value)}
                 openMenuOnFocus={true}
                 menuShouldScrollIntoView={true}
+                isMulti={isMulti}
                 tabSelectsValue={true}
                 noOptionsMessage={() => 'No Results' }
                 onChange={e => !disabled && handleChange(e)}
-                components={{
-                    DropdownIndicator: renderDropdownIcon,
-                }}
+                components={comps}
                 ref={inputRef}
             />
         </div>
