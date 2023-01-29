@@ -270,6 +270,7 @@ $loaderTime: 2.3s;
     font-size: 11px;
     margin-right: 24px;
     min-width: 91px;
+    cursor: default;
 
     & > span {
         & > span:first-child {
@@ -476,7 +477,8 @@ $loaderTime: 2.3s;
     overflow-y: overlay;
     overflow-x: overlay;
     scrollbar-width: thin;
-    scrollbar-color: $lightGray transparent;
+    overscroll-behavior-x: contain;
+    // scrollbar-color: $lightGray transparent;
 
     // &::-webkit-scrollbar {
     //     width: 7px;
@@ -524,7 +526,6 @@ $loaderTime: 2.3s;
 .tables-body__row {
     &:hover {
         .tables-body__cell {
-            transition: background-color 0.15s cubic-bezier(.4,0,.2,1);
             background-color: #14132d;
         }
     }
@@ -604,7 +605,7 @@ $loaderTime: 2.3s;
 }
 
 .tables-body__cell {
-    transition: all 0.25s ease;
+    transition: all 0.02s ease;
 }
 
 // All check cells

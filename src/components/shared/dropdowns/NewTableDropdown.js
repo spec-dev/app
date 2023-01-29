@@ -12,13 +12,13 @@ const options = {
     standard: {
         id: 'standard',
         name: 'Standard Table',
-        desc: 'A new Postgres table from scratch.',
+        desc: 'An empty Postgres table.',
         icon: tableIcon,
     },
     live: {
         id: 'live',
         name: 'Live Table',
-        desc: 'Pre-built table schemas with live web3 data.',
+        desc: 'A new table with a live data source.',
         icon: tableIcon,
     },
 }

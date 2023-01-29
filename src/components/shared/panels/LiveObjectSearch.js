@@ -11,89 +11,6 @@ import hEllipsisIcon from '../../../svgs/h-ellipsis'
 const className = 'live-object-search'
 const pcn = getPCN(className)
 
-const results = [
-    {
-        id: 'NFTCollection',
-        name: 'NFT Collections',
-        icon: 'user-nfts.jpg',
-        desc: 'ERC-721 or ERC-1155 collection contracts.',
-        likes: '204',
-        author: '@spec'
-    },
-    {
-        id: 'NFTAsset',
-        name: 'NFT Assets',
-        icon: 'cool-cat.jpg',
-        desc: 'The NFT assets within a collection.',
-        likes: '1.2k',
-        author: '@spec'
-    },
-    {
-        id: 'NFTSale',
-        name: 'NFT Sales',
-        icon: 'get-nft-sales-history.jpg',
-        desc: 'The sales history of an NFT asset.',
-        likes: '1.0k',
-        author: '@spec'
-    },
-    {
-        id: 'CompoundMarketAPY',
-        name: 'Compound Market APYs',
-        icon: 'compound.jpg',
-        desc: 'Supply and borrow APYs for markets on Compound.',
-        likes: '302',
-        author: '@spec'
-    },
-    {
-        id: 'ENSProfile',
-        name: 'ENS Profiles',
-        icon: 'ens.jpg',
-        desc: 'Profile data for ENS domains.',
-        likes: '20',
-        author: '@spec'
-    },
-    // {
-    //     id: 'CompoundMarket',
-    //     name: 'Compound Market',
-    //     icon: 'compound.jpg',
-    //     desc: 'A snapshot summary of a Compound market.',
-    //     likes: '10',
-    //     author: '@j1mmie'
-    // },
-    // {
-    //     id: 'UniswapPoolTVL',
-    //     name: 'Uniswap Pool TVL',
-    //     icon: 'uniswap.jpg',
-    //     desc: 'Uniswap V3 pool TVL & daily volume.',
-    //     likes: '10',
-    //     author: '@ben'
-    // },
-    // {
-    //     id: 'NFT',
-    //     name: 'NFT Sales Price',
-    //     icon: 'user-nfts.jpg',
-    //     desc: 'The latest sales price for an NFT.',
-    //     likes: '8',
-    //     author: '@0xmerkle'
-    // },
-    // {
-    //     id: 'YieldPosition',
-    //     name: 'Balancer Yield Position',
-    //     icon: 'balancer.jpg',
-    //     desc: 'A user\'s current yield on the Balancer protocol.',
-    //     likes: '5',
-    //     author: '@balancer'
-    // },
-    // {
-    //     id: 'Listing',
-    //     name: 'Thirdweb Marketplace Listing',
-    //     icon: 'thirdweb.jpg',
-    //     desc: 'Represents a listing in a thirdweb marketplace contract.',
-    //     likes: '0',
-    //     author: '@thirdweb'
-    // },
-]
-
 function LiveObjectSearch(props, ref) {
     const { liveObjects = [], onSelectLiveObject = noop } = props
     const lastKeyCode = useRef(null)
@@ -111,10 +28,18 @@ function LiveObjectSearch(props, ref) {
     )), [searchResults, onSelectLiveObject])
 
     const onTypeQuery = useCallback((e) => {
-        const value = e.currentTarget.value.toLowerCase()
-        const matchingResults = liveObjects.filter(liveObject => liveObject.name.toLowerCase().includes(value))
+        const value = e.currentTarget.value.toLowerCase().trim()
+        const matchingResults = liveObjects.filter(liveObject => {
+            let name = liveObject.displayName
+            if (liveObject.isContractEvent) {
+                name += ' Events'
+            }
+            name = name.toLowerCase()
+            const desc = liveObject.desc.toLowerCase()
+            return name.includes(value) || desc.includes(value)
+        })
         setSearchResults(matchingResults)
-    }, [])
+    }, [liveObjects])
 
     const onKeyDown = useCallback(e => {
         lastKeyCode.current = e.which

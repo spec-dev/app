@@ -1,0 +1,133 @@
+.snippet {
+    display: block;
+    width: 100%;
+    position: relative;
+    background-color: adjust-color($backgroundLight, $alpha: -0.6);
+    border-radius: 6px;
+    border: 1px solid adjust-color($gray, $alpha: -0.9);
+
+    .snippet-liner {
+        padding: 21px 26px 14px;
+        width: 100%;
+        overflow: scroll;
+        position: relative;
+
+        &::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+    
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    
+        &::-webkit-scrollbar-thumb {
+            background-color: transparent;
+            border-radius: 4px;
+            transition: all 1s ease;
+        }
+    
+        &::-webkit-scrollbar-corner {
+            background: transparent;
+        }
+    
+        &:hover {
+            scrollbar-color: adjust-color($white, $alpha: -0.95) transparent;
+    
+            &::-webkit-scrollbar-thumb {
+                background-color: adjust-color($white, $alpha: -0.95);
+            }
+        }
+
+        &:before {
+            position: absolute;
+            content: '';
+            width: 1px;
+            top: 46px;
+            bottom: 35px;
+            background-color: adjust-color($gray, $alpha: -0.87);
+            left: 25px;
+        }
+    
+        .interface {
+            white-space: pre;
+            font-family: CodeRegular;
+            font-size: 12px;
+            line-height: 20px;
+            color: #eee;
+        }
+    }
+}
+
+.interface-example-snippet--interface {
+    .interface-example-snippet__toggle-button-icon--interface {
+        opacity: 0;
+    }
+}
+
+.interface-example-snippet--example {
+    .interface-example-snippet__toggle-button-icon--example {
+        opacity: 0;
+    }
+}
+
+.interface-example-snippet__toggle-button {
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background-color: adjust-color($backgroundLight, $alpha: -0.3);
+    transform-origin: 50% 50%;
+    transform: scale(0.1);
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.15s ease;
+    overflow: hidden;
+    display: block;
+    cursor: pointer;
+    position: absolute;
+    top: 9px;
+    right: 9px;
+    z-index: 2;
+
+    &:hover {
+        background-color: $backgroundLight;
+
+        .interface-example-snippet__toggle-button-icon {
+            svg {
+                fill: $white;
+            }
+            span {
+                color: $white;
+            }
+        }
+    }
+}
+
+.interface-example-snippet__toggle-button-icon {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: adjust-color($lightGray, $alpha: -0.1);
+    opacity: 1;
+    transition: opacity 0.1s ease;
+
+    svg {
+        height: 11px;
+        width: auto;
+        fill: currentColor;
+        position: relative;
+        left: 0.5px;
+        transition: fill 0.15s ease;
+    }
+
+    span {
+        font-family: CodeRegular;
+        font-size: 11px;
+        transition: color 0.15s ease;
+    }
+}

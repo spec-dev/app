@@ -31,7 +31,7 @@ export const referrers = {
 const getHeaderTitle = (index, referrer) => {
     switch (index) {
         case 0:
-            return 'Select Live Object'
+            return 'Choose a live data source'
         case 1:
             return {
                 [referrers.ADD_LIVE_DATA]: 'Create Live Columns',
@@ -80,7 +80,7 @@ function NewLiveColumnPanel(props, ref) {
         from: { opacity: 0 },
         enter: { opacity: 1 },
         leave: { opacity: 0 },
-        config: { tension: 425, friction: 33 },
+        config: { tension: 440, friction: 33 },
     })
 
     useImperativeHandle(ref, () => ({
@@ -168,14 +168,17 @@ function NewLiveColumnPanel(props, ref) {
             migrationTimer.current = null
         }, 700)
 
+        let ub = (uniqueBy || []).map(camelToSnake)
+        if (ub.join(':') === 'from:to') {
+            ub = ['from_address', 'to_address']
+        }
+
         const { ok } = await api.meta.createTable({
             schema,
             name: newTable.name,
             desc: newTable.desc,
             columns: newColumns || [],
-            uniqueBy: [
-                (uniqueBy || []).map(camelToSnake), // HACK
-            ]
+            uniqueBy: [ub],
         })
 
         if (!ok) {
@@ -286,30 +289,36 @@ function NewLiveColumnPanel(props, ref) {
         }
     })
 
-    const renderHeader = useCallback(() => (
-        <div className={pcn('__header')}>
-            <div className={pcn('__header-liner')}>
-                <div
-                    className={pcn('__header-title-container', `__header-title-container--${state.index}`)}
-                    key={state.index}
-                    id={panelScrollHeader}>
-                    <div className={pcn('__header-title')}>
-                        <span>{getHeaderTitle(state.index, referrer)}</span>
-                    </div>
-                    { state.index === 1 && state.liveObject && (
-                        <div className={pcn('__spec-header')}>
-                            <img src={s3(`${state.liveObject.id}.jpg`)} alt="" />
-                            <span>{state.liveObject.name}</span>
+    const renderHeader = useCallback(() => {
+        let displayName = state.liveObject.displayName
+        if (state.liveObject.isContractEvent) {
+            displayName = `${displayName} Events`
+        }
+        return (
+            <div className={pcn('__header')}>
+                <div className={pcn('__header-liner')}>
+                    <div
+                        className={pcn('__header-title-container', `__header-title-container--${state.index}`)}
+                        key={state.index}
+                        id={panelScrollHeader}>
+                        <div className={pcn('__header-title')}>
+                            <span>{getHeaderTitle(state.index, referrer)}</span>
                         </div>
-                    )}
-                </div>
-                <div className={pcn('__header-bc', `__header-bc--${state.index}`)}>
-                    <span></span>
-                    <span></span>
+                        { state.index === 1 && state.liveObject && (
+                            <div className={pcn('__spec-header')}>
+                                <img src={state.liveObject.icon} alt="" />
+                                <span>{displayName}</span>
+                            </div>
+                        )}
+                    </div>
+                    <div className={pcn('__header-bc', `__header-bc--${state.index}`)}>
+                        <span></span>
+                        <span></span>
+                    </div>
                 </div>
             </div>
-        </div>
-    ), [state.liveObject, state.index, referrer])
+        )
+    }, [state.liveObject, state.index, referrer])
 
     const renderFooter = useCallback(() => (
         <div className={pcn('__footer')}>

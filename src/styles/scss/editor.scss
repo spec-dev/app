@@ -10,7 +10,7 @@
 .default { color: #eee; }
 .keyword { color: $purpleAccent; }
 .string { color: $blueAccent; }
-.number { color: #dfd2af; }
+.number { color: #e9d9b1; }
 .comment { color: $gray; }
 .date { color: adjust-color($lightGray, $alpha: -0.3); }
 .type { color: $tealAccent; }
@@ -46,7 +46,7 @@
     color: $blueAccent;
 }
 .hljs-number {
-    color: #d7cfb9;
+    color: #e9d9b1;
 }
 
 .editor {

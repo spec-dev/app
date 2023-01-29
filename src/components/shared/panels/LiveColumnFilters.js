@@ -7,7 +7,7 @@ import { propertyIsEnum, formatPropertyOptionsForSelection, resolvedPropertyType
 import closeIcon from '../../../svgs/close'
 import { getSchema } from '../../../utils/schema'
 import useMeasure from 'react-use-measure'
-import { animated, useSpring } from 'react-spring'
+import { animated, useSpring, useTransition } from 'react-spring'
 import { cloneDeep } from 'lodash-es'
 import hljs from 'highlight.js/lib/core'
 import TimestampInput from '../inputs/TimestampInput'
@@ -38,8 +38,9 @@ const getFilterOptions = propertyType => {
 }
 
 function LiveColumnFilters(props, ref) {
-    const { liveObjectVersion = {}, schema, useFilters } = props
+    const { liveObjectVersion = {}, schema, tableName, isNewTable, useFilters } = props
     const [filters, setFilters] = useState(props.filters || [[{ op: filterOps.IN_COLUMN }]])
+    const [showForeignKeyAdditionPrompt, setShowForeignKeyAdditionPrompt] = useState(null)
     const useFiltersRef = useRef(useFilters)
     const overflow = useRef('hidden')
     const containerRef = useRef()
@@ -49,6 +50,8 @@ function LiveColumnFilters(props, ref) {
     const filterLengths = useRef([])
     const [linerRef, { height }] = useMeasure()
     const extraConfig = !useFilters || !useFiltersRef.current ? {} : { duration: 0 }
+    const tablePathsPromptedAboutForeignKeys = useRef(new Set())
+    const promptForeignKeyAddition = useRef(null)
 
     const updateOverflow = useCallback((value) => {
         value = useFilters ? value : 'hidden'
@@ -59,7 +62,7 @@ function LiveColumnFilters(props, ref) {
     const containerProps = useSpring({ 
         height: useFilters ? height : 0, 
         config: {
-            tension: 385,
+            tension: 392,
             friction: 32,
             ...extraConfig
         },
@@ -67,12 +70,23 @@ function LiveColumnFilters(props, ref) {
         onStart: () => updateOverflow('hidden')
     })
 
+    const foreignKeyPromptTransitions = useTransition(!!(showForeignKeyAdditionPrompt?.length), {
+        from: { opacity: 0, height: 0 },
+        enter: { opacity: 1, height: 150 },
+        leave: { opacity: 0, height: 0 },
+        config: enter => key => {
+            return enter
+                ? { tension: 320, friction: 32 }
+                : { tension: 330, friction: 31 }
+        }
+    })
+
     const propertyOptions = useMemo(() => (liveObjectVersion.properties || []).map(p => {
         const example = (liveObjectVersion.example || {})[p.name] || null
         const resolvedType = resolvedPropertyType(p, example)
         if (!filterablePropertyTypes.has(resolvedType)) return null
         return { 
-            value: p.name, 
+            value: p.name,
             label: `.${p.name}`,
             type: p.type,
             example,
@@ -85,8 +99,51 @@ function LiveColumnFilters(props, ref) {
         .map(colPath => ({ value: colPath, label: colPath })), 
     [schema])
 
+    const firstForeignSelectedColFilter = useMemo(() => filters.flat().find(f => 
+        columnOps.has(f.op) && 
+        !!f.value && 
+        (isNewTable || !f.value.startsWith(`${schema}.${tableName}.`))
+    ), [filters, isNewTable, schema, tableName])
+
+    const disabledColumnPaths = useMemo(() => {
+        if (!firstForeignSelectedColFilter) return []
+        const [colSchemaName, colTableName, _] = firstForeignSelectedColFilter.value.split('.')
+        const firstForeignSelectedTablePath = [colSchemaName, colTableName].join('.')
+
+        const disabled = []
+        for (const { value: colPath } of columnPathOptions) {
+            const [colSchemaName, colTableName, _] = colPath.split('.')
+            const colTablePath = [colSchemaName, colTableName].join('.')
+
+            // on current table
+            if (!isNewTable && colSchemaName === schema && colTableName === tableName) {
+                continue
+            }
+
+            // on alredy chosen foreign table
+            if (colTablePath === firstForeignSelectedTablePath) {
+                continue
+            }
+
+            disabled.push(colPath)
+        }
+        return disabled
+    }, [firstForeignSelectedColFilter, columnPathOptions, schema, tableName, isNewTable])
+
     useImperativeHandle(ref, () => ({
-        serialize: () => filters
+        serialize: () => {
+            const finalFilters = []
+            for (const group of (filters || [])) {
+                const finalGroup = []
+                for (const filter of (group || [])) {
+                    if (!!filter.property && !!filter.op && filter.hasOwnProperty('value')) {
+                        finalGroup.push(filter)
+                    }
+                }
+                finalGroup.length && finalFilters.push(finalGroup)
+            }
+            return finalFilters
+        }
     }), [filters])
 
     const setInputRef = useCallback((i, j, key, r) => {
@@ -158,11 +215,22 @@ function LiveColumnFilters(props, ref) {
                     opInputRef && opInputRef.focus()
                 }, 10)
             }
+        } else {
+            const isColumnOp = columnOps.has(newFilters[i][j].op)
+            const isForeignColPath = isColumnOp && value && (isNewTable || !value.startsWith(`${schema}.${tableName}.`))
+            if (!firstForeignSelectedColFilter && isForeignColPath) {
+                const [colSchemaName, colTableName, _] = value
+                const colTablePath = [colSchemaName, colTableName].join('.')
+                if (!tablePathsPromptedAboutForeignKeys.current.has(colTablePath)) {
+                    tablePathsPromptedAboutForeignKeys.current.add(colTablePath)
+                    promptForeignKeyAddition.current = [i, j]
+                }
+            }
         }
 
         newFilters[i][j][key] = value
         setFilters(newFilters)
-    }, [filters, liveObjectVersion])
+    }, [filters, liveObjectVersion, firstForeignSelectedColFilter])
 
     const removeFilter = useCallback((i, j) => {
         const newFilters = cloneDeep(filters)
@@ -202,12 +270,20 @@ function LiveColumnFilters(props, ref) {
             focusOnLastPropertyInput.current = null
             const j = (filters[i] || []).length - 1
             if (j < 0) return
-            setTimeout(() => {
-                const propertyRef = inputRefs.current[`${i}-${j}-property`]
-                propertyRef?.focus()    
-            }, 0)
+            // setTimeout(() => {
+            //     const propertyRef = inputRefs.current[`${i}-${j}-property`]
+            //     propertyRef?.focus()    
+            // }, 20)
         }
     }, [filters])
+
+    // useEffect(() => {
+    //     if (promptForeignKeyAddition.current && firstForeignSelectedColFilter) {
+    //         const [i, j] = promptForeignKeyAddition.current
+    //         promptForeignKeyAddition.current = null
+    //         setShowForeignKeyAdditionPrompt([i, j])
+    //     }
+    // }, [firstForeignSelectedColFilter])
 
     const renderColumnValueSingleValue = useCallback(({ innerProps, data }) => {
         const [_, table, column] = (data?.value || '').split('.')
@@ -221,7 +297,7 @@ function LiveColumnFilters(props, ref) {
         )
     }, [])
 
-    const renderColumnValueOption = useCallback(({ innerRef, innerProps, data, isFocused, isSelected }) => {
+    const renderColumnValueOption = useCallback(({ innerRef, innerProps, data, isFocused, isSelected, isDisabled }) => {
         const [_, table, column] = (data?.value || '').split('.')
         return (
             <span
@@ -229,6 +305,7 @@ function LiveColumnFilters(props, ref) {
                     'spec__option',
                     isFocused ? 'spec__option--is-focused' : '',
                     isSelected ? 'spec__option--is-selected' : '',
+                    isDisabled ? 'spec__option--is-disabled' : '',
                 )}
                 { ...innerProps }
                 ref={innerRef}>
@@ -350,6 +427,7 @@ function LiveColumnFilters(props, ref) {
             classNamePrefix='spec'
             value={filter.value}
             options={columnPathOptions}
+            disabledOptions={disabledColumnPaths}
             placeholder='column'
             isRequired={true}
             updateFromAbove={true}
@@ -360,7 +438,14 @@ function LiveColumnFilters(props, ref) {
             }}
             ref={r => setInputRef(i, j, 'value', r)}
         />
-    ), [renderColumnValueSingleValue, renderColumnValueOption, setFilterData, setInputRef])
+    ), [
+        renderColumnValueSingleValue, 
+        renderColumnValueOption, 
+        setFilterData, 
+        setInputRef, 
+        columnPathOptions, 
+        disabledColumnPaths,
+    ])
 
     const renderMultiValueRemove = useCallback(({ innerProps }) => (
         <div
@@ -540,8 +625,22 @@ function LiveColumnFilters(props, ref) {
         liveObjectVersion,
     ])
 
+    const renderAddForeignKeyPrompt = useCallback((filter) => {
+        return foreignKeyPromptTransitions(
+            (styles, item) => item && (
+                <animated.div
+                    className={pcn('__prompt', '__prompt--fk')}
+                    style={styles}>
+                    <div className={pcn('__prompt-liner')}>
+                        { filter.value }
+                    </div>
+                </animated.div>
+            )
+        )
+    }, [foreignKeyPromptTransitions])
+
     const renderFilterInput = useCallback((filter, i, j) => {
-        const disabledPropertyOptions = filters[i]
+        const alreadySelectedPropertyValues = filters[i]
             .filter((_, k) => k !== j)
             .map(v => v.property)
             .filter(p => !!p)
@@ -549,6 +648,14 @@ function LiveColumnFilters(props, ref) {
         const property = filter.property
             ? (liveObjectVersion.properties || []).find(p => p.name === filter.property)
             : null
+
+        let promptAboutForeignKey = false
+        if (showForeignKeyAdditionPrompt?.length) {
+            const [k, l] = showForeignKeyAdditionPrompt
+            if (i === k && j === l && filter.value) {
+                promptAboutForeignKey = true
+            }
+        }
 
         return (
             <div key={`${i}-${j}`} className={pcn('__filter-input')}>
@@ -560,7 +667,7 @@ function LiveColumnFilters(props, ref) {
                     classNamePrefix='spec'
                     value={filter.property}
                     options={propertyOptions}
-                    disabledOptions={disabledPropertyOptions}
+                    disabledOptions={alreadySelectedPropertyValues}
                     placeholder='.property'
                     isRequired={true}
                     updateFromAbove={true}
@@ -595,12 +702,14 @@ function LiveColumnFilters(props, ref) {
                     onClick={() => removeFilter(i, j)}
                     dangerouslySetInnerHTML={{ __html: closeIcon }}>
                 </div>
+                { promptAboutForeignKey && renderAddForeignKeyPrompt(filter) }
             </div>
         )
     }, [
         filters, 
         liveObjectVersion,
         propertyOptions, 
+        showForeignKeyAdditionPrompt,
         setFilterData,
         removeFilter,
         renderOpValue,
@@ -608,6 +717,7 @@ function LiveColumnFilters(props, ref) {
         renderPropertySingleValue,
         renderPropertyOption,
         renderValueInput,
+        renderAddForeignKeyPrompt,
         setInputRef,
     ])
 

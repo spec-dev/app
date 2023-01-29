@@ -16,7 +16,7 @@
     left: 0;
     width: 100%;
     height: $sliderPanelHeaderHeight;
-    padding: 0 $sliderPanelPadding;
+    padding: 0 31px;
     border-bottom: 1px solid adjust-color($gray, $alpha: -0.9);
 }
 
@@ -55,7 +55,7 @@
     position: absolute;
     left: 0;
     top: 0;
-    padding-left: calc(#{$sliderPanelPadding} + 1px);
+    padding-left: 31px;
     height: $sliderPanelHeaderHeight;
     display: inline-flex;
     flex-direction: row;
@@ -119,7 +119,7 @@
     left: 0;
     width: 100%;
     height: $sliderPanelFooterHeight;
-    padding: 0 $sliderPanelPadding;
+    padding: 0 31px;
     border-top: 1px solid adjust-color($gray, $alpha: -0.9);
 }
 

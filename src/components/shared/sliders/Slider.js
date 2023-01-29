@@ -15,7 +15,7 @@ function Slider(props, ref) {
         leave: { opacity: 0 },
         config: enter => key => {
             return enter
-                ? { tension: 320, friction: 32 }
+                ? { tension: 315, friction: 32 }
                 : { tension: 330, friction: 31 }
         }
     })

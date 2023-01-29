@@ -10,26 +10,37 @@ const pcn = getPCN(className)
 
 function LiveObjectSearchResult(props) {
     const { 
-        id,
-        name, 
-        desc, 
+        desc,
+        icon,
+        isContractEvent,
         latestVersion = {},
         onClick = noop,
     } = props
+
     const supportedChainIds = useMemo(() => sortInts(
         Object.keys(latestVersion?.config?.chains || {}).map(v => parseInt(v))
     ).map(v => v.toString()), [latestVersion])
+
     const supportedChainNames = useMemo(() => (
         supportedChainIds.map(chainId => chainNames[chainId]).filter(v => !!v)
     ), [supportedChainIds])
 
+    let nsp = latestVersion.nsp || ''
+    let name = props.displayName
+
+    if (isContractEvent) {
+        const splitNsp = nsp.split('.')
+        nsp = [splitNsp[0], splitNsp[1]].join('.')
+        name = `${name} Events`
+    }
+    
     return (
         <div className={className} onClick={onClick}>
             <div className={pcn('__liner')}>
                 <div className={pcn('__left')}>
                     <img
                         className={pcn('__icon')}
-                        src={s3(`${id}.jpg`)}
+                        src={icon}
                         alt=""
                     />
                     <div className={pcn('__main')}>
@@ -53,7 +64,7 @@ function LiveObjectSearchResult(props) {
                         ))}
                     </div>
                     <div className={pcn('__nsp')}>
-                        <span>@{ latestVersion.nsp }</span>
+                        <span>@{ nsp }</span>
                     </div>
                 </div>
             </div>

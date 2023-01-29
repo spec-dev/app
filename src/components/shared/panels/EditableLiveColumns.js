@@ -119,7 +119,7 @@ const formatInitialColumns = (
 }
 
 function EditableLiveColumns(props, ref) {
-    const { table, liveObjectVersion = {}, config, purpose } = props
+    const { table, liveObjectVersion = {}, config, purpose, initialTableName } = props
     const isNewTable = useMemo(() => purpose === purposes.NEW_LIVE_TABLE, [purpose])
     const primaryKeyColNames = useMemo(() => new Set((table.primary_keys || []).map(pk => pk.name)), [table])
     const foreignKeys = useMemo(() => {
@@ -303,14 +303,20 @@ function EditableLiveColumns(props, ref) {
 
         let colIcon = colTypeIcon(col.data_type)
         if (col.isPrimaryKey) {
+            // colIcon = '<span class="--label">PK</span>'
             colIcon = keyIcon
         } else if (!!col.relationship) {
             colIcon = modelRelationshipIcon
+            // colIcon = '<span class="--label">FK</span>'
         }
         colIcon = colIcon || '<span class="--plus">+</span>'
 
         return (
-            <div className={pcn('__new-col', !!property ? '__new-col--live' : '')}>
+            <div className={pcn(
+                '__new-col', 
+                !!property ? '__new-col--live' : '',
+                col.isPrimaryKey ? '__new-col--pk' : '',
+            )}>
                 <div className={pcn('__new-col-liner')}>
                     <div
                         className={pcn('__new-col-type-icon')}
@@ -325,6 +331,9 @@ function EditableLiveColumns(props, ref) {
                         spellCheck={false}
                         onChange={value => setNewColumnName(value, i)}
                         ref={r => setColNameInputRef(r, i)}
+                        renderAfter={val => (
+                            <span className='text-input-mirror'>{val}</span>
+                        )}
                     />
                 </div>
                 { col.isSerial ? 
@@ -337,10 +346,12 @@ function EditableLiveColumns(props, ref) {
                         onChange={value => setNewColumnDataType(value, i)}
                     />
                 )}
-                <div
-                    className={pcn('__new-col-icon', '__new-col-icon--extra')}
-                    onClick={() => {}}
-                    dangerouslySetInnerHTML={{ __html: filterControlsIcon }}>
+                <div style={{ width: 40, display: 'block', height: '100%', flex: 1 }}>
+                    <div
+                        className={pcn('__new-col-icon', '__new-col-icon--extra')}
+                        onClick={() => {}}
+                        dangerouslySetInnerHTML={{ __html: filterControlsIcon }}>
+                    </div>
                 </div>
                 <div
                     className={pcn('__new-col-icon', '__new-col-icon--remove')}
@@ -490,7 +501,7 @@ function EditableLiveColumns(props, ref) {
                         columns.length && columns[0].isPrimaryKey ? '__header--tad-left' : '',
                     )}>
                     <span>{liveObjectVersion.name}:</span>
-                    <span>{tableName || 'new_table'}:</span>
+                    <span>{tableName || initialTableName || 'new_table'}:</span>
                 </div>
                 <div className={pcn('__col-inputs', !!columns.find(c => c.isNew) ? '__col-inputs--has-new' : '')}>
                     { renderColInputs() }
@@ -498,7 +509,7 @@ function EditableLiveColumns(props, ref) {
                 <div className={pcn('__action-buttons')}>
                     <button onClick={addNewColumn}>
                         <span>+</span>
-                        <span>New Live Column</span>
+                        <span>New Column</span>
                     </button>
                 </div>
             </div>

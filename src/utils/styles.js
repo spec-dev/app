@@ -99,8 +99,8 @@ const styles = {
                 { token: 'variable.parameter', foreground: 'FFFFFF' },
                 { token: 'constant', foreground: '6874FF' },
                 { token: 'comment', foreground: '727A92' },
-                { token: 'number', foreground: 'dfd2af' },
-                { token: 'number.hex', foreground: '5BB498' },
+                { token: 'number', foreground: 'e9d9b1' },
+                { token: 'number.hex', foreground: 'e9d9b1' },
                 { token: 'regexp', foreground: 'B46695' },
                 { token: 'annotation', foreground: 'cc6666' },
                 { token: 'type', foreground: '00ded7' },
@@ -127,8 +127,8 @@ const styles = {
 
                 { token: 'attribute.name', foreground: '9CDCFE' },
                 { token: 'attribute.value', foreground: 'CE9178' },
-                { token: 'attribute.value.number.css', foreground: 'dfd2af' },
-                { token: 'attribute.value.unit.css', foreground: 'dfd2af' },
+                { token: 'attribute.value.number.css', foreground: 'e9d9b1' },
+                { token: 'attribute.value.unit.css', foreground: 'e9d9b1' },
                 { token: 'attribute.value.hex.css', foreground: 'EEEEEE' },
 
                 { token: 'string', foreground: '0dcefd' },

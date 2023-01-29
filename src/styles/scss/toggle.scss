@@ -27,6 +27,7 @@ $toggleHeight: 29px;
         .toggle__side:nth-child(2) {
             color: $backgroundMedium;
             font-family: Medium;
+            letter-spacing: 0;
 
             &:hover {
                 span {

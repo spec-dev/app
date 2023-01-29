@@ -31,7 +31,7 @@ function NewTableBasicInputs(props, ref) {
             <TextInput
                 className={pcn('__input-field', '__input-field--desc')}
                 value={values.desc || ''}
-                placeholder='Optional'
+                placeholder='Description'
                 isRequired={true}
                 updateFromAbove={true}
                 spellCheck={false}

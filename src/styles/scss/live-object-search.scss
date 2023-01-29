@@ -167,28 +167,28 @@
     overflow-x: hidden;
     scrollbar-width: thin;
 
-    &::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
+    // &::-webkit-scrollbar {
+    //     width: 8px;
+    //     height: 8px;
+    // }
 
-    &::-webkit-scrollbar-track {
-        background: transparent;
-    }
+    // &::-webkit-scrollbar-track {
+    //     background: transparent;
+    // }
 
-    &::-webkit-scrollbar-thumb {
-        background-color: transparent;
-        border-radius: 4px;
-        transition: all 1s ease;
-    }
+    // &::-webkit-scrollbar-thumb {
+    //     background-color: transparent;
+    //     border-radius: 4px;
+    //     transition: all 1s ease;
+    // }
 
-    &:hover {
-        scrollbar-color: adjust-color($white, $alpha: -0.95) transparent;
+    // &:hover {
+    //     scrollbar-color: adjust-color($white, $alpha: -0.95) transparent;
 
-        &::-webkit-scrollbar-thumb {
-            background-color: adjust-color($white, $alpha: -0.95);
-        }
-    }
+    //     &::-webkit-scrollbar-thumb {
+    //         background-color: adjust-color($white, $alpha: -0.95);
+    //     }
+    // }
 }
 
 .live-object-search__results-liner {

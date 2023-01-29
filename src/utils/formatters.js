@@ -4,7 +4,27 @@ const vowels = new Set(['a', 'e', 'i', 'o', 'u'])
 
 export const noMod = val => val
 
-export const camelToSnake = val => humps.decamelize(val || '')
+export const camelToSnake = val => {
+    val = val || ''
+
+    let formattedVal = ''
+    for (let i = 0; i < val.length; i++) {
+        const [prevChar, char, nextChar] = [val[i - 1], val[i], val[i + 1]]
+        const [prevCharIsUpperCase, charIsUpperCase, nextCharIsUpperCase] = [
+            prevChar && prevChar === prevChar.toUpperCase(),
+            char && char === char.toUpperCase(),
+            nextChar && nextChar === nextChar.toUpperCase(),
+        ]
+
+        if (prevCharIsUpperCase && charIsUpperCase && (nextCharIsUpperCase || i === val.length - 1)) {
+            formattedVal += char.toLowerCase()
+        } else {
+            formattedVal += char
+        }
+    }
+
+    return humps.decamelize(formattedVal)
+}
 
 export const snakeToCamel = val => humps.camelize(val || '')
 

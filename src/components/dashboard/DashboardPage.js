@@ -95,6 +95,7 @@ function DashboardPage(props) {
         const newSeedCursors = []
         for (const seedCursor of seedCursors) {
             const event = eventsBySeedCursorId[seedCursor.id]
+            // Keep any seed cursors not currently affected by this batch of events.
             if (!event) {
                 newSeedCursors.push(seedCursor)
             }
@@ -109,9 +110,10 @@ function DashboardPage(props) {
         })  
 
         // Ignore updates to existing seed cursors 'cursor' position.
-        if (currentSeedCursorIds.sort().join(',') === newSeedCursors.map(sc => sc.id).sort().join(',')) {
-            return
-        }
+        const changed = currentSeedCursorIds.sort().join(',') !== newSeedCursors.map(sc => sc.id).sort().join(',')
+        if (!changed) return
+
+        console.log('SET SEED CURSORS', newSeedCursors)
 
         setSeedCursors(newSeedCursors)
     }, [seedCursors])

@@ -15,6 +15,7 @@ import typescript from 'highlight.js/lib/languages/typescript'
 import { camelToSnake } from '../../../utils/formatters'
 import { sortInts } from '../../../utils/math'
 import { chainNames } from '../../../utils/chains'
+import Snippet from '../snippets/InterfaceExampleSnippet'
 hljs.registerLanguage('typescript', typescript)
 
 const className = 'new-live-column-specs'
@@ -41,7 +42,8 @@ const sizing = {
     ICON_LENGTH: 70,
     ICON_OFFSET_RIGHT: 21,
     LINKS_OFFSET_LEFT: 20,
-    DOCS_HEADER_HEIGHT: 40 + 15 + 16,
+    // DOCS_HEADER_HEIGHT: 40 + 15 + 16,
+    DOCS_HEADER_HEIGHT: 0,
     DOCS_PADDING_BOTTOM: 36,
     DOCS_INTERFACE_PADDING: 22 + 22 + 1 + 1,
     DOCS_INTERFACE_LINE_HEIGHT: 20,
@@ -71,23 +73,26 @@ const buildExampleObjectCode = liveObjectVersion => {
 }
 
 const getLiveColumnsSectionTitle = purpose => {
-    switch (purpose) {
-        case purposes.NEW_LIVE_TABLE:
-            return 'New Live Table'
-        default:
-            return 'Live Columns'
-    }
+    return 'Table Schema'
+    // switch (purpose) {
+    //     case purposes.NEW_LIVE_TABLE:
+    //         return 'Table Schema'
+    //     default:
+    //         return 'Live Columns'
+    // }
 }
 
-const getLiveColumnsSectionSubtitle = (purpose, liveObjectVersion) => {
-    switch (purpose) {
-        case purposes.NEW_LIVE_COLUMN:
-            return `Stream ${liveObjectVersion.name} properties into your columns.`
-        case purposes.NEW_LIVE_TABLE:
-            return `Stream ${liveObjectVersion.name} properties into your columns.`
-        default:
-            return `Stream ${liveObjectVersion.name} properties into your columns.`
-    }
+const getLiveColumnsSectionSubtitle = (purpose, liveObjectVersion, isContractEvent) => {
+    return 'Live Columns'
+    // const properties = `${isContractEvent ? 'event ' : ''}properties`
+    // switch (purpose) {
+    //     case purposes.NEW_LIVE_COLUMN:
+    //         return `Stream ${liveObjectVersion.name} ${properties} into your columns.`
+    //     case purposes.NEW_LIVE_TABLE:
+    //         return `Live Columns`
+    //     default:
+    //         return `Stream ${liveObjectVersion.name} ${properties} into your columns.`
+    // }
 }
 
 function NewLiveColumnSpecs(props, ref) {
@@ -123,10 +128,26 @@ function NewLiveColumnSpecs(props, ref) {
             sizing.DOCS_INTERFACE_PADDING + 
             sizing.DOCS_PADDING_BOTTOM +
             sizing.DOCS_INTERFACE_LINE_HEIGHT * (2 + propertyNames.length)
-            + 12
         ),
         sizing.DOCS_COLLAPSED_MAX_HEIGHT
     ), [propertyNames])
+
+    const nsp = useMemo(() => {
+        let nsp = liveObjectVersion.nsp || ''
+        if (liveObject.isContractEvent) {
+            const splitNsp = nsp.split('.')
+            nsp = [splitNsp[0], splitNsp[1]].join('.')
+        }    
+        return nsp
+    }, [liveObjectVersion?.nsp, liveObject?.isContractEvent])
+
+    const displayName = useMemo(() => {
+        let name = liveObject.displayName
+        if (liveObject.isContractEvent) {
+            name = `${name} Events`
+        }
+        return name
+    }, [liveObjectVersion?.displayName, liveObject?.isContractEvent])
 
     const getFilters = useCallback(() => liveColumnFiltersRef.current?.serialize() || [], [])
     const getUniqueMappings = useCallback(() => uniqueMappingsRef.current?.serialize() || [], [])
@@ -184,9 +205,9 @@ function NewLiveColumnSpecs(props, ref) {
 
     const renderDocsSection = useCallback(() => (
         <div className={pcn('__docs')} ref={calculateExpandedDocsHeight}>
-            <div className={pcn('__version')}>
+            {/* <div className={pcn('__version')}>
                 <span>v{liveObjectVersion.version}</span>
-            </div>
+            </div> */}
             <div className={pcn('__doc-properties')}>
                 { renderProperties() }
             </div>
@@ -195,40 +216,14 @@ function NewLiveColumnSpecs(props, ref) {
 
     const renderInterfaceSection = useCallback(() => (
         <div className={cn('editor', pcn('__interface'))}>
-            <div className={pcn(
-                '__interface-header',
-                `__interface-header--index-${selectedDocsIndex}`,
-                `__interface-header--${docsHeaderTabs[selectedDocsIndex].name?.toLowerCase()?.replaceAll(' ', '-')}`,  
-            )}>
-                <div className={pcn('__interface-header-slider')}></div>
-                { docsHeaderTabs.map((tab, i) => (
-                    <div
-                        key={i}
-                        className={pcn(
-                            '__interface-header-tab', 
-                            i === selectedDocsIndex ? '__interface-header-tab--selected' : '',
-                        )}
-                        onClick={i === selectedDocsIndex ? noop : () => setSelectedDocsIndex(i)}>
-                        <span>{tab.name}</span>
-                    </div>
-                ))}
-            </div>
-            <div
-                className={pcn(
-                    '__interface-body', 
-                    `__interface-body--${liveObjectVersion.name}`, 
-                    `__interface-body--index-${selectedDocsIndex}`,
-                )}>
-                <div
-                    className='interface'
-                    dangerouslySetInnerHTML={{ __html: selectedDocsIndex === 1 ? exampleObjectCode : interfaceCode }}>    
-                </div>
-            </div>
+            <Snippet
+                exampleCode={exampleObjectCode}
+                interfaceCode={interfaceCode}
+            />
         </div>
     ), [liveObjectVersion, selectedDocsIndex, interfaceCode, exampleObjectCode])
 
     const renderPrimaryDetails = useCallback(() => {
-        const nsp = `@${liveObjectVersion.nsp}`
         const mainWidthOffset = (
             sizing.ICON_LENGTH + 
             sizing.ICON_OFFSET_RIGHT + 
@@ -240,14 +235,14 @@ function NewLiveColumnSpecs(props, ref) {
                 <div className={pcn('__primary-details-liner')}>
                     <div className={pcn('__primary-details-icon')}>
                         <img
-                            src={s3(`${liveObject.id}.jpg`)}
+                            src={liveObject.icon}
                             alt=""
                         />
                     </div>
                     <div className={pcn('__primary-details-main')} style={{ maxWidth: `calc(100% - ${mainWidthOffset}px)`}}>
                         <div className={pcn('__primary-details-main-top')}>
                             <div className={pcn('__primary-details-name')}>
-                                <span>{liveObject.name}</span>
+                                <span>{displayName}</span>
                             </div>
                             { supportedChainNames.length &&
                                 <div className={pcn('__primary-details-chains')}>
@@ -270,16 +265,17 @@ function NewLiveColumnSpecs(props, ref) {
                         <a
                             className={pcn('__primary-details-link', '__primary-details-link--gh')}
                             target="_blank"
+                            href={liveObject.codeUrl}
                             dangerouslySetInnerHTML={{ __html: githubIcon }}>
                         </a>
                         <span className={pcn('__primary-details-link', '__primary-details-link--nsp')}>
-                            {nsp}
+                            {`@${nsp}`}
                         </span>
                     </div>    
                 </div>
             </div>
         )
-    }, [liveObjectVersion, liveObject, supportedChainNames])
+    }, [liveObjectVersion, liveObject, supportedChainNames, nsp, displayName])
 
     const renderTypeOverview = useCallback(() => (
         <div
@@ -303,83 +299,138 @@ function NewLiveColumnSpecs(props, ref) {
         </div>
     ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection, collapsedHeight])
 
-    const renderFiltersSection = useCallback(() => (
-        <div className={pcn('__section', '__section--filters')}>
-            <div className={pcn('__section-title')}>
-                <span
-                    className={pcn('__section-icon')}
-                    dangerouslySetInnerHTML={{ __html: filterIcon }}>
-                </span>
-                <span>Filters</span>
-            </div>
-            <div className={pcn('__section-main')}>
-                <div className={pcn('__filters-question')}>
-                    <div className={pcn('__section-subtitle')}>
-                        Which {liveObject.name} do you need?
+    const renderFiltersSection = useCallback(() => {
+        let name = liveObject.displayName
+        if (liveObject.isContractEvent) {
+            name = `${name} events`
+        }
+        return (
+            <div className={pcn('__section', '__section--filters')}>
+                <div className={pcn('__section-title')}>
+                    <span
+                        className={pcn('__section-icon')}
+                        dangerouslySetInnerHTML={{ __html: filterIcon }}>
+                    </span>
+                    <span>Filters</span>
+                </div>
+                <div className={pcn('__section-main')}>
+                    <div className={pcn('__filters-question')}>
+                        <div className={pcn('__section-subtitle')}>
+                            Which {name} do you need?
+                        </div>
+                        <div className={pcn('__filters-toggle-container')}>
+                            <Toggle
+                                falseText='All Records'
+                                trueText='Filter By'
+                                value={useFilters}
+                                onChange={setUseFilters}
+                            />
+                        </div>
                     </div>
-                    <div className={pcn('__filters-toggle-container')}>
-                        <Toggle
-                            falseText='All'
-                            trueText='Filter By'
-                            value={useFilters}
-                            onChange={setUseFilters}
+                    <div className={pcn('__filters-container')}>
+                        <LiveColumnFilters
+                            liveObjectVersion={liveObjectVersion}
+                            useFilters={useFilters}
+                            schema={schema}
+                            tableName={table?.name}
+                            isNewTable={isNewTable}
+                            ref={liveColumnFiltersRef}
                         />
                     </div>
                 </div>
-                <div className={pcn('__filters-container')}>
-                    <LiveColumnFilters
+            </div>
+        )
+    }, [liveObjectVersion, liveObject, schema, useFilters, table?.name, isNewTable])
+
+    const renderLiveColumnsSection = useCallback(() => {
+        let initialTableName = liveObjectVersion.config?.tableName
+        if (!initialTableName) {
+            initialTableName = camelToSnake(
+                liveObject.isContractEvent ? `${liveObject.displayName}Event` : liveObjectVersion.name
+            ) + 's'
+        }
+
+        return (
+            <div className={pcn('__section', '__section--live-columns')}>
+                <div className={pcn('__section-title')}>
+                    <span className='blink-indicator'><span></span></span>
+                    <span>{getLiveColumnsSectionTitle(purpose)}</span>
+                    <span>&mdash;</span>
+                    <span>{getLiveColumnsSectionSubtitle(purpose, liveObjectVersion, liveObject.isContractEvent)}</span>
+                </div>
+                {/* <div className={pcn('__section-subtitle')}>
+                    {getLiveColumnsSectionSubtitle(purpose, liveObjectVersion, liveObject.isContractEvent)}
+                </div> */}
+                <div className={pcn('__section-main')}>
+                    {/* { isNewTable && 
+                        <NewTableBasicInputs
+                            values={{
+                                name: initialTableName,
+                                desc: liveObject.desc,
+                            }}
+                            onNameChange={val => editableLiveColumnsRef.current?.updateTableName(val)}
+                            ref={newTableDetailsRef}
+                        />
+                    } */}
+                    <EditableLiveColumns
+                        table={table}
+                        config={config}
                         liveObjectVersion={liveObjectVersion}
-                        useFilters={useFilters}
-                        schema={schema}
-                        ref={liveColumnFiltersRef}
+                        initialTableName={initialTableName}
+                        purpose={purpose}
+                        ref={editableLiveColumnsRef}
                     />
                 </div>
             </div>
-        </div>
-    ), [liveObjectVersion, liveObject, schema, useFilters])
+        )
+    }, [isNewTable, liveObjectVersion, liveObject, table, purpose])
 
-    const renderLiveColumnsSection = useCallback(() => (
-        <div className={pcn('__section', '__section--live-columns')}>
-            <div className={pcn('__section-title')}>
-                <span className='blink-indicator'><span></span></span>
-                <span>{getLiveColumnsSectionTitle(purpose)}</span>
-            </div>
-            <div className={pcn('__section-subtitle')}>
-                {getLiveColumnsSectionSubtitle(purpose, liveObjectVersion)}
-            </div>
-            <div className={pcn('__section-main')}>
-                { isNewTable && 
+    const renderTableInfoSection = useCallback(() => {
+        let initialTableName = liveObjectVersion.config?.tableName
+        if (!initialTableName) {
+            initialTableName = camelToSnake(
+                liveObject.isContractEvent ? `${liveObject.displayName}Event` : liveObjectVersion.name
+            ) + 's'
+        }
+
+        return (
+            <div className={pcn('__section', '__section--table-info')}>
+                <div className={pcn('__section-title')}>
+                    <span
+                        className={pcn('__section-icon')}
+                        dangerouslySetInnerHTML={{ __html: tableEditorIcon }}>
+                    </span>
+                    <span>{`New Table`}</span>
+                    <span>&mdash;</span>
+                    <span>{`Name & Description`}</span>
+                </div>
+                {/* <div className={pcn('__section-subtitle')}>
+                    Customize the name and description of your new table.
+                </div> */}
+                <div className={pcn('__section-main')}>
                     <NewTableBasicInputs
                         values={{
-                            name: liveObjectVersion.config?.tableName,
+                            name: initialTableName,
                             desc: liveObject.desc,
                         }}
                         onNameChange={val => editableLiveColumnsRef.current?.updateTableName(val)}
                         ref={newTableDetailsRef}
                     />
-                }
-                <EditableLiveColumns
-                    table={table}
-                    config={config}
-                    liveObjectVersion={liveObjectVersion}
-                    purpose={purpose}
-                    ref={editableLiveColumnsRef}
-                />
+                </div>
             </div>
-        </div>
-    ), [isNewTable, liveObjectVersion, liveObject, table, purpose])
+        )
+    }, [isNewTable, liveObjectVersion, liveObject, table, purpose])
 
     if (!liveObjectVersion.name) {
         return <div className={className}></div>
     }
-
-    console.log(table)
 
     return (
         <div className={cn(className, `${className}--${purpose}`)} id={observerScrollRoot}>
             { renderPrimaryDetails() }
             { renderTypeOverview() }
             { renderFiltersSection() }
+            { renderTableInfoSection() }
             { renderLiveColumnsSection() }
         </div>
     )

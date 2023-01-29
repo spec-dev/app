@@ -178,3 +178,7 @@ export function colTypeIcon(t) {
 export function isColSerial(col) {
     return col.is_identity || (col.default_value || '').startsWith('nextval(')
 }
+
+export function isJSONColumn(col) {
+    return [JSON, JSONB].includes(col.data_type)
+}

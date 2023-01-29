@@ -125,6 +125,7 @@ $gutterPadding: 24px;
     align-items: center;
     justify-content: flex-start;
     padding-left: 11px;
+    padding-right: 10px;
     border-radius: 4px;
     background-color: transparent;
     transition: all 0.15s ease;
@@ -144,6 +145,11 @@ $gutterPadding: 24px;
         font-size: 13.5px;
         letter-spacing: 0.11px;
         transition: all 0.15s ease;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        max-width: 100%;
+        display: inline-block;
     }
 
     &:not(.tables-panel__table-item--selected):hover {
