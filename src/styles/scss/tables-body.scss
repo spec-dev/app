@@ -62,6 +62,12 @@ $loaderTime: 2.3s;
         .tables-body__row {
             &.tables-body__row--new {
                 opacity: 0;
+
+                .tables-body__cell {
+                    span {
+                        color: $tealAccent;
+                    }
+                }
             }
         }
     }
@@ -70,16 +76,22 @@ $loaderTime: 2.3s;
         .tables-body__row {
             &.tables-body__row--new {
                 opacity: 1;
-            }
-        }
 
-        &.tables-body--populating-page {
-            .tables-body__cell {
-                span {
-                    color: $tealAccent;
+                .tables-body__cell {
+                    span {
+                        color: $tealAccent;
+                    }
                 }
             }
         }
+
+        // &.tables-body--populating-page {
+        //     .tables-body__cell {
+        //         span {
+        //             color: $tealAccent;
+        //         }
+        //     }
+        // }
     }
 
     &.tables-body--in-sync {

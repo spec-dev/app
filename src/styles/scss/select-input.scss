@@ -33,6 +33,10 @@
 }
 
 .select-input {
+    .spec__input {
+        cursor: pointer;
+    }
+    
     .spec__value-container {
         padding: 0 !important;
     }

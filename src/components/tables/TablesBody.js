@@ -139,9 +139,6 @@ const defaultInitialStatus = (initialSeedCursor, schema, tableName) => {
 
     if (!initialSeedCursor) return tableStatus.IN_SYNC.id
     return tableStatus.BACKFILLING.id
-    return initialSeedCursor.cursor && initialSeedCursor.cursor > 0
-        ? tableStatus.POPULATING.id
-        : tableStatus.BACKFILLING.id
 }
 
 const defaultSortRules = (primaryKeyColNames) => (
@@ -258,7 +255,7 @@ function TablesBody(props, ref) {
             showLiveDataPanel(referrers.NEW_LIVE_COLUMN)
         }
     }, [showLiveDataPanel])
-
+    
     const selectLiveColumnFormatter = useCallback((liveObjectSpec, property, cb) => {
         if (selectLiveColumnFormatterPanelRef.current) {
             selectLiveColumnFormatterPanelRef.current.configure(liveObjectSpec, property, cb)
@@ -365,7 +362,7 @@ function TablesBody(props, ref) {
 
         if (status === tableStatus.BACKFILLING.id || appliedStatus.current === tableStatus.BACKFILLING.id) {
             const cb = () => {
-                // setStatus(tableStatus.POPULATING.id)
+                setStatus(tableStatus.POPULATING.id)
                 setCount(tableCounts[tablePath])
 
                 const fadeInIndexes = fadeInRowIndexesRange.current || []
@@ -785,7 +782,7 @@ function TablesBody(props, ref) {
         <div className={cn(
             className,
             `${className}--${appliedStatus.current}`,
-            appliedStatus.current === tableStatus.BACKFILLING.id ? `${className}--populating-page` : '',
+            // appliedStatus.current === tableStatus.BACKFILLING.id ? `${className}--populating-page` : '',
             records === null ? `${className}--loading` : '',
         )} ref={tablesBodyRef}>
             { table?.name && (

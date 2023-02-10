@@ -80,7 +80,7 @@ function NewLiveColumnPanel(props, ref) {
         from: { opacity: 0 },
         enter: { opacity: 1 },
         leave: { opacity: 0 },
-        config: { tension: 440, friction: 33 },
+        config: { tension: 460, friction: 34 },
     })
 
     useImperativeHandle(ref, () => ({
@@ -109,6 +109,9 @@ function NewLiveColumnPanel(props, ref) {
                 state.liveObject?.latestVersion || {},
             ),
         }
+
+        console.log(payload)
+        return
 
         setState(prevState => ({ 
             ...prevState,

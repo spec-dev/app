@@ -5,6 +5,13 @@
     background-color: adjust-color($backgroundLight, $alpha: -0.6);
     border-radius: 6px;
     border: 1px solid adjust-color($gray, $alpha: -0.9);
+    
+    &:hover {
+        .interface-example-snippet__toggle-button {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
 
     .snippet-liner {
         padding: 21px 26px 14px;
@@ -43,10 +50,10 @@
             position: absolute;
             content: '';
             width: 1px;
-            top: 46px;
-            bottom: 35px;
-            background-color: adjust-color($gray, $alpha: -0.87);
-            left: 25px;
+            top: 42px;
+            bottom: 34px;
+            background-color: adjust-color($gray, $alpha: -0.85);
+            left: 26.5px;
         }
     
         .interface {
@@ -72,20 +79,20 @@
 }
 
 .interface-example-snippet__toggle-button {
-    width: 27px;
-    height: 27px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background-color: adjust-color($backgroundLight, $alpha: -0.3);
     transform-origin: 50% 50%;
-    transform: scale(0.1);
+    transform: scale(0.5);
     opacity: 0;
-    transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.15s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, background-color 0.2s ease;
     overflow: hidden;
     display: block;
     cursor: pointer;
     position: absolute;
-    top: 9px;
-    right: 9px;
+    top: 7px;
+    right: 7px;
     z-index: 2;
 
     &:hover {
@@ -93,10 +100,10 @@
 
         .interface-example-snippet__toggle-button-icon {
             svg {
-                fill: $white;
+                fill: $lightGray;
             }
             span {
-                color: $white;
+                color: $lightGray;
             }
         }
     }
@@ -112,22 +119,23 @@
     position: absolute;
     top: 0;
     left: 0;
-    color: adjust-color($lightGray, $alpha: -0.1);
+    // color: adjust-color($lightGray, $alpha: -0.4);
+    color: $gray;
     opacity: 1;
     transition: opacity 0.1s ease;
 
     svg {
-        height: 11px;
+        height: 10px;
         width: auto;
         fill: currentColor;
         position: relative;
         left: 0.5px;
-        transition: fill 0.15s ease;
+        transition: fill 0.2s ease;
     }
 
     span {
         font-family: CodeRegular;
         font-size: 11px;
-        transition: color 0.15s ease;
+        transition: color 0.2s ease;
     }
 }

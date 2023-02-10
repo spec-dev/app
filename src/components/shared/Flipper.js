@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react'
 import { getPCN } from '../../utils/classes'
 
 const modifiers = {

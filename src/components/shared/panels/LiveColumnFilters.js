@@ -12,7 +12,9 @@ import { cloneDeep } from 'lodash-es'
 import hljs from 'highlight.js/lib/core'
 import TimestampInput from '../inputs/TimestampInput'
 import { parse, stringify } from '../../../utils/json'
+import { noop } from '../../../utils/nodash'
 import CodeInput from '../inputs/CodeInput'
+import YesNoPrompt, { promptLevels } from '../prompts/YesNoPrompt'
 import {
     NUMBER,
     STRING,
@@ -38,7 +40,7 @@ const getFilterOptions = propertyType => {
 }
 
 function LiveColumnFilters(props, ref) {
-    const { liveObjectVersion = {}, schema, tableName, isNewTable, useFilters } = props
+    const { liveObjectVersion = {}, schema, tableName, isNewTable, useFilters, addForeignKeyRefToTable = noop} = props
     const [filters, setFilters] = useState(props.filters || [[{ op: filterOps.IN_COLUMN }]])
     const [showForeignKeyAdditionPrompt, setShowForeignKeyAdditionPrompt] = useState(null)
     const useFiltersRef = useRef(useFilters)
@@ -62,23 +64,12 @@ function LiveColumnFilters(props, ref) {
     const containerProps = useSpring({ 
         height: useFilters ? height : 0, 
         config: {
-            tension: 392,
+            tension: 390,
             friction: 32,
             ...extraConfig
         },
         onRest: () => updateOverflow('visible'),
         onStart: () => updateOverflow('hidden')
-    })
-
-    const foreignKeyPromptTransitions = useTransition(!!(showForeignKeyAdditionPrompt?.length), {
-        from: { opacity: 0, height: 0 },
-        enter: { opacity: 1, height: 150 },
-        leave: { opacity: 0, height: 0 },
-        config: enter => key => {
-            return enter
-                ? { tension: 320, friction: 32 }
-                : { tension: 330, friction: 31 }
-        }
     })
 
     const propertyOptions = useMemo(() => (liveObjectVersion.properties || []).map(p => {
@@ -218,12 +209,20 @@ function LiveColumnFilters(props, ref) {
         } else {
             const isColumnOp = columnOps.has(newFilters[i][j].op)
             const isForeignColPath = isColumnOp && value && (isNewTable || !value.startsWith(`${schema}.${tableName}.`))
-            if (!firstForeignSelectedColFilter && isForeignColPath) {
-                const [colSchemaName, colTableName, _] = value
+            if (!firstForeignSelectedColFilter && isForeignColPath && !!newFilters[i][j].property) {
+                const [colSchemaName, colTableName, _] = value.split('.')
                 const colTablePath = [colSchemaName, colTableName].join('.')
-                if (!tablePathsPromptedAboutForeignKeys.current.has(colTablePath)) {
+                const selectedTable = (getSchema(colSchemaName) || []).find(table => table.name === colTableName)
+                const numPrimaryKeysOnSelectedTable = (selectedTable?.primary_keys || []).length
+
+                // TODO: Check to make sure foreign key hasn't already been added in the columns section.
+                if (numPrimaryKeysOnSelectedTable === 1 && !tablePathsPromptedAboutForeignKeys.current.has(colTablePath)) {
                     tablePathsPromptedAboutForeignKeys.current.add(colTablePath)
-                    promptForeignKeyAddition.current = [i, j]
+                    promptForeignKeyAddition.current = [
+                        i, 
+                        j,
+                        [colSchemaName, colTableName, selectedTable.primary_keys[0].name].join('.')
+                    ]
                 }
             }
         }
@@ -256,6 +255,11 @@ function LiveColumnFilters(props, ref) {
         andButtonRefs.current[i] = ref
     }, [])
     
+    const onAddForeignKeyRefToTable = useCallback((foreignTablePkColPath, closePrompt) => {
+        setTimeout(closePrompt, 1000)
+        addForeignKeyRefToTable(foreignTablePkColPath)
+    }, [addForeignKeyRefToTable])
+
     useEffect(() => {
         useFiltersRef.current = useFilters
     }, [useFilters])
@@ -277,13 +281,21 @@ function LiveColumnFilters(props, ref) {
         }
     }, [filters])
 
-    // useEffect(() => {
-    //     if (promptForeignKeyAddition.current && firstForeignSelectedColFilter) {
-    //         const [i, j] = promptForeignKeyAddition.current
-    //         promptForeignKeyAddition.current = null
-    //         setShowForeignKeyAdditionPrompt([i, j])
-    //     }
-    // }, [firstForeignSelectedColFilter])
+    useEffect(() => {
+        if (promptForeignKeyAddition.current && firstForeignSelectedColFilter) {
+            const [i, j, foreignTablePkColPath] = promptForeignKeyAddition.current
+            promptForeignKeyAddition.current = null
+            setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'will-open'])      
+        }
+    }, [firstForeignSelectedColFilter])
+
+    useEffect(() => {
+        if (!showForeignKeyAdditionPrompt?.length) return
+        const [i, j, foreignTablePkColPath, mod] = showForeignKeyAdditionPrompt
+        if (mod === 'will-open') {
+            setTimeout(() => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'open']), 30)
+        }
+    }, [showForeignKeyAdditionPrompt])
 
     const renderColumnValueSingleValue = useCallback(({ innerProps, data }) => {
         const [_, table, column] = (data?.value || '').split('.')
@@ -417,12 +429,13 @@ function LiveColumnFilters(props, ref) {
         )
     }, [])
 
-    const renderColumnValueInput = useCallback((filter, i, j) => (
+    const renderColumnValueInput = useCallback((filter, i, j, showingPrompt) => (
         <SelectInput
             className={pcn(
                 '__filter-input-field', 
                 '__filter-input-field--value', 
                 '__filter-input-field--col-value',
+                showingPrompt ? '__filter-input-field--showing-prompt' : '',
             )}
             classNamePrefix='spec'
             value={filter.value}
@@ -571,12 +584,12 @@ function LiveColumnFilters(props, ref) {
         />
     ), [setFilterData, setInputRef])
 
-    const renderValueInput = useCallback((filter, i, j) => {
+    const renderValueInput = useCallback((filter, i, j, showingPrompt) => {
         const op = filter.op
 
         // Column selection
         if (columnOps.has(op)) {
-            return renderColumnValueInput(filter, i, j)
+            return renderColumnValueInput(filter, i, j, showingPrompt)
         }
 
         const property = filter.property
@@ -625,19 +638,25 @@ function LiveColumnFilters(props, ref) {
         liveObjectVersion,
     ])
 
-    const renderAddForeignKeyPrompt = useCallback((filter) => {
-        return foreignKeyPromptTransitions(
-            (styles, item) => item && (
-                <animated.div
-                    className={pcn('__prompt', '__prompt--fk')}
-                    style={styles}>
-                    <div className={pcn('__prompt-liner')}>
-                        { filter.value }
-                    </div>
-                </animated.div>
-            )
+    const renderAddForeignKeyPrompt = useCallback((filter, foreignTablePkColPath, mod, i, j) => {
+        const id = `${i}-${j}-prompt-fk`
+        const close = () => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'close'])
+        const [_, foreignTableName, foreignTablePkName] = foreignTablePkColPath.split('.')
+        return (
+            <div
+                id={id}
+                key={id}
+                className={pcn('__prompt', '__prompt--fk', `__prompt--${mod}`)}>
+                <YesNoPrompt
+                    level={promptLevels.INFO}
+                    title='Create and auto-populate a foreign key column?'
+                    subtitle={`This is optional and won't affect filtering, but it could improve join-query performance.`}
+                    onYes={() => onAddForeignKeyRefToTable(foreignTablePkColPath, close)}
+                    onNo={close}
+                />
+            </div>
         )
-    }, [foreignKeyPromptTransitions])
+    }, [onAddForeignKeyRefToTable])
 
     const renderFilterInput = useCallback((filter, i, j) => {
         const alreadySelectedPropertyValues = filters[i]
@@ -650,14 +669,18 @@ function LiveColumnFilters(props, ref) {
             : null
 
         let promptAboutForeignKey = false
+        let foreignTablePkColPath = ''
+        let mod = ''
         if (showForeignKeyAdditionPrompt?.length) {
-            const [k, l] = showForeignKeyAdditionPrompt
+            const [k, l, m, n] = showForeignKeyAdditionPrompt
+            foreignTablePkColPath = m
+            mod = n
             if (i === k && j === l && filter.value) {
                 promptAboutForeignKey = true
             }
         }
 
-        return (
+        const filterInput = (
             <div key={`${i}-${j}`} className={pcn('__filter-input')}>
                 <SelectInput
                     className={pcn(
@@ -696,15 +719,23 @@ function LiveColumnFilters(props, ref) {
                     }}
                     ref={r => setInputRef(i, j, 'op', r)}
                 />
-                { renderValueInput(filter, i, j) }
+                { renderValueInput(filter, i, j, promptAboutForeignKey && mod === 'open') }
                 <div
                     className={pcn('__filter-input-icon-button', '__filter-input-icon-button--remove')}
                     onClick={() => removeFilter(i, j)}
                     dangerouslySetInnerHTML={{ __html: closeIcon }}>
                 </div>
-                { promptAboutForeignKey && renderAddForeignKeyPrompt(filter) }
             </div>
         )
+
+        if (!promptAboutForeignKey) {
+            return filterInput
+        }
+
+        return [
+            filterInput,
+            renderAddForeignKeyPrompt(filter, foreignTablePkColPath, mod, i, j),
+        ]
     }, [
         filters, 
         liveObjectVersion,

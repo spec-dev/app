@@ -5,6 +5,7 @@ import SelectInput from '../../shared/inputs/SelectInput'
 import { noop } from '../../../utils/nodash'
 import { camelToSnake, snakeToCamel } from '../../../utils/formatters'
 import gearIcon from '../../../svgs/gear-thin'
+import { cloneDeep } from 'lodash-es'
 import closeIcon from '../../../svgs/close'
 import transformIcon from '../../../svgs/transform'
 import triangleIcon from '../../../svgs/triangle'
@@ -15,6 +16,7 @@ import { guessColTypeFromProperty } from '../../../utils/propertyTypes'
 import { getLiveColumnsForTable } from '../../../utils/config'
 import short from 'short-uuid'
 import ColumnTypeInput from '../inputs/ColumnTypeInput'
+import { getSchema } from '../../../utils/schema'
 
 const className = 'editable-live-columns'
 const pcn = getPCN(className)
@@ -153,13 +155,77 @@ function EditableLiveColumns(props, ref) {
 
     const colNameInputRefs = useRef({})
 
+    const addNewForeignKeyColumn = useCallback((foreignTablePkColPath) => {
+        const [targetSchemaName, targetTableName, targetColName] = foreignTablePkColPath.split('.')
+        const targetColumn = ((
+            getSchema(targetSchemaName).find(t => t.name === targetTableName) || {}
+        ).columns || []).find(col => col.name === targetColName)
+        if (!targetColumn) {
+            console.warn(`Couldn't find meta info for column ${foreignTablePkColPath}.`)
+            return
+        }
+
+        let lastPkIndex = -1
+        let lastFkIndex = -1
+        const newColumns = []
+        for (let i = 0; i < columns.length; i++) {
+            const col = { ...columns[i] }
+            if (col.isPrimaryKey) {
+                lastPkIndex = i
+            }
+            if (!!col.relationship) {
+                lastFkIndex = i
+            }
+            newColumns.push(col)
+        }
+        const addColToIndex = Math.max(lastPkIndex, lastFkIndex) + 1
+
+        let singularTargetTableName = targetTableName.endsWith('s') 
+            ? targetTableName.slice(0, targetTableName.length - 1)
+            : targetTableName
+    
+        const foreignKeyColName = [singularTargetTableName, targetColName].join('_')
+        const foreignKeyColType = targetColumn.data_type
+
+        newColumns.splice(addColToIndex, 0, {
+            id: short.generate(),
+            isNew: true,
+            name: foreignKeyColName,
+            data_type: foreignKeyColType,
+            relationship: {
+                source_column_name: foreignKeyColName,
+                target_table_schema: targetSchemaName,
+                target_table_name: targetTableName,
+                target_column_name: targetColName,
+            },
+        })
+
+        newColumns.forEach((col, i) => {
+            col.ordinal_position = i + 1
+        })
+
+        setColumns(newColumns)
+    }, [columns, table])
+
     useImperativeHandle(ref, () => ({
         serialize: () => {
             const newColumns = []
             const liveColumns = {}
-            for (const col of columns) {
+            for (const column of columns) {
+                let col = { ...column }
+
+                // Foreign key formatting
+                if (col.relationship) {
+                    col.foreignKey = {
+                        schema: col.relationship.target_schema_name,
+                        table: col.relationship.target_table_name,
+                        column: col.relationship.target_column_name,
+                    }
+                }
+
                 col.isNew && newColumns.push(col)
                 
+                // Live column -> property mapping.
                 if (col.liveColumn?.property && !col.liveColumn.isDisabled) {
                     liveColumns[col.name] = {
                         property: col.liveColumn.property
@@ -169,7 +235,25 @@ function EditableLiveColumns(props, ref) {
             return [newColumns, liveColumns]
         },
         updateTableName: value => setTableName(value),
-    }), [columns])
+        addForeignKeyRefToTable: (foreignTablePkColPath) => {
+            // Ensure relationship doesn't already exist.
+            let fkAlreadyExists = false
+            const [targetSchema, targetTable, targetCol] = foreignTablePkColPath.split('.')
+            for (const col of columns) {
+                const rel = col.relationship
+                if (!rel) continue
+                if (rel.target_schema_name === targetSchema && 
+                    rel.target_table_name === targetTable && 
+                    rel.target_column_name === targetCol
+                ) {
+                    fkAlreadyExists = true
+                    break
+                }
+            }
+            if (fkAlreadyExists) return
+            addNewForeignKeyColumn(foreignTablePkColPath)
+        }
+    }), [columns, addNewForeignKeyColumn])
 
     const setColNameInputRef = useCallback((ref, i) => {
         if (!ref) return
@@ -194,10 +278,13 @@ function EditableLiveColumns(props, ref) {
     const removeNewColumn = useCallback(removeIndex => {
         const newColumns = []
         for (let i = 0; i < columns.length; i++) {
-            const column = columns[i]
+            const column = { ...columns[i] }
             if (i === removeIndex && column.isNew) continue
             newColumns.push(column)
         }
+        newColumns.forEach((col, i) => {
+            col.ordinal_position = i + 1
+        })
         setColumns(newColumns)
     }, [columns])
 
@@ -301,27 +388,53 @@ function EditableLiveColumns(props, ref) {
     const renderNewColumn = useCallback((col, i) => {
         const property = col.liveColumn?.property
 
-        let colIcon = colTypeIcon(col.data_type)
+        let dataTypeIcon = ( 
+            <div
+                className={pcn('__new-col-type-icon')}
+                dangerouslySetInnerHTML={{ 
+                    __html: colTypeIcon(col.data_type) || '<span class="--plus">+</span>' 
+                }}>
+            </div> 
+        )
+
         if (col.isPrimaryKey) {
-            // colIcon = '<span class="--label">PK</span>'
-            colIcon = keyIcon
+            dataTypeIcon = <span className={pcn('__new-constraint-label')}><span>PK</span></span>
         } else if (!!col.relationship) {
-            colIcon = modelRelationshipIcon
-            // colIcon = '<span class="--label">FK</span>'
+            dataTypeIcon = <span className={pcn('__new-constraint-label', '__new-constraint-label--fk')}><span>FK</span></span>
         }
-        colIcon = colIcon || '<span class="--plus">+</span>'
+
+        let colType = (
+            <ColumnTypeInput
+                className={pcn('__new-col-type')}
+                value={displayColType(col.data_type || '')}
+                placeholder='type'
+                icon={caretDownIcon}
+                onChange={value => setNewColumnDataType(value, i)}
+            />
+        )
+        if (col.isSerial) {
+            colType = (
+                <span className={pcn('__new-col-type-fixed')}>
+                    <span>{SERIAL}</span>
+                </span>
+            )
+        } else if (!!col.relationship) {
+            colType = (
+                <span className={pcn('__new-col-type-fixed')}>
+                    <span>{displayColType(col.data_type || '')}</span>
+                </span>
+            )
+        }
 
         return (
             <div className={pcn(
                 '__new-col', 
                 !!property ? '__new-col--live' : '',
                 col.isPrimaryKey ? '__new-col--pk' : '',
+                !!col.relationship ? '__new-col--fk' : '',
             )}>
                 <div className={pcn('__new-col-liner')}>
-                    <div
-                        className={pcn('__new-col-type-icon')}
-                        dangerouslySetInnerHTML={{ __html: colIcon }}>
-                    </div>
+                    { dataTypeIcon }
                     <TextInput
                         className={pcn('__new-col-name')}
                         value={col.name || ''}
@@ -336,16 +449,7 @@ function EditableLiveColumns(props, ref) {
                         )}
                     />
                 </div>
-                { col.isSerial ? 
-                    <span className={pcn('__new-col-type-fixed')}>{SERIAL}</span> : (
-                    <ColumnTypeInput
-                        className={pcn('__new-col-type')}
-                        value={displayColType(col.data_type || '')}
-                        placeholder='type'
-                        icon={caretDownIcon}
-                        onChange={value => setNewColumnDataType(value, i)}
-                    />
-                )}
+                { colType }
                 <div style={{ width: 40, display: 'block', height: '100%', flex: 1 }}>
                     <div
                         className={pcn('__new-col-icon', '__new-col-icon--extra')}

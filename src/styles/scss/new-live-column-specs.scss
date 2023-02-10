@@ -58,7 +58,7 @@ $newLiveColumnPrimaryDetailsLinksOffsetLeft: 20px;
     display: block;
     padding: 25px 33px 24px;
     width: 100%;
-    border-bottom: 1px solid adjust-color($gray, $alpha: -0.93);
+    border-bottom: 1px solid adjust-color($gray, $alpha: -0.92);
 }
 
 .new-live-column-specs__primary-details-liner {
@@ -265,7 +265,7 @@ a.new-live-column-specs__primary-details-link {
     justify-content: flex-start;
     align-items: flex-start;
     width: 100%;
-    margin-top: -5px;
+    margin-top: -4px;
 }
 
 .new-live-column-specs__doc-property {
@@ -510,6 +510,12 @@ a.new-live-column-specs__primary-details-link {
         }
     }
 
+    &.new-live-column-specs__section--filters {
+        .new-live-column-specs__section-title {
+            padding-left: 21px;
+        }
+    }
+
     &.new-live-column-specs__section--new-table {
         .new-live-column-specs__section-icon svg {
             height: 11.5px;
@@ -596,12 +602,12 @@ a.new-live-column-specs__primary-details-link {
     position: relative;
     padding-top: 24px;
 
-    &:hover {
-        .interface-example-snippet__toggle-button {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
+    // &:hover {
+    //     .interface-example-snippet__toggle-button {
+    //         transform: scale(1);
+    //         opacity: 1;
+    //     }
+    // }
 
     .new-live-column-specs__type-overview-liner {
         display: flex;
@@ -694,7 +700,7 @@ a.new-live-column-specs__primary-details-link {
 
 .new-live-column-specs__filters-toggle-container {
     display: inline-block;
-    width: 200px;
+    width: 195px;
 }
 
 .new-live-column-specs__filters-container {

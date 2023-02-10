@@ -42,10 +42,8 @@ const sizing = {
     ICON_LENGTH: 70,
     ICON_OFFSET_RIGHT: 21,
     LINKS_OFFSET_LEFT: 20,
-    // DOCS_HEADER_HEIGHT: 40 + 15 + 16,
-    DOCS_HEADER_HEIGHT: 0,
     DOCS_PADDING_BOTTOM: 36,
-    DOCS_INTERFACE_PADDING: 22 + 22 + 1 + 1,
+    DOCS_INTERFACE_PADDING: 21 + 21 + 1 + 1,
     DOCS_INTERFACE_LINE_HEIGHT: 20,
     DOCS_COLLAPSED_BOTTOM_OFFSET: 13,
     DOCS_COLLAPSED_MAX_HEIGHT: 400,
@@ -124,10 +122,9 @@ function NewLiveColumnSpecs(props, ref) {
     const supportedChainNames = useMemo(() => supportedChainIds.map(chainId => chainNames[chainId]).filter(v => !!v), [supportedChainIds])
     const collapsedHeight = useMemo(() => Math.min(
         (
-            sizing.DOCS_HEADER_HEIGHT + 
             sizing.DOCS_INTERFACE_PADDING + 
             sizing.DOCS_PADDING_BOTTOM +
-            sizing.DOCS_INTERFACE_LINE_HEIGHT * (2 + propertyNames.length)
+            sizing.DOCS_INTERFACE_LINE_HEIGHT * (2 + propertyNames.length) + 6
         ),
         sizing.DOCS_COLLAPSED_MAX_HEIGHT
     ), [propertyNames])
@@ -205,9 +202,6 @@ function NewLiveColumnSpecs(props, ref) {
 
     const renderDocsSection = useCallback(() => (
         <div className={pcn('__docs')} ref={calculateExpandedDocsHeight}>
-            {/* <div className={pcn('__version')}>
-                <span>v{liveObjectVersion.version}</span>
-            </div> */}
             <div className={pcn('__doc-properties')}>
                 { renderProperties() }
             </div>
@@ -334,6 +328,9 @@ function NewLiveColumnSpecs(props, ref) {
                             schema={schema}
                             tableName={table?.name}
                             isNewTable={isNewTable}
+                            addForeignKeyRefToTable={(...args) => {
+                                editableLiveColumnsRef.current?.addForeignKeyRefToTable(...args)
+                            }}
                             ref={liveColumnFiltersRef}
                         />
                     </div>
@@ -358,20 +355,7 @@ function NewLiveColumnSpecs(props, ref) {
                     <span>&mdash;</span>
                     <span>{getLiveColumnsSectionSubtitle(purpose, liveObjectVersion, liveObject.isContractEvent)}</span>
                 </div>
-                {/* <div className={pcn('__section-subtitle')}>
-                    {getLiveColumnsSectionSubtitle(purpose, liveObjectVersion, liveObject.isContractEvent)}
-                </div> */}
                 <div className={pcn('__section-main')}>
-                    {/* { isNewTable && 
-                        <NewTableBasicInputs
-                            values={{
-                                name: initialTableName,
-                                desc: liveObject.desc,
-                            }}
-                            onNameChange={val => editableLiveColumnsRef.current?.updateTableName(val)}
-                            ref={newTableDetailsRef}
-                        />
-                    } */}
                     <EditableLiveColumns
                         table={table}
                         config={config}
@@ -404,9 +388,6 @@ function NewLiveColumnSpecs(props, ref) {
                     <span>&mdash;</span>
                     <span>{`Name & Description`}</span>
                 </div>
-                {/* <div className={pcn('__section-subtitle')}>
-                    Customize the name and description of your new table.
-                </div> */}
                 <div className={pcn('__section-main')}>
                     <NewTableBasicInputs
                         values={{

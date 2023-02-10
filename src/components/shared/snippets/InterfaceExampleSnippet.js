@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
 import { getPCN, cn } from '../../../utils/classes'
 import { previewIcon } from '../../../svgs/icons'
 
