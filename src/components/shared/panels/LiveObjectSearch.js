@@ -29,6 +29,7 @@ function LiveObjectSearch(props, ref) {
 
     const onTypeQuery = useCallback((e) => {
         const value = e.currentTarget.value.toLowerCase().trim()
+
         const matchingResults = liveObjects.filter(liveObject => {
             let name = liveObject.displayName
             if (liveObject.isContractEvent) {
@@ -37,7 +38,32 @@ function LiveObjectSearch(props, ref) {
             name = name.toLowerCase()
             const desc = liveObject.desc.toLowerCase()
             return name.includes(value) || desc.includes(value)
+        }).sort((a, b) => {
+            let aName = a.displayName
+            if (a.isContractEvent) {
+                aName += ' Events'
+            }
+            aName = aName.toLowerCase()
+            const aDesc = a.desc.toLowerCase()
+            const aNameMatches = aName.includes(value)
+            const aDescMatches = aDesc.includes(value)
+
+            let bName = b.displayName
+            if (b.isContractEvent) {
+                bName += ' Events'
+            }
+            bName = bName.toLowerCase()
+            const bDesc = b.desc.toLowerCase()
+            const bNameMatches = bName.includes(value)
+            const bDescMatches = bDesc.includes(value)
+    
+            return (
+                Number(bNameMatches) - Number(aNameMatches) ||
+                Number(bDescMatches) - Number(aDescMatches) ||
+                Number(a.isContractEvent) - Number(b.isContractEvent)
+            )
         })
+
         setSearchResults(matchingResults)
     }, [liveObjects])
 

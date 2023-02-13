@@ -217,7 +217,7 @@ function EditableLiveColumns(props, ref) {
                 // Foreign key formatting
                 if (col.relationship) {
                     col.foreignKey = {
-                        schema: col.relationship.target_schema_name,
+                        schema: col.relationship.target_table_schema,
                         table: col.relationship.target_table_name,
                         column: col.relationship.target_column_name,
                     }

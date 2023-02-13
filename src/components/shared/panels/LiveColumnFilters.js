@@ -7,20 +7,20 @@ import { propertyIsEnum, formatPropertyOptionsForSelection, resolvedPropertyType
 import closeIcon from '../../../svgs/close'
 import { getSchema } from '../../../utils/schema'
 import useMeasure from 'react-use-measure'
-import { animated, useSpring, useTransition } from 'react-spring'
+import { animated, useSpring } from 'react-spring'
 import { cloneDeep } from 'lodash-es'
 import hljs from 'highlight.js/lib/core'
 import TimestampInput from '../inputs/TimestampInput'
 import { parse, stringify } from '../../../utils/json'
 import { noop } from '../../../utils/nodash'
 import CodeInput from '../inputs/CodeInput'
-import YesNoPrompt, { promptLevels } from '../prompts/YesNoPrompt'
 import {
     NUMBER,
     STRING,
     BOOLEAN,
     TIMESTAMP,
 } from '../../../utils/propertyTypes'
+import AddForeignKeyPrompt from '../prompts/AddForeignKeyPrompt'
 
 const className = 'live-column-filters'
 const pcn = getPCN(className)
@@ -647,10 +647,7 @@ function LiveColumnFilters(props, ref) {
                 id={id}
                 key={id}
                 className={pcn('__prompt', '__prompt--fk', `__prompt--${mod}`)}>
-                <YesNoPrompt
-                    level={promptLevels.INFO}
-                    title='Create and auto-populate a foreign key column?'
-                    subtitle={`This is optional and won't affect filtering, but it could improve join-query performance.`}
+                <AddForeignKeyPrompt
                     onYes={() => onAddForeignKeyRefToTable(foreignTablePkColPath, close)}
                     onNo={close}
                 />

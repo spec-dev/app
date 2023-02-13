@@ -265,7 +265,7 @@ function NewLiveColumnSpecs(props, ref) {
                         <span className={pcn('__primary-details-link', '__primary-details-link--nsp')}>
                             {`@${nsp}`}
                         </span>
-                    </div>    
+                    </div>
                 </div>
             </div>
         )

@@ -11,7 +11,14 @@ export async function loadAllLiveObjects() {
         // TODO: Show error
         return
     }
-    liveObjects.all = data
+    liveObjects.all = (data || []).sort((a, b) => {
+        const aTimestamp = new Date(a.latestVersion.createdAt).getTime()
+        const bTimestamp = new Date(b.latestVersion.createdAt).getTime()
+        return (
+            Number(a.isContractEvent) - Number(b.isContractEvent) ||
+            bTimestamp - aTimestamp
+        )
+    })
 }
 
 export const getAllLiveObjects = () => liveObjects.all || []

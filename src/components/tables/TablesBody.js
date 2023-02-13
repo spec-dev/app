@@ -292,8 +292,6 @@ function TablesBody(props, ref) {
             const prevNumRowsOnPage = records?.length || 0
             const numRowsOnPage = data.length
 
-            console.log('Track changes', numRowsOnPage, prevNumRowsOnPage)
-
             if (numRowsOnPage <= prevNumRowsOnPage) {
                 fadeInRowIndexesRange.current = []
             } else {
@@ -362,6 +360,7 @@ function TablesBody(props, ref) {
 
         if (status === tableStatus.BACKFILLING.id || appliedStatus.current === tableStatus.BACKFILLING.id) {
             const cb = () => {
+                console.log('calling backfillingCallback.current')
                 setStatus(tableStatus.POPULATING.id)
                 setCount(tableCounts[tablePath])
 
@@ -372,8 +371,10 @@ function TablesBody(props, ref) {
 
                 removePopulatingTimer.current = setTimeout(() => {
                     if (seedCursor.current) {
+                        console.log('removePopulatingTimer.current top')
                         $(tablesBodyRef.current).removeClass(`${className}--populating-page`)
                     } else {
+                        console.log('removePopulatingTimer.current bottom')
                         setStatus(tableStatus.IN_SYNC.id)
                     }
                 }, numNewRecords ? (numNewRecords * timing.rowFadeInDelay) : 0)
@@ -516,6 +517,7 @@ function TablesBody(props, ref) {
         // Seed complete.
         else if (seedCursor.current) {
             seedCursor.current = null
+            if (backfillingCallback.current) return
             setTimeout(() => setStatus(tableStatus.IN_SYNC.id), 1000)
         }
     }, [props.seedCursor])
@@ -765,7 +767,7 @@ function TablesBody(props, ref) {
             maxWidth = Math.min(mainRef.current.offsetWidth, maxWidth)
         }
         return (
-            <div className={pcn('__table-loading')} style={{ maxWidth: `${maxWidth}px` }}>
+            <div key='fixed' className={pcn('__table-loading')} style={{ maxWidth: `${maxWidth}px` }}>
                 <div className='indeterminate'></div>
             </div>
         )
@@ -782,7 +784,6 @@ function TablesBody(props, ref) {
         <div className={cn(
             className,
             `${className}--${appliedStatus.current}`,
-            // appliedStatus.current === tableStatus.BACKFILLING.id ? `${className}--populating-page` : '',
             records === null ? `${className}--loading` : '',
         )} ref={tablesBodyRef}>
             { table?.name && (

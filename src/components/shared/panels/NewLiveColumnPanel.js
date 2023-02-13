@@ -110,9 +110,6 @@ function NewLiveColumnPanel(props, ref) {
             ),
         }
 
-        console.log(payload)
-        return
-
         setState(prevState => ({ 
             ...prevState,
             status: status.SAVING,

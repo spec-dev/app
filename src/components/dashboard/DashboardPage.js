@@ -185,8 +185,8 @@ function DashboardPage(props) {
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
             <div className={pcn('__side-nav-liner')}>
-                <Link dangerouslySetInnerHTML={{ __html: specIcon }}></Link>
-                <Link dangerouslySetInnerHTML={{ __html: homeIcon }}></Link>
+                <div dangerouslySetInnerHTML={{ __html: specIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: homeIcon }}></div>
                 <span></span>
                 <Link
                     className={ currentSection === sections.TABLES ? '--selected' : '' } 
@@ -194,17 +194,17 @@ function DashboardPage(props) {
                     // TODO: This needs to be set to the last visited table
                     to={paths.toTables(projectId)}>
                 </Link>
-                <Link>
+                <div>
                     <span>{'{}'}</span>
-                </Link>
-                <Link dangerouslySetInnerHTML={{ __html: terminalIcon }}></Link>
-                <Link dangerouslySetInnerHTML={{ __html: dbIcon }}></Link>
+                </div>
+                <div dangerouslySetInnerHTML={{ __html: terminalIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: dbIcon }}></div>
                 <span></span>
-                <Link dangerouslySetInnerHTML={{ __html: blistIcon }}></Link>
-                <Link dangerouslySetInnerHTML={{ __html: barChartIcon }}></Link>
-                <Link dangerouslySetInnerHTML={{ __html: documentIcon }}></Link>
-                <Link dangerouslySetInnerHTML={{ __html: gearIcon }}></Link>
-                <Link dangerouslySetInnerHTML={{ __html: userIcon }}></Link>
+                <div dangerouslySetInnerHTML={{ __html: blistIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: barChartIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: documentIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: gearIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: userIcon }}></div>
             </div>
         </div>
     ), [currentSection, projectId])

@@ -568,7 +568,7 @@ $loaderTime: 2.3s;
     overflow: hidden;
     opacity: 0;
     z-index: 9;
-    animation: show-loader $loaderTime linear forwards;
+    animation: show-loader $loaderTime linear infinite;
     animation-delay: 10ms;
 
     &:before {

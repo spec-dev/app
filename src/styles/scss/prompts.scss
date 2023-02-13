@@ -27,7 +27,7 @@
             color: $blueAccent;
         }
 
-        .yes-no-prompt__button {
+        .add-foreign-key-prompt__button {
             color: $blueAccent;
             border: 1px solid adjust-color($blueAccent, $alpha: -0.7);
             background-color: transparent;
@@ -114,7 +114,7 @@
     justify-content: flex-start;
 }
 
-.yes-no-prompt__buttons {
+.add-foreign-key-prompt__buttons {
     display: inline-flex;
     flex-direction: row;
     align-items: center;
@@ -124,7 +124,7 @@
     right: -5px;
 }
 
-.yes-no-prompt__button {
+.add-foreign-key-prompt__button {
     height: 24px;
     width: 33px;
     display: flex;
@@ -145,8 +145,8 @@
         margin-right: 7px;
     }
     
-    &.yes-no-prompt__button--added,
-    &.yes-no-prompt__button--animate {
+    &.add-foreign-key-prompt__button--added,
+    &.add-foreign-key-prompt__button--animate {
         background-color: transparent;
 
         span {
