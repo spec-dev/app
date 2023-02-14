@@ -124,7 +124,7 @@ function NewLiveColumnSpecs(props, ref) {
         (
             sizing.DOCS_INTERFACE_PADDING + 
             sizing.DOCS_PADDING_BOTTOM +
-            sizing.DOCS_INTERFACE_LINE_HEIGHT * (2 + propertyNames.length) + 6
+            sizing.DOCS_INTERFACE_LINE_HEIGHT * (2 + propertyNames.length)
         ),
         sizing.DOCS_COLLAPSED_MAX_HEIGHT
     ), [propertyNames])

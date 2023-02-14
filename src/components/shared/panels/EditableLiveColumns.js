@@ -155,15 +155,8 @@ function EditableLiveColumns(props, ref) {
 
     const colNameInputRefs = useRef({})
 
-    const addNewForeignKeyColumn = useCallback((foreignTablePkColPath) => {
-        const [targetSchemaName, targetTableName, targetColName] = foreignTablePkColPath.split('.')
-        const targetColumn = ((
-            getSchema(targetSchemaName).find(t => t.name === targetTableName) || {}
-        ).columns || []).find(col => col.name === targetColName)
-        if (!targetColumn) {
-            console.warn(`Couldn't find meta info for column ${foreignTablePkColPath}.`)
-            return
-        }
+    const addNewForeignKeyColumn = useCallback((foreignKeyColName, targetColPath, targetColType) => {
+        const [targetSchema, targetTable, targetCol] = targetColPath.split('.')
 
         let lastPkIndex = -1
         let lastFkIndex = -1
@@ -180,23 +173,16 @@ function EditableLiveColumns(props, ref) {
         }
         const addColToIndex = Math.max(lastPkIndex, lastFkIndex) + 1
 
-        let singularTargetTableName = targetTableName.endsWith('s') 
-            ? targetTableName.slice(0, targetTableName.length - 1)
-            : targetTableName
-    
-        const foreignKeyColName = [singularTargetTableName, targetColName].join('_')
-        const foreignKeyColType = targetColumn.data_type
-
         newColumns.splice(addColToIndex, 0, {
             id: short.generate(),
             isNew: true,
             name: foreignKeyColName,
-            data_type: foreignKeyColType,
+            data_type: targetColType,
             relationship: {
                 source_column_name: foreignKeyColName,
-                target_table_schema: targetSchemaName,
-                target_table_name: targetTableName,
-                target_column_name: targetColName,
+                target_table_schema: targetSchema,
+                target_table_name: targetTable,
+                target_column_name: targetCol,
             },
         })
 
@@ -235,23 +221,58 @@ function EditableLiveColumns(props, ref) {
             return [newColumns, liveColumns]
         },
         updateTableName: value => setTableName(value),
-        addForeignKeyRefToTable: (foreignTablePkColPath) => {
-            // Ensure relationship doesn't already exist.
-            let fkAlreadyExists = false
-            const [targetSchema, targetTable, targetCol] = foreignTablePkColPath.split('.')
-            for (const col of columns) {
-                const rel = col.relationship
-                if (!rel) continue
-                if (rel.target_schema_name === targetSchema && 
-                    rel.target_table_name === targetTable && 
-                    rel.target_column_name === targetCol
-                ) {
-                    fkAlreadyExists = true
-                    break
-                }
+        addForeignKeyRefToTable: (foreignKeyColName, targetColPath) => {
+            const [targetSchema, targetTable, targetColName] = targetColPath.split('.')
+            const targetColumn = ((
+                getSchema(targetSchema).find(t => t.name === targetTable) || {}
+            ).columns || []).find(col => col.name === targetColName)
+            if (!targetColumn) {
+                console.warn(`Couldn't find meta info for column ${targetColPath}.`)
+                return
             }
-            if (fkAlreadyExists) return
-            addNewForeignKeyColumn(foreignTablePkColPath)
+    
+            let colAlreadyExisted = false
+            const newColumns = []
+            for (const column of columns) {
+                const col = { ...column }
+                const rel = col.relationship
+
+                if (rel && rel.target_schema_name === targetSchema && 
+                    rel.target_table_name === targetTable && 
+                    rel.target_column_name === targetColName
+                ) {
+                    return
+                }
+
+                if (col.name === foreignKeyColName) {
+                    col.relationship = {
+                        source_column_name: foreignKeyColName,
+                        target_table_schema: targetSchema,
+                        target_table_name: targetTable,
+                        target_column_name: targetColName            
+                    }
+                    colAlreadyExisted = true
+                    col.data_type = targetColumn.data_type
+                    newColumns.push(col)
+                    continue
+                }
+
+                newColumns.push(col)
+            }
+
+            if (colAlreadyExisted) {
+                newColumns.sort((a, b) => (
+                    Number(b.isPrimaryKey || !!b.relationship) - Number(a.isPrimaryKey || !!a.relationship) ||
+                    a.ordinal_position - b.ordinal_position
+                ))
+                newColumns.forEach((col, i) => {
+                    col.ordinal_position = i + 1
+                })
+                newColumns.sort((a, b) => a.ordinal_position - b.ordinal_position)
+                setColumns(newColumns)
+            } else {
+                addNewForeignKeyColumn(foreignKeyColName, targetColPath, targetColumn.data_type)
+            }
         }
     }), [columns, addNewForeignKeyColumn])
 

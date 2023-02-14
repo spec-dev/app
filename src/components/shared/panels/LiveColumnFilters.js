@@ -85,9 +85,12 @@ function LiveColumnFilters(props, ref) {
     }).filter(v => !!v), [liveObjectVersion])
     
     const columnPathOptions = useMemo(() => (getSchema(schema) || [])
-        .map(table => table.columns.map(c => [schema, table.name, c.name].join('.')))
+        .map(table => table.columns.map(col => ({ 
+            colPath: [schema, table.name, col.name].join('.'),
+            colType: col.data_type,
+        })))
         .flat()
-        .map(colPath => ({ value: colPath, label: colPath })), 
+        .map(({ colPath, colType }) => ({ value: colPath, label: colPath, type: colType })), 
     [schema])
 
     const firstForeignSelectedColFilter = useMemo(() => filters.flat().find(f => 
@@ -255,9 +258,9 @@ function LiveColumnFilters(props, ref) {
         andButtonRefs.current[i] = ref
     }, [])
     
-    const onAddForeignKeyRefToTable = useCallback((foreignTablePkColPath, closePrompt) => {
+    const onAddForeignKeyRefToTable = useCallback((foreignKeyColName, targetColPath, closePrompt) => {
         setTimeout(closePrompt, 1000)
-        addForeignKeyRefToTable(foreignTablePkColPath)
+        addForeignKeyRefToTable(foreignKeyColName, targetColPath)
     }, [addForeignKeyRefToTable])
 
     useEffect(() => {
@@ -641,19 +644,35 @@ function LiveColumnFilters(props, ref) {
     const renderAddForeignKeyPrompt = useCallback((filter, foreignTablePkColPath, mod, i, j) => {
         const id = `${i}-${j}-prompt-fk`
         const close = () => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'close'])
-        const [_, foreignTableName, foreignTablePkName] = foreignTablePkColPath.split('.')
+        const [foreignSchema, foreignTable, _] = foreignTablePkColPath.split('.')
+        const foreignTablePath = [foreignSchema, foreignTable].join('.')
+        const foreignColOptions = columnPathOptions
+            .filter(opt => opt.value.startsWith(`${foreignTablePath}.`))
+            .map(opt => {
+                const colPath = opt.value
+                const [_, table, col] = colPath.split('.')
+                return {
+                    value: colPath,
+                    label: [table, col].join('.')
+                }
+            })
+
         return (
             <div
                 id={id}
                 key={id}
                 className={pcn('__prompt', '__prompt--fk', `__prompt--${mod}`)}>
                 <AddForeignKeyPrompt
-                    onYes={() => onAddForeignKeyRefToTable(foreignTablePkColPath, close)}
+                    filterProperty={filter.property}
+                    filterColPath={filter.value}
+                    foreignTablePkColPath={foreignTablePkColPath}
+                    foreignColOptions={foreignColOptions}
+                    onYes={(foreignKeyColName, targetColPath) => onAddForeignKeyRefToTable(foreignKeyColName, targetColPath, close)}
                     onNo={close}
                 />
             </div>
         )
-    }, [onAddForeignKeyRefToTable])
+    }, [onAddForeignKeyRefToTable, columnPathOptions])
 
     const renderFilterInput = useCallback((filter, i, j) => {
         const alreadySelectedPropertyValues = filters[i]

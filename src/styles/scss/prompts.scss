@@ -3,7 +3,7 @@
     height: auto;
     width: 100%;
     border-radius: 5px;
-    padding: 17px 17px 15px;
+    padding: 17px 0 0;
     margin-top: 5px;
 
     .--code {
@@ -16,26 +16,15 @@
 
     // info level
     &.prompt--0 {
-        background-color: adjust-color($blueAccent, $alpha: -0.93);
-        border: 1px solid adjust-color($blueAccent, $alpha: -0.9);
+        background-color: adjust-color($blueAccent, $alpha: -0.95);
+        border: 1px solid adjust-color($blueAccent, $alpha: -0.91);
 
         .prompt-title {
-            color: $blueAccent;
+            color: $white;
         }
 
         .prompt-icon svg {
             color: $blueAccent;
-        }
-
-        .add-foreign-key-prompt__button {
-            color: $blueAccent;
-            border: 1px solid adjust-color($blueAccent, $alpha: -0.7);
-            background-color: transparent;
-            // background-color: adjust-color($blueAccent, $alpha: -0.95);
-            &:hover {
-                // color: $white;
-                background-color: adjust-color($blueAccent, $alpha: -0.95);
-            }
         }
     }
 }
@@ -54,6 +43,7 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
+    width: 100%;
     height: 100%;
 }
 
@@ -63,6 +53,8 @@
     align-items: flex-start;
     justify-content: center;
     height: 24px;
+    padding: 0 17px;
+    width: 100%;
 }
 
 .prompt-icon {
@@ -74,7 +66,6 @@
         height: 14px;
         width: auto;
         position: relative;
-        // top: -0.5px;
     }
 }
 
@@ -85,64 +76,379 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     margin-left: 8px;
-    font-family: Medium;
+    // font-family: Medium;
 }
 
 .prompt-main-bottom {
     display: inline-block;
+    width: 100%;
 }
 
 .prompt-subtitle {
     display: inline-block;
     font-size: 12px;
-    color: adjust-color($lightGray, $alpha: -0.15);
+    color: adjust-color($lightGray, $alpha: -0);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-top: 2px;
-    padding-left: 1px;
+    margin-top: 4px;
+    padding: 0 17px;
     letter-spacing: 0.1px;
 }
 
 .prompt-buttons-container {
+    display: flex;
+    height: 46px;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    border-top: 1px solid adjust-color($blueAccent, $alpha: -0.92);
+    padding: 0 17px;
+}
+
+.add-foreign-key-prompt__fk-container {
+    display: block;
+    width: 100%;
+    margin-top: 9px;
+    border-top: 1px solid adjust-color($blueAccent, $alpha: -0.92);
+}
+
+.add-foreign-key-prompt__fk-header {
+    // background-color: adjust-color($blueAccent, $alpha: -0.96);
+    height: 24px;
     display: inline-flex;
-    height: 100%;
-    margin-left: auto;
+    flex-direction: row;
+    align-items: center;
     justify-self: flex-end;
-    flex-direction: column;
-    align-items: flex-start;
+    margin-left: auto;
     justify-content: flex-start;
+    position: relative;
+    z-index: 0;
+    user-select: none;
+    // margin-top: 7px;
+    // margin-bottom: 7px;
+    margin-top: -4px;
+
+
+    .add-foreign-key-prompt__fk-header-slider {
+        height: 28px;
+        border-radius: 14.5px;
+        display: inline-block;
+        position: absolute;
+        top: -2px;
+        cursor: pointer;
+        z-index: 1;
+        // border: 1px solid adjust-color($white, $alpha: -0.3);
+        // border: 1px solid adjust-color($blueAccent, $alpha: -0.8);
+        background-color: adjust-color($blueAccent, $alpha: -0.95);
+        // background-color: adjust-color($white, $alpha: -0.07);
+        transition: all 0.3s $defaultTiming;
+        pointer-events: none;
+    }
+
+    &.add-foreign-key-prompt__fk-header--index-0 .add-foreign-key-prompt__fk-header-slider {
+        left: 0;
+        width: 118px;
+    }
+
+    &.add-foreign-key-prompt__fk-header--index-1 {
+        .add-foreign-key-prompt__fk-header-slider {
+            left: calc(118px + 4px);
+            width: 99px;
+        }
+    }
+
+    &.add-foreign-key-prompt__fk-header--index-2 {
+        .add-foreign-key-prompt__fk-header-slider {
+            left: calc(118px + 4px + 99px + 4px);
+            width: 64px;
+        }
+    }
+}
+
+.add-foreign-key-prompt__fk-header-tab {
+    margin-left: 4px;
+    font-size: 11px;
+    letter-spacing: 0.1px;
+    cursor: pointer;
+    height: 28px;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    color: $lightGray;
+    transition: all 0.13s ease;
+    padding: 0 12px;
+    border-radius: 14px;
+    position: relative;
+    z-index: 2;
+
+    &:nth-child(2) {
+        margin-left: 0;
+    }
+
+    &:not(.add-foreign-key-prompt__fk-header-tab--selected):hover {
+        color: $white;
+    }
+
+    &.add-foreign-key-prompt__fk-header-tab--selected {
+        color: $blueAccent;
+    }
+}
+
+.add-foreign-key-prompt__fk-body {
+    display: block;
+    width: 100%;
+    padding: 20px 17px;
+}
+
+.add-foreign-key-prompt__fk-body-liner {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.add-foreign-key-prompt__fk-col-name {
+    width: calc(#{$liveObjectFilterInputWidth} / 1.1);
+    height: 35px;
+    position: relative;
+
+    input {
+        width: 100%;
+        position: relative;
+        padding-left: 12px;
+        padding-right: 29px;
+        outline: none !important;
+        background-color: transparent;
+        border: 1px solid adjust-color($blueAccent, $alpha: -0.7);
+        cursor: text;
+        border-radius: 4px;
+        font-family: CodeRegular;
+        font-size: 11px;
+        height: 35px;
+        color: $white;
+
+        &::placeholder {
+            color: adjust-color($lightGray, $alpha: -.4);
+        }
+
+        &::-webkit-input-placeholder {
+            color: adjust-color($lightGray, $alpha: -.4);
+        }
+
+        &::-moz-placeholder {
+            color: adjust-color($lightGray, $alpha: -.4);
+        }
+    }
+
+    .add-foreign-key-prompt__fk-col-name-link-icon {
+        position: absolute;
+        right: 10px;
+        top: 9px;
+        height: auto;
+        width: 12px;
+
+        svg {
+            height: auto;
+            width: 12px;
+            fill: $blueAccent;
+            opacity: 0.9;
+        }
+    }
+}
+
+.add-foreign-key-prompt__ref-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 35px;
+    position: relative;
+
+    .add-foreign-key-prompt__ref-arrow-point {
+        position: absolute;
+        right: -7px;
+        top: calc(50% - 10.5px);
+
+        svg {
+            height: auto;
+            width: 7px;
+            fill: adjust-color($blueAccent, $alpha: -0.45);
+        }
+    }
+
+    &:before {
+        left: 0;
+        width: 14px;
+        height: 1px;
+        background-color: adjust-color($blueAccent, $alpha: -0.7);
+        top: 17px;
+        content: '';
+        position: absolute;
+        display: block;
+    }
+
+    &:after {
+        right: 0;
+        width: 14px;
+        height: 1px;
+        background-color: adjust-color($blueAccent, $alpha: -0.7);
+        top: 17px;
+        content: '';
+        position: absolute;
+        display: block;
+    }
+
+    span:first-child {
+        padding-left: 20px;
+        padding-right: 20px;
+        font-size: 9.5px;
+        position: relative;
+        color: $blueAccent;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        display: inline-block;
+    }
+}
+
+.add-foreign-key-prompt__fixed-ref-key {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 35px;
+    max-width: 44.5%;
+    flex: 1;
+    margin-left: 17px;
+}
+
+.add-foreign-key-prompt__fixed-ref-key-col {
+    display: inline-flex;
+    font-family: CodeRegular;
+    font-size: 11px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    width: 100%;
+    background-color: adjust-color($blueAccent, $alpha: -0.96);
+    border-radius: 4px;
+    padding-left: 12px;
+
+    & > span {
+
+        span:first-child {
+            color: $white;
+        }
+        span:last-child {
+            color: $white;
+        }
+    }   
+}
+
+.add-foreign-key-prompt__ref-key-input {
+    height: 35px;
+    margin-left: 18px;
+    width: auto;
+    flex: 1;
+
+    &.select-input {
+        .spec__single-value,
+        .spec__placeholder,
+        .spec__input-container,
+        .spec__option,
+        .spec__multi-value__label,
+        .spec__input > * {
+            font-family: CodeRegular;
+        }
+
+        .spec__option {
+            font-size: 11px;
+            color: $lightGray;
+            height: 26px;
+            line-height: 26px;
+
+            &.spec__option--is-selected {
+                color: $blueAccent;
+            }
+        }
+
+        .spec__single-value,
+        .spec__multi-value__label,
+        .spec__placeholder {
+            font-size: 11px;
+            letter-spacing: normal;
+        }
+        .spec__placeholder {
+            color: adjust-color($lightGray, $alpha: -.4);
+        }
+        .spec__control {
+            height: 35px;
+            background-color: transparent !important;
+            border: 1px solid adjust-color($blueAccent, $alpha: -0.75) !important;
+            border-radius: 4px;        
+        }
+
+        .spec__value-container {
+            padding-left: 7px !important;
+        }
+
+        .spec__menu-list {
+            max-height: 70px;    
+        }
+    }
 }
 
 .add-foreign-key-prompt__buttons {
     display: inline-flex;
     flex-direction: row;
     align-items: center;
-    justify-content: center;
-    position: relative;
-    top: -3px;
-    right: -5px;
+    // justify-content: space-between;
+    // width: 100%;
 }
 
 .add-foreign-key-prompt__button {
-    height: 24px;
-    width: 33px;
+    height: 26px;
+    width: auto;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 9.5px;
-    font-family: Medium;
-    text-transform: uppercase;
-    border-radius: 5px;
+    font-size: 11px;
+    border-radius: 4px;
     letter-spacing: 0.3px;
     transition: all 0.2s ease;
     background-color: transparent;
+    padding: 0 12px;
     animation: none;
     cursor: pointer;
     position: relative;
+    color: $blueAccent;
+    // background-color: adjust-color($blueAccent, $alpha: -0.94);
+    border: 1px solid adjust-color($blueAccent, $alpha: -0.8);
+
+    &:hover {
+        background-color: adjust-color($blueAccent, $alpha: -0.94);
+    }
 
     &:first-child {
-        margin-right: 7px;
+        margin-right: 10px;
+        // display: none;
+    }
+
+    &:last-child {
+        // border: 1px solid adjust-color($blueAccent, $alpha: -0.7);
+        // background-color: transparent;
+        // color: $blueAccent;
+
+        // &:hover {
+        //     background-color: adjust-color($blueAccent, $alpha: -0.95);
+        // }
     }
     
     &.add-foreign-key-prompt__button--added,

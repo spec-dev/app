@@ -776,6 +776,7 @@ $disabledOpacity: 0.35;
     margin-left: 2px;
     position: relative;
     top: -0.5px;
+    cursor: default;
 
     &.editable-live-columns__new-constraint-label--fk {
         background-color: $backgroundDark;

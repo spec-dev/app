@@ -208,7 +208,7 @@
         &.live-column-filters__filter-input-field--showing-prompt {
             .spec__single-value {
                 & > span:last-child {
-                    color: $blueAccent;
+                    // color: $blueAccent;
                 }
             }
         }
@@ -669,6 +669,6 @@
     transition: height 0.6s $defaultTiming;
 
     &.live-column-filters__prompt--open {
-        height: 92px;
+        height: 190px;
     }
 }
