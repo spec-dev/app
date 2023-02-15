@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useCallback, useState, forwardRef, useImperativ
 import { cn, getPCN } from '../../../utils/classes'
 import TextInput from '../../shared/inputs/TextInput'
 import SelectInput from '../../shared/inputs/SelectInput'
-import { noop } from '../../../utils/nodash'
+import { noop, unique } from '../../../utils/nodash'
 import { camelToSnake, snakeToCamel } from '../../../utils/formatters'
 import gearIcon from '../../../svgs/gear-thin'
 import { cloneDeep } from 'lodash-es'
@@ -246,8 +246,13 @@ function EditableLiveColumns(props, ref) {
         serialize: () => {
             const newColumns = []
             const liveColumns = {}
+            const uniqueByProperties = []
             for (const column of columns) {
                 let col = { ...column }
+
+                if (col.is_nullable === false) {
+                    col.isNotNull = true
+                }
 
                 // Foreign key formatting
                 if (col.relationship) {
@@ -266,8 +271,12 @@ function EditableLiveColumns(props, ref) {
                         property: col.liveColumn.property
                     }
                 }
+
+                if (col.liveColumn?.onUniqueMapping) {
+                    uniqueByProperties.push(col.liveColumn.property)
+                }
             }
-            return [newColumns, liveColumns]
+            return [newColumns, liveColumns, unique(uniqueByProperties)]
         },
         updateTableName: value => setTableName(value),
         addForeignKeyRefToTable: (foreignKeyColName, targetColPath) => {
@@ -375,7 +384,7 @@ function EditableLiveColumns(props, ref) {
         setAnimateLines(false)
         setTimeout(() => {
             editColumn(cloneDeep(col), (updatedCol) => onDoneEditingColumn(updatedCol, i))
-        }, 10)
+        }, 20)
     }, [editColumn, onDoneEditingColumn])
 
     const setLiveColumnProperty = useCallback((property, colIndex) => {

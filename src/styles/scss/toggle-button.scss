@@ -15,6 +15,11 @@
         background-color: adjust-color($backgroundLight, $alpha: -0);
     }
 
+    &.toggle-button--disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
     span {
         display: block;
         width: 20px;

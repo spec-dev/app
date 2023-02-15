@@ -38,6 +38,7 @@ import newLiveColIcon from './new-live-col'
 import npmIcon from './npm'
 import numberIcon from './number'
 import previewIcon from './preview'
+import requiredIcon from './required'
 import searchIcon from './search'
 import shuffleIcon from './shuffle'
 import slideArrowIcon from './slide-arrow'
@@ -94,6 +95,7 @@ export {
     npmIcon,
     numberIcon,
     previewIcon,
+    requiredIcon,
     searchIcon,
     shuffleIcon,
     slideArrowIcon,

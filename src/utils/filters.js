@@ -83,8 +83,8 @@ export const englishForFilterOp = {
 export const filterOpForEnglish = invert(englishForFilterOp)
 
 export const filterOptions = [
-    filterOps.IN_COLUMN,
     filterOps.EQUAL_TO,
+    filterOps.IN_COLUMN,
     filterOps.IN,
     filterOps.GREATER_THAN,
     filterOps.GREATER_THAN_OR_EQUAL_TO,

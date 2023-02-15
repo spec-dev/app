@@ -158,8 +158,7 @@ function NewLiveColumnSpecs(props, ref) {
         serialize: () => {
             const filters = useFilters ? getFilters() : []
             const newTable = isNewTable ? newTableDetailsRef.current?.serialize() : null
-            const [newColumns, liveColumns] = editableLiveColumnsRef.current?.serialize()
-            const uniqueBy = (liveObjectVersion.config.uniqueBy || [])[0] || []
+            const [newColumns, liveColumns, uniqueBy] = editableLiveColumnsRef.current?.serialize()
             return { filters, newTable, newColumns, liveColumns, uniqueBy }
         }
     }), [getFilters, getUniqueMappings, useFilters, liveObjectVersion, isNewTable])

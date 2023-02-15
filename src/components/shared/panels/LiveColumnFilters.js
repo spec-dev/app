@@ -41,7 +41,7 @@ const getFilterOptions = propertyType => {
 
 function LiveColumnFilters(props, ref) {
     const { liveObjectVersion = {}, schema, tableName, isNewTable, useFilters, addForeignKeyRefToTable = noop} = props
-    const [filters, setFilters] = useState(props.filters || [[{ op: filterOps.IN_COLUMN }]])
+    const [filters, setFilters] = useState(props.filters || [[{ op: filterOps.EQUAL_TO }]])
     const [showForeignKeyAdditionPrompt, setShowForeignKeyAdditionPrompt] = useState(null)
     const useFiltersRef = useRef(useFilters)
     const overflow = useRef('hidden')
@@ -126,11 +126,24 @@ function LiveColumnFilters(props, ref) {
 
     useImperativeHandle(ref, () => ({
         serialize: () => {
+            const currentFilters = cloneDeep(filters || [])
             const finalFilters = []
-            for (const group of (filters || [])) {
+            for (const group of currentFilters) {
                 const finalGroup = []
                 for (const filter of (group || [])) {
                     if (!!filter.property && !!filter.op && filter.hasOwnProperty('value')) {
+                        if (!columnOps.has(filter.op)) {
+                            let value = filter.value
+                            try {
+                                value = JSON.parse(value)
+                            } catch (err) {
+                                value = value
+                            }
+                            if (typeof value === 'number') {
+                                value = value.toString()
+                            }
+                            filter.value = value
+                        }
                         finalGroup.push(filter)
                     }
                 }
@@ -777,7 +790,7 @@ function LiveColumnFilters(props, ref) {
                     ref={r => setAndButtonRef(i, r)}
                     onClick={() => {
                         const newFilters = cloneDeep(filters)
-                        newFilters[i].push({ op: filterOps.IN_COLUMN })
+                        newFilters[i].push({ op: filterOps.EQUAL_TO })
                         focusOnLastPropertyInput.current = i
                         setFilters(newFilters)
                     }}>
@@ -785,7 +798,7 @@ function LiveColumnFilters(props, ref) {
                 </button>
                 <button onClick={() => {
                     const newFilters = cloneDeep(filters)
-                    newFilters.splice(i + 1, 0, [{ op: filterOps.IN_COLUMN }])
+                    newFilters.splice(i + 1, 0, [{ op: filterOps.EQUAL_TO }])
                     focusOnLastPropertyInput.current = i + 1
                     setFilters(newFilters)
                 }}>

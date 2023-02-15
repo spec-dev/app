@@ -126,18 +126,29 @@ $disabledOpacity: 0.35;
 
     &.editable-live-columns__col-input--in-unique-mapping {
         .editable-live-columns__new-col:before {
-            background-color: adjust-color($backgroundLight, $alpha: -0.5);
-            border: 1px solid adjust-color($tealAccent, $alpha: -0.95);
+            background-color: adjust-color($backgroundLight, $alpha: -0.4);
+            border: 1px solid adjust-color($tealAccent, $alpha: -0.92);
         }
         .editable-live-columns__new-col:hover {
             &:before {
-                background-color: adjust-color($backgroundLight, $alpha: -0.4);
+                background-color: adjust-color($backgroundLight, $alpha: -0.35);
             }
         }
         .editable-live-columns__existing-col-type-icon,
         .editable-live-columns__new-col-type-icon {
             color: $tealAccent !important;
         }
+        // .editable-live-columns__new-constraint-label--fk {
+        //     background-color: $tealAccent;
+        //     box-shadow: none;
+        //     border: none;
+        //     height: 16px;
+        //     width: 16px;
+        //     color: $backgroundMedium;
+        //     font-family: Medium;
+        //     margin-right: 10px;
+        //     margin-left: 2px;
+        // }    
     }
 
     &.editable-live-columns__col-input--first-unique-mapping {

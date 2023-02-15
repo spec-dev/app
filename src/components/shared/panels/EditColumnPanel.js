@@ -3,7 +3,7 @@ import { getPCN, cn } from '../../../utils/classes'
 import SelectInput from '../inputs/SelectInput'
 import $ from 'jquery'
 import { noop } from '../../../utils/nodash'
-import { keyIcon, modelRelationshipIcon } from '../../../svgs/icons'
+import { keyIcon, modelRelationshipIcon, requiredIcon } from '../../../svgs/icons'
 import { cloneDeep } from 'lodash-es'
 import { getSchema } from '../../../utils/schema'
 import { colTypeIcon, displayColType } from '../../../utils/colTypes'
@@ -19,23 +19,31 @@ function EditColumnPanel(props, ref) {
     const tables = useMemo(() => getSchema(schema), [schema])
     const overflow = useRef('hidden')
     const containerRef = useRef()
+    const fkLock = useRef(false)
+    const fkChangeTimeout = useRef()
 
     const updateOverflow = useCallback((value) => {
         value = !!column.relationship ? value : 'hidden'
-        containerRef.current && setTimeout(() => (
-            $(containerRef.current).css('overflow', value)
-        ), value === 'visible' ? 300 : 0)
+        if (containerRef.current) {
+            clearTimeout(fkChangeTimeout.current)
+            fkChangeTimeout.current = setTimeout(() => {
+                $(containerRef.current).css('overflow', value)
+            }, value === 'visible' ? 300 : 0)
+        }
         overflow.current = value
     }, [column.relationship])
 
     const containerProps = useSpring({
-        height: !!column.relationship ? 51 : 0, 
+        height: !!column.relationship ? 51 : 0,
         config: {
             tension: 1000,
             friction: 0,
             clamp: true,
         },
-        onRest: () => updateOverflow('visible'),
+        onRest: () => {
+            updateOverflow('visible')
+            fkLock.current = false
+        },
         onStart: () => updateOverflow('hidden'),
     })
 
@@ -79,16 +87,26 @@ function EditColumnPanel(props, ref) {
         if (newColumn.isPrimaryKey && newColumn.liveColumn?.onUniqueMapping) {
             newColumn.liveColumn.onUniqueMapping = false
         }
+        if (newColumn.isPrimaryKey && (newColumn.is_nullable || !newColumn.hasOwnProperty('is_nullable'))) {
+            newColumn.is_nullable = false
+        }
         setColumn(newColumn)
     }, [column])
 
     const toggleIsForeignKey = useCallback(() => {
+        fkLock.current = true
         const newColumn = { ...column }
         if (newColumn.hasOwnProperty('relationship')) {
             delete newColumn.relationship
         } else {
             newColumn.relationship = {}
         }
+        setColumn(newColumn)
+    }, [column])
+
+    const toggleIsRequired = useCallback(() => {
+        const newColumn = { ...column }
+        newColumn.is_nullable = !newColumn.is_nullable
         setColumn(newColumn)
     }, [column])
 
@@ -166,7 +184,7 @@ function EditColumnPanel(props, ref) {
                         className={pcn('__section-icon', column.isPrimaryKey ? '__section-icon--bright' : '')}
                         dangerouslySetInnerHTML={{ __html: keyIcon }}>
                     </span>
-                    <span>Is Primary Key</span>
+                    <span>Is Primary Key?</span>
                 </div>
                 <div className={pcn('__section-body')}>
                     <div className={pcn('__qa')}>
@@ -193,7 +211,7 @@ function EditColumnPanel(props, ref) {
                         className={pcn('__section-icon', !!rel ? '__section-icon--bright' : '')}
                         dangerouslySetInnerHTML={{ __html: modelRelationshipIcon }}>
                     </span>
-                    <span>Is Foreign Key</span>
+                    <span>Is Foreign Key?</span>
                 </div>
                 <div className={pcn('__section-body')}>
                     <div className={pcn('__qa')}>
@@ -201,7 +219,7 @@ function EditColumnPanel(props, ref) {
                         <div className={pcn('__section-toggle')}>
                             <button
                                 className={cn('toggle-button', !!rel ? `toggle-button--true` : '')}
-                                onClick={toggleIsForeignKey}>
+                                onClick={() => !fkLock.current && toggleIsForeignKey()}>
                                 <span></span>
                             </button>
                         </div>
@@ -230,14 +248,47 @@ function EditColumnPanel(props, ref) {
         )
     }, [column, toggleIsForeignKey, setForeignKeyRelationship, refKeyOptions])
 
+    const renderIsRequiredSection = useCallback(() => {
+        const isRequired = column.is_nullable === false || column.isPrimaryKey
+        const isDisabled = column.isPrimaryKey
+        return (
+            <div className={pcn('__section', '__section--required')}>
+                <div className={pcn('__section-title')}>
+                    <span
+                        className={pcn('__section-icon', isRequired ? '__section-icon--bright' : '')}
+                        dangerouslySetInnerHTML={{ __html: requiredIcon }}>
+                    </span>
+                    <span>Is Required?</span>
+                </div>
+                <div className={pcn('__section-body')}>
+                    <div className={pcn('__qa')}>
+                        <span>Is <span className='--code'>{column.name}</span> required to have a value?</span>
+                        <div className={pcn('__section-toggle')}>
+                            <button
+                                className={cn(
+                                    'toggle-button', 
+                                    isRequired ? `toggle-button--true` : '',
+                                    isDisabled ? `toggle-button--disabled` : ''
+                                )}
+                                onClick={isDisabled ? noop : toggleIsRequired}>
+                                <span></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }, [column, toggleIsRequired])
+
     const renderBody = useCallback(() => (
         <div className={pcn('__body')}>
             <div className={pcn('__body-liner')}>
                 { renderPrimaryKeySection() }
                 { renderForeignKeySection() }
+                { renderIsRequiredSection() }
             </div>
         </div>
-    ), [renderPrimaryKeySection, renderForeignKeySection])
+    ), [renderPrimaryKeySection, renderForeignKeySection, renderIsRequiredSection])
 
     const renderFooter= useCallback(() => (
         <div className={pcn('__footer')}>

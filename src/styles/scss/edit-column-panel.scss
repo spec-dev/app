@@ -16,7 +16,8 @@
     left: 0;
     width: 100%;
     height: $sliderPanelHeaderHeight;
-    padding: 0 29px;
+    padding-right: 29px;
+    padding-left: 27px;
     border-bottom: 1px solid adjust-color($gray, $alpha: -0.9);
 }
 
@@ -41,6 +42,9 @@
         font-size: 13px;
         position: relative;
         letter-spacing: 0;
+        border-radius: 4px;
+        background-color: adjust-color($backgroundLight, $alpha: -0.6);
+        padding: 5px 7px;
     }
 
     & > span:nth-child(2) {
@@ -155,17 +159,31 @@
     justify-content: flex-start;
     align-items: flex-start;
     width: 100%;
-    padding: 36px 29px;
+    padding: 38px 29px;
     border-bottom: 1px solid adjust-color($gray, $alpha: -0.9);
+
+    &.edit-column-panel__section--required {
+        .edit-column-panel__section-title {
+            padding-left: 21px;
+        }
+
+        .edit-column-panel__section-icon {
+            svg {
+                margin-left: 1px;
+                height: 12px;
+                width: 12px;
+                transform: scale(1, 0.9);
+            }
+        }
+    }
 }
 .edit-column-panel__section-title {
     font-size: 13px;
-    letter-spacing: 0.15px;
+    letter-spacing: 0.23px;
     display: inline-block;
     color: $white;
     position: relative;
-    font-family: Medium;
-    padding-left: 23px;
+    padding-left: 22px;
 }
 
 .edit-column-panel__section-subtitle {
@@ -194,7 +212,7 @@
     svg {
         height: 13.5px;
         width: auto;
-        color: $gray;
+        color: $lightGray;
         fill: currentColor;
         transition: all 0.3s $defaultTiming;
 
@@ -229,7 +247,7 @@
         letter-spacing: 0.1px;
         display: inline-block;
         color: adjust-color($lightGray, $alpha: -0.3);
-        max-width: calc(100% - 90px);
+        max-width: calc(100% - 70px);
         line-height: 24px;
         padding-left: 1px;
 
@@ -320,12 +338,12 @@
         }
     
         .spec__value-container {
-            padding-left: 7px !important;
+            padding-left: 6px !important;
         }
 
         .spec__single-value {
             grid-area: 1/1/2/3;
-            margin-left: 2px;
+            margin-left: 0px;
             margin-right: 2px;
             max-width: 100%;
             overflow: hidden;
@@ -347,6 +365,7 @@
                     width: auto;
                     fill: currentColor;
                     position: relative;
+                    opacity: 0.6;
                     top: 1px;
                 }
             }
@@ -384,7 +403,8 @@
                     width: auto;
                     fill: currentColor;
                     position: relative;
-                    top: 1px;
+                    top: 2px;
+                    opacity: 0.6;
                 }
             }
 
@@ -396,7 +416,6 @@
                 white-space: nowrap;
                 padding-left: 1px;
                 position: relative;
-                top: -0.5px;
                 flex: 1;
             }
         }
