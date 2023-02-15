@@ -130,7 +130,7 @@ class MetaSocketClient {
         this.onTableDataChange = () => {}
         this.client = createEventClient({
             hostname: constants.META_API_HOSTNAME,
-            port: constants.META_API_PORT,
+            port: constants.isLocal() ? constants.META_API_PORT : 54321,
             onConnect: () => this._subscribeToChannels(),
         })
     }

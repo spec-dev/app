@@ -2,6 +2,14 @@
     "name": "app",
     "version": "0.0.1",
     "private": true,
+    "scripts": {
+        "clean": "rimraf build",
+        "build": "run-s clean build:main",
+        "start": "react-scripts start",
+        "build:main": "react-scripts build",
+        "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
+        "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css"
+    },
     "dependencies": {
         "@monaco-editor/react": "^4.4.5",
         "@spec.dev/event-client": "^0.0.8",
@@ -26,13 +34,9 @@
         "react-error-overlay": "6.0.9"
     },
     "devDependencies": {
-        "react-error-overlay": "6.0.9"
-    },
-    "scripts": {
-        "start": "react-scripts start",
-        "build-prod": "react-scripts build",
-        "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
-        "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css"
+        "npm-run-all": "^4.1.5",
+        "react-error-overlay": "6.0.9",
+        "rimraf": "^3.0.2"
     },
     "eslintConfig": {
         "extends": [

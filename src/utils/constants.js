@@ -2,12 +2,12 @@ import { setCurrentProject } from './cache'
 
 // Global app constants.
 const constants = {
-    ENV: process.env.REACT_APP_ENV || 'local',
+    ENV: process.env.REACT_APP_ENV || 'prod',
     
     // Explicitly set project details.
-    PROJECT_ID: process.env.REACT_APP_PROJECT_ID,
-    PROJECT_ORG: process.env.REACT_APP_PROJECT_ORG,
-    PROJECT_NAME: process.env.REACT_APP_PROJECT_NAME,
+    PROJECT_ID: process.env.REACT_APP_PROJECT_ID || 'local',
+    PROJECT_ORG: process.env.REACT_APP_PROJECT_ORG || 'local',
+    PROJECT_NAME: process.env.REACT_APP_PROJECT_NAME || 'local',
 
     META_API_HOSTNAME: process.env.REACT_APP_META_API_HOSTNAME || 'localhost',
     META_API_PORT: parseInt(process.env.REACT_APP_META_API_PORT || 54322),
@@ -16,8 +16,8 @@ const constants = {
 }
 constants.isLocal = () => constants.ENV === 'local'
 
-// Store project details from constants as current project if running locally.
-if (constants.isLocal() && constants.PROJECT_ID) {
+// Store project details from constants as current project.
+if (constants.PROJECT_ID) {
     setCurrentProject({
         id: constants.PROJECT_ID,
         org: constants.PROJECT_ORG,

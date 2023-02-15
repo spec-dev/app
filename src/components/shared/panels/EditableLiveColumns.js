@@ -276,6 +276,20 @@ function EditableLiveColumns(props, ref) {
                     uniqueByProperties.push(col.liveColumn.property)
                 }
             }
+
+            if (!uniqueByProperties.length) {
+                const liveColumnProperties = new Set(Object.values(liveColumns).map(obj => obj.property))
+                for (const property of defaultUniqueByProperties) {
+                    if (liveColumnProperties.has(property)) {
+                        uniqueByProperties.push(property)
+                    }
+                }
+                if (!uniqueByProperties.length) {
+                    alert('Must have at least one uniqueBy property set')
+                    return [[], [], []]
+                }
+            }
+
             return [newColumns, liveColumns, unique(uniqueByProperties)]
         },
         updateTableName: value => setTableName(value),
