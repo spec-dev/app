@@ -1,4 +1,5 @@
 import api from './api'
+import { getColumnOpForSpecConfigOp } from './filters'
 
 export async function getConfig() {
     const { data, ok } = await api.meta.config()
@@ -46,6 +47,7 @@ export function getLiveColumnLinksOnTable(schema, table, config) {
         for (const link of obj.links || []) {
             const linkOn = link.linkOn || {}
 
+            // TODO: FIX - linkOn isn't a thing anymore
             for (const property in linkOn) {
                 const colPath = linkOn[property]
                 const [colSchema, colTable, colName] = colPath.split('.')
@@ -144,4 +146,45 @@ export function splitLiveObjectId(id) {
 
 export function formatLiveObjectId(nsp, name, version) {
     return `${nsp}.${name}@${version}`
+}
+
+export function formatExistingFiltersForEdit(table, config, liveObjectVersion) {
+    if (!table || !config || !liveObjectVersion) return null
+
+    const tablePath = [table.schema, table.name].join('.')
+    const liveObjects = config.objects || {}
+
+    let filterBy = null
+    for (const givenName in liveObjects) {
+        const obj = liveObjects[givenName]
+        const [nsp, name, version] = splitLiveObjectId(obj.id)
+
+        if (nsp == liveObjectVersion.nsp && name === liveObjectVersion.name && liveObjectVersion.version === version) {
+            const link = (obj.links || []).find(link => link.table === tablePath)
+            filterBy = link?.filterBy
+            break
+        }
+    }
+    if (!filterBy?.length) return null
+
+    const editableFilters = []
+    for (const filterGroupMap of filterBy) {
+        const filterGroupEntries = []
+        for (const property in filterGroupMap) {
+            const filter = filterGroupMap[property]
+            let value = filter.value
+            let op = filter.op
+            if (filter.column) {
+                value = filter.column
+                op = getColumnOpForSpecConfigOp(op)
+            }
+            filterGroupEntries.push({
+                property,
+                op,
+                value,
+            })
+        }
+        filterGroupEntries.length && editableFilters.push(filterGroupEntries)
+    }
+    return editableFilters
 }

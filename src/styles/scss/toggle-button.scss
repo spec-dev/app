@@ -1,0 +1,40 @@
+
+.toggle-button {
+    width: 44px;
+    height: 24px;
+    position: relative;
+    display: block;
+    padding: 2px;
+    border: none;
+    border-radius: 12px;
+    background-color: adjust-color($backgroundLight, $alpha: -0.3);
+    transition: all 0.3s $defaultTiming;
+    cursor: pointer;
+
+    &:not(.toggle-button--true):hover {
+        background-color: adjust-color($backgroundLight, $alpha: -0);
+    }
+
+    span {
+        display: block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        position: absolute;
+        left: 2px;
+        top: 2px;
+        transform: translateX(0);
+        transition: all 0.3s $defaultTiming;
+        background-color: adjust-color($lightGray, $alpha: -0.2);
+    }
+
+    &.toggle-button--true {
+        background-color: adjust-color($tealAccent);
+        
+        span {
+            transform: translateX(20px);
+            background-color: $white;
+            box-shadow: 0 0 6px adjust-color($gray, $alpha: -0.8);
+        }
+    }
+}

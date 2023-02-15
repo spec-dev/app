@@ -11,6 +11,7 @@ import NewTableBasicInputs from './NewTableBasicInputs'
 import UniqueMappings from './UniqueMappings'
 import { caretDownIcon, filterIcon, linkIcon, githubIcon, tableEditorIcon } from '../../../svgs/icons'
 import hljs from 'highlight.js/lib/core'
+import { formatExistingFiltersForEdit } from '../../../utils/config'
 import typescript from 'highlight.js/lib/languages/typescript'
 import { camelToSnake } from '../../../utils/formatters'
 import { sortInts } from '../../../utils/math'
@@ -95,12 +96,11 @@ const getLiveColumnsSectionSubtitle = (purpose, liveObjectVersion, isContractEve
 
 function NewLiveColumnSpecs(props, ref) {
     // Props
-    const { liveObject, table, config, schema, purpose } = props
+    const { liveObject, table, config, schema, purpose, editColumn = noop } = props
 
     // State
     const [docsExpanded, setDocsExpanded] = useState(false)
     const [selectedDocsIndex, setSelectedDocsIndex] = useState(0)
-    const [useFilters, setUseFilters] = useState(false)
 
     // Refs
     const editableLiveColumnsRef = useRef()
@@ -128,6 +128,11 @@ function NewLiveColumnSpecs(props, ref) {
         ),
         sizing.DOCS_COLLAPSED_MAX_HEIGHT
     ), [propertyNames])
+    const existingFilters = useMemo(() => (
+        isNewTable ? null : formatExistingFiltersForEdit(table, config, liveObjectVersion)
+    ), [isNewTable, table, config, liveObjectVersion])
+
+    const [useFilters, setUseFilters] = useState(!!existingFilters?.length)
 
     const nsp = useMemo(() => {
         let nsp = liveObjectVersion.nsp || ''
@@ -193,20 +198,18 @@ function NewLiveColumnSpecs(props, ref) {
         window.IntersectionObserver && createHeaderIntersectionObserver()
     }, [createHeaderIntersectionObserver])
 
-    const renderProperties = useCallback(() => liveObjectVersion.properties.map((p, i) => (
-        <div key={i} className={pcn('__doc-property')}>
-            <div><span>{p.name}</span><span>{p.type}</span></div>
-            <div>{p.desc}</div>
-        </div>
-    )), [liveObjectVersion])
-
     const renderDocsSection = useCallback(() => (
         <div className={pcn('__docs')} ref={calculateExpandedDocsHeight}>
             <div className={pcn('__doc-properties')}>
-                { renderProperties() }
+                { liveObjectVersion.properties.map((p, i) => (
+                    <div key={`${liveObjectVersion.name}.${p.name}`} className={pcn('__doc-property')}>
+                        <div><span>{p.name}</span><span>{p.type}</span></div>
+                        <div>{p.desc}</div>
+                    </div>
+                )) }
             </div>
         </div>
-    ), [liveObjectVersion, renderProperties])
+    ), [liveObjectVersion])
 
     const renderInterfaceSection = useCallback(() => (
         <div className={cn('editor', pcn('__interface'))}>
@@ -323,6 +326,7 @@ function NewLiveColumnSpecs(props, ref) {
                     </div>
                     <div className={pcn('__filters-container')}>
                         <LiveColumnFilters
+                            filters={existingFilters}
                             liveObjectVersion={liveObjectVersion}
                             useFilters={useFilters}
                             schema={schema}
@@ -362,6 +366,7 @@ function NewLiveColumnSpecs(props, ref) {
                         liveObjectVersion={liveObjectVersion}
                         initialTableName={initialTableName}
                         purpose={purpose}
+                        editColumn={editColumn}
                         ref={editableLiveColumnsRef}
                     />
                 </div>
@@ -400,7 +405,7 @@ function NewLiveColumnSpecs(props, ref) {
                 </div>
             </div>
         )
-    }, [isNewTable, liveObjectVersion, liveObject, table, purpose])
+    }, [liveObjectVersion, liveObject, table, purpose])
 
     if (!liveObjectVersion.name) {
         return <div className={className}></div>
@@ -411,7 +416,7 @@ function NewLiveColumnSpecs(props, ref) {
             { renderPrimaryDetails() }
             { renderTypeOverview() }
             { renderFiltersSection() }
-            { renderTableInfoSection() }
+            { isNewTable && renderTableInfoSection() }
             { renderLiveColumnsSection() }
         </div>
     )

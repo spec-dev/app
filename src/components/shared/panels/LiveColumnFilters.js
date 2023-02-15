@@ -288,7 +288,7 @@ function LiveColumnFilters(props, ref) {
         if (promptForeignKeyAddition.current && firstForeignSelectedColFilter) {
             const [i, j, foreignTablePkColPath] = promptForeignKeyAddition.current
             promptForeignKeyAddition.current = null
-            setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'will-open'])      
+            // setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'will-open'])      
         }
     }, [firstForeignSelectedColFilter])
 
@@ -296,7 +296,7 @@ function LiveColumnFilters(props, ref) {
         if (!showForeignKeyAdditionPrompt?.length) return
         const [i, j, foreignTablePkColPath, mod] = showForeignKeyAdditionPrompt
         if (mod === 'will-open') {
-            setTimeout(() => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'open']), 30)
+            // setTimeout(() => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'open']), 30)
         }
     }, [showForeignKeyAdditionPrompt])
 
@@ -642,6 +642,7 @@ function LiveColumnFilters(props, ref) {
     ])
 
     const renderAddForeignKeyPrompt = useCallback((filter, foreignTablePkColPath, mod, i, j) => {
+        return null
         const id = `${i}-${j}-prompt-fk`
         const close = () => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'close'])
         const [foreignSchema, foreignTable, _] = foreignTablePkColPath.split('.')

@@ -246,7 +246,7 @@
 
     .add-foreign-key-prompt__fk-col-name-link-icon {
         position: absolute;
-        right: 10px;
+        right: 11px;
         top: 9px;
         height: auto;
         width: 12px;
@@ -429,31 +429,23 @@
     cursor: pointer;
     position: relative;
     color: $blueAccent;
-    // background-color: adjust-color($blueAccent, $alpha: -0.94);
-    border: 1px solid adjust-color($blueAccent, $alpha: -0.8);
+    border: none;
+    background-color: adjust-color($blueAccent, $alpha: -0.95);
 
     &:hover {
-        background-color: adjust-color($blueAccent, $alpha: -0.94);
+        background-color: adjust-color($blueAccent, $alpha: -0.93);
     }
 
     &:first-child {
         margin-right: 10px;
-        // display: none;
+        border: none;
+        color: $lightGray;
+        background-color: adjust-color($blueAccent, $alpha: -0.97);
     }
 
-    &:last-child {
-        // border: 1px solid adjust-color($blueAccent, $alpha: -0.7);
-        // background-color: transparent;
-        // color: $blueAccent;
-
-        // &:hover {
-        //     background-color: adjust-color($blueAccent, $alpha: -0.95);
-        // }
-    }
-    
     &.add-foreign-key-prompt__button--added,
     &.add-foreign-key-prompt__button--animate {
-        background-color: transparent;
+        background-color: adjust-color($blueAccent, $alpha: -0.93);
 
         span {
             opacity: 0;

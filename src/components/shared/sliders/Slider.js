@@ -7,7 +7,7 @@ const className = 'slider'
 const pcn = getPCN(className)
 
 function Slider(props, ref) {
-    const { id, children, onShown = noop } = props
+    const { id, children, onShown = noop, willHide = noop } = props
     const [shown, setShown] = useState(false)
     const backdropTransitions = useTransition(shown, {
         from: { opacity: 0 },
@@ -48,7 +48,10 @@ function Slider(props, ref) {
                 (styles, item) => item && (
                     <animated.div
                         className={pcn('__backdrop')}
-                        onClick={() => setShown(false)}
+                        onClick={() => {
+                            willHide()
+                            setShown(false)
+                        }}
                         style={styles}>
                     </animated.div>
                 ))

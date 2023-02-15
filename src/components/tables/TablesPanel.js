@@ -58,7 +58,7 @@ function TablesPanel(props) {
                 </div>
             </div>
             <div className={pcn('__new-table-button')}>
-                <span id='newTableDropdownTarget' onClick={onClickNewTable}>
+                <span id='newTableDropdownTarget' onClick={onNewLiveTable}>
                     <span>+</span>
                     <span>New Table</span>
                 </span>

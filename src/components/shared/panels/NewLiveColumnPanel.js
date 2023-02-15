@@ -50,10 +50,10 @@ function NewLiveColumnPanel(props, ref) {
         referrer = referrers.ADD_LIVE_DATA,
         onCancel = noop,
         onSave = noop,
-        selectLiveColumnFormatter = noop,
         addTransform = noop,
         addHook = noop,
         refetchTables = noop,
+        editColumn = noop,
     } = props
     const liveObjects = getAllLiveObjects()
 
@@ -131,15 +131,23 @@ function NewLiveColumnPanel(props, ref) {
             liveObjectVersionId, 
             liveColumns,
             filters, 
-            uniqueBy,
+            uniqueBy = [],
         } = (payload || state.payload)
+
+        const ub = []
+        for (const colName in liveColumns) {
+            const property = liveColumns[colName].property
+            if (uniqueBy.includes(property)) {
+                ub.push(property)
+            }
+        }
 
         const { ok } = await api.meta.liveColumns({
             tablePath, 
             liveObjectVersionId,
             liveColumns,
             filters,
-            uniqueBy,
+            uniqueBy: ub,
         })
 
         if (!ok) {
@@ -160,7 +168,7 @@ function NewLiveColumnPanel(props, ref) {
             liveObjectVersionId, 
             liveColumns,
             filters,
-            uniqueBy,
+            uniqueBy = [],
         } = state.payload
 
         migrationTimer.current = setTimeout(() => {
@@ -168,9 +176,11 @@ function NewLiveColumnPanel(props, ref) {
             migrationTimer.current = null
         }, 700)
 
-        let ub = (uniqueBy || []).map(camelToSnake)
-        if (ub.join(':') === 'from:to') {
-            ub = ['from_address', 'to_address']
+        const ub = []
+        for (const colName in liveColumns) {
+            if (uniqueBy.includes(liveColumns[colName].property)) {
+                ub.push(colName)
+            }
         }
 
         const { ok } = await api.meta.createTable({
@@ -373,9 +383,9 @@ function NewLiveColumnPanel(props, ref) {
                                     config={config}
                                     purpose={referrer}
                                     liveObject={state.liveObject}
-                                    selectLiveColumnFormatter={selectLiveColumnFormatter}
                                     addTransform={addTransform}
                                     addHook={addHook}
+                                    editColumn={editColumn}
                                     ref={newLiveColumnSpecsRef}
                                 />
                             </animated.div>

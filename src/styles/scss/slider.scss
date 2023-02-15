@@ -46,6 +46,7 @@
     z-index: 100;
 }
 
+#editColumnSlider,
 #selectLiveColumnFormatterSlider,
 #transformObjectSlider,
 #hookSlider,
@@ -53,6 +54,6 @@
     z-index: 101;
 
     .slider__panel {
-        width: 38%;
+        width: 33%;
     }
 }

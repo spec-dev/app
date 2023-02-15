@@ -17,26 +17,33 @@ import { getLiveColumnsForTable } from '../../../utils/config'
 import short from 'short-uuid'
 import ColumnTypeInput from '../inputs/ColumnTypeInput'
 import { getSchema } from '../../../utils/schema'
+import { range } from '../../../utils/math'
 
 const className = 'editable-live-columns'
 const pcn = getPCN(className)
 
-const formatNewTableInitialColumns = (liveObjectVersion) => {
-    const propertyColumns = (liveObjectVersion.properties || []).map((property, i)=> {
-        const colName = camelToSnake(property.name)
-        const colType = guessColTypeFromProperty(property)
+const formatNewTableInitialColumns = (liveObjectVersion, defaultUniqueByProperties = []) => {
+    const properties = cloneDeep(liveObjectVersion.properties || [])
+    const propertyColumns = properties
+        .sort((a, b) => (
+            Number(defaultUniqueByProperties.includes(b.name)) - Number(defaultUniqueByProperties.includes(a.name))
+        ))
+        .map((property, i)=> {
+            const colName = camelToSnake(property.name)
+            const colType = guessColTypeFromProperty(property)
 
-        return {
-            id: short.generate(),
-            isNew: true,
-            ordinal_position: i + 2,
-            name: colName,
-            data_type: colType,
-            liveColumn: {
-                property: property.name,
-            },
-        }
-    })
+            return {
+                id: short.generate(),
+                isNew: true,
+                ordinal_position: i + 2,
+                name: colName,
+                data_type: colType,
+                liveColumn: {
+                    property: property.name,
+                    onUniqueMapping: defaultUniqueByProperties.includes(property.name),
+                },
+            }
+        })
 
     return [
         {
@@ -60,9 +67,10 @@ const formatInitialColumns = (
     foreignKeys, 
     config,
     purpose,
+    defaultUniqueByProperties,
 ) => {
     if (isNewTable) {
-        return formatNewTableInitialColumns(liveObjectVersion)
+        return formatNewTableInitialColumns(liveObjectVersion, defaultUniqueByProperties)
     }
 
     const existingLiveColumns = getLiveColumnsForTable(table.schema, table.name, config)
@@ -103,8 +111,10 @@ const formatInitialColumns = (
     })
 
     columns = columns.sort((a, b) => (
-        Number(b.isPrimaryKey) - Number(a.isPrimaryKey) ||
-        a.ordinal_position - b.ordinal_position
+        (
+            Number(b.isPrimaryKey || defaultUniqueByProperties.includes(b.liveColumn?.property)) - 
+            Number(a.isPrimaryKey || defaultUniqueByProperties.includes(a.liveColumn?.property))
+        ) || a.ordinal_position - b.ordinal_position
     ))
     
     if (purpose === purposes.NEW_LIVE_COLUMN) {
@@ -120,8 +130,39 @@ const formatInitialColumns = (
     return columns
 }
 
+const calculateUniqueMappingRange = (columns) => {
+    let firstUniqueMappingIndex = null
+    for (let i = 0; i < columns.length; i++) {
+        const isUniqueMappingCol = columns[i].liveColumn?.onUniqueMapping
+        if (isUniqueMappingCol && firstUniqueMappingIndex === null) {
+            firstUniqueMappingIndex = i
+            break
+        }
+    }
+    let numUniqueMappingRows = 1
+    if (firstUniqueMappingIndex !== null) {
+        let i = firstUniqueMappingIndex
+        while (true) {
+            i++
+            if (columns[i]?.liveColumn?.onUniqueMapping) {
+                numUniqueMappingRows++
+            } else {
+                break
+            }
+        }
+    }
+    return {
+        firstIndex: firstUniqueMappingIndex,
+        numRows: numUniqueMappingRows
+    }
+}
+
+const styles = {
+    ROW_HEIGHT: 52,
+}
+
 function EditableLiveColumns(props, ref) {
-    const { table, liveObjectVersion = {}, config, purpose, initialTableName } = props
+    const { table, liveObjectVersion = {}, config, purpose, initialTableName, editColumn = noop } = props
     const isNewTable = useMemo(() => purpose === purposes.NEW_LIVE_TABLE, [purpose])
     const primaryKeyColNames = useMemo(() => new Set((table.primary_keys || []).map(pk => pk.name)), [table])
     const foreignKeys = useMemo(() => {
@@ -135,7 +176,12 @@ function EditableLiveColumns(props, ref) {
     }, [table])
     const uniqueColGroups = useMemo(() => table.unique_columns || [], [table])
     const nonUniqueIndexes = useMemo(() => table.non_unique_indexes || [], [table])
+    const defaultUniqueByProperties = useMemo(
+        () => (liveObjectVersion.config?.uniqueBy || [])[0] || [], 
+        [liveObjectVersion],
+    )
 
+    const [animateLines, setAnimateLines] = useState(true)
     const [tableName, setTableName] = useState(isNewTable ? liveObjectVersion.config?.tableName : table.name)
     const [columns, setColumns] = useState(formatInitialColumns(
         table, 
@@ -145,7 +191,10 @@ function EditableLiveColumns(props, ref) {
         foreignKeys, 
         config,
         purpose,
+        defaultUniqueByProperties,
     ))
+
+    const uniqueMappingRange = useMemo(() => calculateUniqueMappingRange(columns), [columns])  
 
     const propertyOptions = useMemo(() => (liveObjectVersion.properties || []).map(p => ({ 
         value: p.name, 
@@ -230,6 +279,7 @@ function EditableLiveColumns(props, ref) {
                 console.warn(`Couldn't find meta info for column ${targetColPath}.`)
                 return
             }
+            const targetColType = displayColType(targetColumn.data_type)
     
             let colAlreadyExisted = false
             const newColumns = []
@@ -252,7 +302,7 @@ function EditableLiveColumns(props, ref) {
                         target_column_name: targetColName            
                     }
                     colAlreadyExisted = true
-                    col.data_type = targetColumn.data_type
+                    col.data_type = targetColType
                     newColumns.push(col)
                     continue
                 }
@@ -271,7 +321,7 @@ function EditableLiveColumns(props, ref) {
                 newColumns.sort((a, b) => a.ordinal_position - b.ordinal_position)
                 setColumns(newColumns)
             } else {
-                addNewForeignKeyColumn(foreignKeyColName, targetColPath, targetColumn.data_type)
+                addNewForeignKeyColumn(foreignKeyColName, targetColPath, targetColType)
             }
         }
     }), [columns, addNewForeignKeyColumn])
@@ -308,6 +358,25 @@ function EditableLiveColumns(props, ref) {
         })
         setColumns(newColumns)
     }, [columns])
+
+    const onDoneEditingColumn = useCallback((col, index) => {
+        setAnimateLines(true)
+        if (!col) return
+
+        const newColumns = []
+        for (let i = 0; i < columns.length; i++) {
+            const column = { ...columns[i] }
+            newColumns.push(i === index ? col : column)
+        }
+        setColumns(newColumns)
+    }, [columns])
+
+    const onEditColumn = useCallback((col, i) => {
+        setAnimateLines(false)
+        setTimeout(() => {
+            editColumn(cloneDeep(col), (updatedCol) => onDoneEditingColumn(updatedCol, i))
+        }, 10)
+    }, [editColumn, onDoneEditingColumn])
 
     const setLiveColumnProperty = useCallback((property, colIndex) => {
         const newColumns = []
@@ -474,7 +543,7 @@ function EditableLiveColumns(props, ref) {
                 <div style={{ width: 40, display: 'block', height: '100%', flex: 1 }}>
                     <div
                         className={pcn('__new-col-icon', '__new-col-icon--extra')}
-                        onClick={() => {}}
+                        onClick={() => onEditColumn(col, i)}
                         dangerouslySetInnerHTML={{ __html: filterControlsIcon }}>
                     </div>
                 </div>
@@ -485,7 +554,7 @@ function EditableLiveColumns(props, ref) {
                 </div>
             </div>
         )
-    }, [setNewColumnName, setNewColumnDataType, setColNameInputRef])
+    }, [setNewColumnName, setNewColumnDataType, setColNameInputRef, onEditColumn])
 
     const renderExistingColumn = useCallback((col) => {
         const property = col.liveColumn?.property
@@ -555,57 +624,65 @@ function EditableLiveColumns(props, ref) {
         </div>
     ), [])
 
-    const renderColInputs = useCallback(() => columns.map((col, i) => {
-        const property = col.liveColumn?.property
-        const propertyIsFromOtherLiveObject = col.liveColumn?.isDisabled
-        const showArrow = !!property && !col.isSerial
+    const renderColInputs = useCallback((uniqueMappingRange) => {
+        return columns.map((col, i) => {
+            const property = col.liveColumn?.property
+            const propertyIsFromOtherLiveObject = col.liveColumn?.isDisabled
+            const showArrow = !!property && !col.isSerial
+            const uniqueMappingIndexes = uniqueMappingRange.firstIndex !== null
+                ? range(uniqueMappingRange.firstIndex, uniqueMappingRange.firstIndex + uniqueMappingRange.numRows - 1)
+                : []
 
-        return (
-            <div key={col.id} className={pcn(
-                '__col-input',
-                propertyIsFromOtherLiveObject ? '__col-input--from-other-live-object' : '',
-                col.isNew ? '__col-input--is-new' : '',
-                !col.isNew && (columns[i + 1] || {}).isNew ? '__col-input--nex-is-new' : '',
-            )}>
-                { propertyIsFromOtherLiveObject ? renderPropertyFromOtherLiveObject(col.liveColumn) : (
-                    <SelectInput
-                        className={pcn(
-                            '__col-input-field', 
-                            '__col-input-field--property',
-                            !!property ? '__col-input-field--has-value' : '',
-                        )}
-                        classNamePrefix='spec'
-                        value={col.liveColumn?.property}
-                        options={[
-                            { value: null, label: '--' },
-                            ...propertyOptions,
-                        ]}
-                        placeholder='.property'
-                        isRequired={true}
-                        disabled={col.isSerial}
-                        updateFromAbove={true}
-                        onChange={value => setLiveColumnProperty(value, i)}
-                        comps={{
-                            SingleValue: renderPropertyValue,
-                            Option: renderPropertyOption,
-                        }}
-                    />
-                )}
-                <div className={pcn('__col-arrow', showArrow ? '__col-arrow--shown' : '')}>
-                    <div className={pcn('__col-arrow-line')}>
-                        <span></span>
-                        <span
-                            className={pcn('__col-arrow-point')} 
-                            dangerouslySetInnerHTML={{ __html: triangleIcon }}>
-                        </span>
+            return (
+                <div key={col.id} className={pcn(
+                    '__col-input',
+                    propertyIsFromOtherLiveObject ? '__col-input--from-other-live-object' : '',
+                    col.isNew ? '__col-input--is-new' : '',
+                    !col.isNew && (columns[i + 1] || {}).isNew ? '__col-input--next-is-new' : '',
+                    uniqueMappingIndexes.includes(i) ? '__col-input--in-unique-mapping' : '',
+                    i === uniqueMappingIndexes[0] ? '__col-input--first-unique-mapping' : '',
+                    uniqueMappingIndexes.length && i === uniqueMappingIndexes[uniqueMappingIndexes.length - 1] ? '__col-input--last-unique-mapping' : '',
+                )}>
+                    { propertyIsFromOtherLiveObject ? renderPropertyFromOtherLiveObject(col.liveColumn) : (
+                        <SelectInput
+                            className={pcn(
+                                '__col-input-field', 
+                                '__col-input-field--property',
+                                !!property ? '__col-input-field--has-value' : '',
+                            )}
+                            classNamePrefix='spec'
+                            value={col.liveColumn?.property}
+                            options={[
+                                { value: null, label: '--' },
+                                ...propertyOptions,
+                            ]}
+                            placeholder='.property'
+                            isRequired={true}
+                            disabled={col.isSerial}
+                            updateFromAbove={true}
+                            onChange={value => setLiveColumnProperty(value, i)}
+                            comps={{
+                                SingleValue: renderPropertyValue,
+                                Option: renderPropertyOption,
+                            }}
+                        />
+                    )}
+                    <div className={pcn('__col-arrow', showArrow ? '__col-arrow--shown' : '')}>
+                        <div className={pcn('__col-arrow-line')}>
+                            <span></span>
+                            <span
+                                className={pcn('__col-arrow-point')} 
+                                dangerouslySetInnerHTML={{ __html: triangleIcon }}>
+                            </span>
+                        </div>
+                    </div>
+                    <div className={pcn('__col-input-container')}>
+                        { col.isNew ? renderNewColumn(col, i) : renderExistingColumn(col) }
                     </div>
                 </div>
-                <div className={pcn('__col-input-container')}>
-                    { col.isNew ? renderNewColumn(col, i) : renderExistingColumn(col) }
-                </div>
-            </div>
-        )
-    }), [
+            )
+        })
+    }, [
         columns, 
         setLiveColumnProperty, 
         propertyOptions,
@@ -618,7 +695,7 @@ function EditableLiveColumns(props, ref) {
     ])
 
     return (
-        <div className={cn(className, `${className}--${purpose}`)}>
+        <div className={cn(className, `${className}--${purpose}`, animateLines ? `${className}--animate-lines` : '')}>
             <div className={pcn('__liner')}>
                 <div
                     className={pcn(
@@ -629,7 +706,16 @@ function EditableLiveColumns(props, ref) {
                     <span>{tableName || initialTableName || 'new_table'}:</span>
                 </div>
                 <div className={pcn('__col-inputs', !!columns.find(c => c.isNew) ? '__col-inputs--has-new' : '')}>
-                    { renderColInputs() }
+                    { uniqueMappingRange.firstIndex !== null && (
+                        <div
+                            className={pcn('__unique-mapping-range')}
+                            style={{
+                                top: (uniqueMappingRange.firstIndex * styles.ROW_HEIGHT) + 4,
+                                height: uniqueMappingRange.numRows * styles.ROW_HEIGHT + 8,
+                            }}>
+                        </div>
+                    )}
+                    { renderColInputs(uniqueMappingRange) }
                 </div>
                 <div className={pcn('__action-buttons')}>
                     <button onClick={addNewColumn}>

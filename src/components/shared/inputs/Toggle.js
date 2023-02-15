@@ -13,11 +13,11 @@ function Toggle(props) {
         if (newValue === value) return
         setInternally && setValue(newValue)
         onChange(newValue)
-    }, [value, onChange])
+    }, [value, onChange, setInternally])
 
     useEffect(() => {
         props.value !== value && setValue(props.value)
-    }, [props.value])
+    }, [props.value, value])
 
     return (
         <div className={cn(className, value ? `${className}--true` : '')}>

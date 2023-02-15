@@ -113,8 +113,6 @@ function DashboardPage(props) {
         const changed = currentSeedCursorIds.sort().join(',') !== newSeedCursors.map(sc => sc.id).sort().join(',')
         if (!changed) return
 
-        console.log('SET SEED CURSORS', newSeedCursors)
-
         setSeedCursors(newSeedCursors)
     }, [seedCursors])
 

@@ -767,6 +767,10 @@ $loaderTime: 2.3s;
             width: auto;
             fill: currentColor;
         }
+
+        & + .tables-body__col-header-name {
+            margin-left: 0 !important;
+        }
     }
 
     // Live Object Link

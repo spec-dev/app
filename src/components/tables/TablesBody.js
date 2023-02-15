@@ -14,7 +14,7 @@ import { displayColType, isJSONColumn } from '../../utils/colTypes'
 import { getNewCount, tableCounts } from '../../utils/counts'
 import { stringify } from '../../utils/json'
 import { loadAllLiveObjects } from '../../utils/liveObjects'
-import { isElementInView } from '../../utils/doc'
+import EditColumnPanel from '../shared/panels/EditColumnPanel'
 import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
     filterIcon,
@@ -166,7 +166,7 @@ function TablesBody(props, ref) {
         rel => rel.source_table_name === table.name
     ).map(rel => rel.source_column_name)), [table])
     
-    const [sortRules, setSortRules] = useState(defaultSortRules(primaryKeyColNames))
+    const sortRules = useMemo(() => defaultSortRules(primaryKeyColNames), [primaryKeyColNames])
 
     // Live column info.
     const liveColumns = useMemo(() => compileLiveColumnDataForTable(table, config), [table, config])
@@ -190,14 +190,13 @@ function TablesBody(props, ref) {
     // Refs.
     const newLiveColumnSliderRef = useRef()
     const newLiveColumnPanelRef = useRef()
-    const selectLiveColumnFormatterPanelRef = useRef()
-    const selectLiveColumnFormatterSliderRef = useRef()
+    const editColumnSliderRef = useRef()
+    const editColumnPanelRef = useRef()
     const newColumnDropdownRef = useRef()
     const shouldShowLiveDataPanel = useRef(false)
     const extendTableDropdownRef = useRef()
-    const configureLiveColumnFormatterArgs = useRef([])
+    const configureEditColumnPanelArgs = useRef([])
     const transformObjectSliderRef = useRef()
-    const transformObjectPanelRef = useRef()
     const hookSliderRef = useRef()
     const hasEagerLoadedAllLiveObjects = useRef(false)
     const seedCursor = useRef(props.seedCursor || null)
@@ -256,13 +255,13 @@ function TablesBody(props, ref) {
         }
     }, [showLiveDataPanel])
     
-    const selectLiveColumnFormatter = useCallback((liveObjectSpec, property, cb) => {
-        if (selectLiveColumnFormatterPanelRef.current) {
-            selectLiveColumnFormatterPanelRef.current.configure(liveObjectSpec, property, cb)
+    const showEditColumnSlider = useCallback((column, cb) => {
+        if (editColumnPanelRef.current) {
+            editColumnPanelRef.current.configure(column, cb)
         } else {
-            configureLiveColumnFormatterArgs.current = [liveObjectSpec, property, cb]
+            configureEditColumnPanelArgs.current = [column, cb]
         }
-        selectLiveColumnFormatterSliderRef.current?.show()
+        editColumnSliderRef.current?.show()
     }, [])
 
     const loadPageRecords = useCallback(async (trackChanges) => {
@@ -438,7 +437,6 @@ function TablesBody(props, ref) {
             const nextCount = props.table.name ? (tableCounts[[schema, props.table.name].join('.')] || null) : null
             prevCount.current = nextCount
             setCount(nextCount)
-            setSortRules(defaultSortRules(primaryKeyColNames))
             resetScroll.current = true
             setRecords(null)
             return
@@ -467,7 +465,7 @@ function TablesBody(props, ref) {
             setStatus(defaultInitialStatus(props.seedCursor, schema, props.table.name))
         }
     }, [schema, table, props.table, props.seedCursor, primaryKeyColNames, mainWidth])
-    
+
     useEffect(() => {
         if (table?.name && records === null) {
             if (count === null) {
@@ -669,7 +667,7 @@ function TablesBody(props, ref) {
         
         colHeaders.push((
             <div key='add' className={pcn('__col-header', '__col-header--new-col')}>
-                <span id='extendTableDropdownTarget' onClick={onClickExtendTable}>
+                <span id='extendTableDropdownTarget' onClick={() => showLiveDataPanel(referrers.NEW_LIVE_COLUMN)}>
                     <span>+</span>
                 </span>
                 <NewColumnDropdown
@@ -841,11 +839,29 @@ function TablesBody(props, ref) {
                     referrer={liveDataPanelReferrer}
                     onSave={onSaveLiveColumns}
                     onCancel={() => newLiveColumnSliderRef.current?.hide()}
-                    selectLiveColumnFormatter={selectLiveColumnFormatter}
                     addTransform={addTransform}
                     addHook={addHook}
                     refetchTables={refetchTables}
+                    editColumn={showEditColumnSlider}
                     ref={newLiveColumnPanelRef}
+                />
+            </Slider>
+            <Slider
+                id='editColumnSlider'
+                faster={true}
+                willHide={() => editColumnPanelRef.current?.willHide()}
+                ref={editColumnSliderRef}>
+                <EditColumnPanel
+                    schema={schema}
+                    onCancel={() => editColumnSliderRef.current?.hide()}
+                    onDone={() => editColumnSliderRef.current?.hide()}
+                    ref={r => {
+                        editColumnPanelRef.current = r
+                        if (editColumnPanelRef.current && !!configureEditColumnPanelArgs.current?.length) {
+                            editColumnPanelRef.current.configure(...configureEditColumnPanelArgs.current)
+                            configureEditColumnPanelArgs.current = []
+                        }
+                    }}
                 />
             </Slider>
         </div>

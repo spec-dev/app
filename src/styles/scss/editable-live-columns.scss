@@ -32,6 +32,16 @@ $disabledOpacity: 0.35;
             }
         }
     }
+
+    &.editable-live-columns--animate-lines {
+        .editable-live-columns__col-arrow {
+            .editable-live-columns__col-arrow-line {
+                span:first-child {
+                    animation: 0.9s moving-line-right linear infinite;
+                }
+            }
+        }
+    }
 }
 
 .editable-live-columns__liner {
@@ -85,12 +95,24 @@ $disabledOpacity: 0.35;
     justify-content: flex-start;
     align-items: flex-start;
     width: 100%;
+    position: relative;
 
     &.editable-live-columns__col-inputs--has-new {
         .editable-live-columns__col-arrow {
             padding-right: 7px;
         }
     }
+}
+
+.editable-live-columns__unique-mapping-range {
+    display: block;
+    left: -12px;
+    right: -15px;
+    position: absolute;
+    border-radius: 4px;
+    background-color: adjust-color($tealAccent, $alpha: -0.975);
+    border: 1px solid adjust-color($tealAccent, $alpha: -0.95);
+    pointer-events: none;
 }
 
 .editable-live-columns__col-input {
@@ -102,15 +124,29 @@ $disabledOpacity: 0.35;
     align-items: center;
     width: 100%;
 
-    // &:first-child {
-    //     .editable-live-columns__new-col:before {
-    //         background-color: adjust-color($purpleAccent, $alpha: -0.95);
-    //     }
-    //     .editable-live-columns__new-col-type-fixed {
-    //         color: $purpleAccent;
-    //     }
-    // }
+    &.editable-live-columns__col-input--in-unique-mapping {
+        .editable-live-columns__new-col:before {
+            background-color: adjust-color($backgroundLight, $alpha: -0.5);
+            border: 1px solid adjust-color($tealAccent, $alpha: -0.95);
+        }
+        .editable-live-columns__new-col:hover {
+            &:before {
+                background-color: adjust-color($backgroundLight, $alpha: -0.4);
+            }
+        }
+        .editable-live-columns__existing-col-type-icon,
+        .editable-live-columns__new-col-type-icon {
+            color: $tealAccent !important;
+        }
+    }
 
+    &.editable-live-columns__col-input--first-unique-mapping {
+        margin-top: 8px;
+    }
+
+    &.editable-live-columns__col-input--last-unique-mapping {
+        margin-bottom: 8px;
+    }
 
     &.editable-live-columns__col-input--from-other-live-object {
         .editable-live-columns__col-arrow {
@@ -273,7 +309,7 @@ $disabledOpacity: 0.35;
         .spec__control {
             // border: 1px solid adjust-color($white, $alpha: -0.9) !important;
             border: 1px solid #343456 !important;
-            background-color: transparent !important;
+            background-color: $backgroundMedium !important;
             transition: border 0.25s ease, background-color 0.2 ease !important;
             padding-left: 13px;
         }
@@ -538,6 +574,12 @@ $disabledOpacity: 0.35;
     &.editable-live-columns__new-col--fk {
         &:before {
             background-color: adjust-color($backgroundLight, $alpha: -0.55);
+        }
+
+        &:hover {
+            &:before {
+                background-color: adjust-color($backgroundLight, $alpha: -0.4);
+            }
         }
     }
     
@@ -1083,7 +1125,6 @@ $disabledOpacity: 0.35;
             top: 8.5px;
             background-position: 100% 50%;
             background: url('../../svgs/dash-green.svg') repeat;
-            animation: 0.9s moving-line-right linear infinite;
             opacity: 0.4;
         }
 

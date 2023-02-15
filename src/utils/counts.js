@@ -1,6 +1,7 @@
 export const tableCounts = {}
 
 export function updateTableCountWithEvents(events, tablePath) {
+    if (!tableCounts.hasOwnProperty(tablePath)) return
     const newCount = getNewCount(tableCounts[tablePath] || 0, events)
     tableCounts[tablePath] = newCount
 }

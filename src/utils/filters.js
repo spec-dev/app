@@ -114,3 +114,25 @@ export const multiValueOps = new Set([
     filterOps.IN,
     filterOps.NOT_IN,
 ])
+
+export function getColumnOpForSpecConfigOp(op) {
+    switch (op) {
+        case filterOps.EQUAL_TO:
+            return filterOps.IN_COLUMN
+
+        case filterOps.GREATER_THAN:
+            return filterOps.GREATER_THAN_COLUMN
+
+        case filterOps.GREATER_THAN_OR_EQUAL_TO:
+            return filterOps.GREATER_THAN_OR_EQUAL_TO_COLUMN
+
+        case filterOps.LESS_THAN:
+            return filterOps.LESS_THAN_COLUMN
+    
+        case filterOps.LESS_THAN_OR_EQUAL_TO:
+            return filterOps.LESS_THAN_OR_EQUAL_TO_COLUMN
+
+        default:
+            return op
+    }
+}
