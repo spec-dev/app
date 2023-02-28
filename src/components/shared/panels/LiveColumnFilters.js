@@ -14,6 +14,7 @@ import TimestampInput from '../inputs/TimestampInput'
 import { parse, stringify } from '../../../utils/json'
 import { noop } from '../../../utils/nodash'
 import CodeInput from '../inputs/CodeInput'
+import { colTypeIcon, displayColType } from '../../../utils/colTypes'
 import {
     NUMBER,
     STRING,
@@ -87,7 +88,7 @@ function LiveColumnFilters(props, ref) {
     const columnPathOptions = useMemo(() => (getSchema(schema) || [])
         .map(table => table.columns.map(col => ({ 
             colPath: [schema, table.name, col.name].join('.'),
-            colType: col.data_type,
+            colType: displayColType(col.data_type),
         })))
         .flat()
         .map(({ colPath, colType }) => ({ value: colPath, label: colPath, type: colType })), 
@@ -315,18 +316,22 @@ function LiveColumnFilters(props, ref) {
 
     const renderColumnValueSingleValue = useCallback(({ innerProps, data }) => {
         const [_, table, column] = (data?.value || '').split('.')
+        const tablePath = [table, column].join('.')
+        const icon = colTypeIcon(data.type)
         return (
             <span
                 className='spec__single-value'
                 { ...innerProps }>
-                <span>{column}</span>
-                <span>{table}</span>
+                <span dangerouslySetInnerHTML={{ __html: icon }}></span>
+                <span>{tablePath}</span>
             </span>
         )
     }, [])
 
     const renderColumnValueOption = useCallback(({ innerRef, innerProps, data, isFocused, isSelected, isDisabled }) => {
         const [_, table, column] = (data?.value || '').split('.')
+        const tablePath = [table, column].join('.')
+        const icon = colTypeIcon(data.type)
         return (
             <span
                 className={cn(
@@ -337,8 +342,8 @@ function LiveColumnFilters(props, ref) {
                 )}
                 { ...innerProps }
                 ref={innerRef}>
-                <span>{column}</span>
-                <span title={table}>{table}</span>
+                <span dangerouslySetInnerHTML={{ __html: icon }}></span>
+                <span>{tablePath}</span>
             </span>
         )
     }, [])

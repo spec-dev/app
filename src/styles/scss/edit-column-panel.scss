@@ -363,10 +363,18 @@
                 svg {
                     height: 12px;
                     width: auto;
-                    fill: currentColor;
+                    stroke: currentColor;
                     position: relative;
                     opacity: 0.6;
                     top: 1px;
+            
+                    &.data-type-icon--text {
+                        width: 11.5px;
+                    }
+            
+                    &.data-type-icon--datetime {
+                        width: 11.5px;
+                    }
                 }
             }
 
@@ -377,7 +385,7 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                padding-left: 1px;
+                padding-left: 2px;
                 position: relative;
                 flex: 1;
                 position: relative;
@@ -393,18 +401,35 @@
             align-items: center;
             justify-content: space-between;
 
+            &.spec__option--is-selected {
+                & > span:first-child {
+                    svg {
+                        opacity: 1;
+                    }
+                }
+            }
+
             & > span:first-child {
                 width: 17px;
                 display: inline-block;
                 height: auto;
 
                 svg {
-                    height: 12px;
-                    width: auto;
-                    fill: currentColor;
+                    stroke: currentColor;
                     position: relative;
                     top: 2px;
                     opacity: 0.6;
+                    fill: none;
+                    width: 12px;
+                    height: auto;
+            
+                    &.data-type-icon--text {
+                        width: 11.5px;
+                    }
+            
+                    &.data-type-icon--datetime {
+                        width: 11.5px;
+                    }
                 }
             }
 
@@ -414,7 +439,7 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                padding-left: 1px;
+                padding-left: 2px;
                 position: relative;
                 flex: 1;
             }
