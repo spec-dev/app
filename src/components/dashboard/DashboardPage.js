@@ -95,8 +95,7 @@ function DashboardPage(props) {
         const newSeedCursors = []
         for (const seedCursor of seedCursors) {
             const event = eventsBySeedCursorId[seedCursor.id]
-            // Keep any seed cursors not currently affected by this batch of events.
-            if (!event) {
+            if (!event || event.operation === 'UPDATE') {
                 newSeedCursors.push(seedCursor)
             }
         }
@@ -107,7 +106,7 @@ function DashboardPage(props) {
             e.data?.job_type === 'seed-table'
         ).forEach(event => {
             newSeedCursors.push(event.data)
-        })  
+        })
 
         // Ignore updates to existing seed cursors 'cursor' position.
         const changed = currentSeedCursorIds.sort().join(',') !== newSeedCursors.map(sc => sc.id).sort().join(',')

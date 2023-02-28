@@ -3,6 +3,7 @@ import { DEFAULT_SCHEMA_NAME } from './schema'
 const keys = {
     CURRENT_PROJECT: 'currentProject',
     CURRENT_SCHEMA_NAME: 'currentSchemaName',
+    TABLES_SEEDED: 'tablesSeeded',
 }
 
 /**
@@ -22,7 +23,20 @@ export const getCurrentSchemaName = () => {
 }
 export const setCurrentSchemaName = schemaName => setToStorage(keys.CURRENT_SCHEMA_NAME, schemaName) 
 
-export function setToStorage(key, value) {
+/**
+ * Get/Set whether a table has been seeded before.
+ */
+export const hasTableBeenSeeded = (tableId) => {
+    const tablesSeeded = getFromStorage(keys.TABLES_SEEDED, true) || {}
+    return tablesSeeded[tableId.toString()] === true
+}
+export const markTableAsSeeded = (tableId) => {
+    const tablesSeeded = getFromStorage(keys.TABLES_SEEDED) || {}
+    tablesSeeded[tableId.toString()] = true
+    setToStorage(keys.TABLES_SEEDED, tablesSeeded, true)
+}
+
+export function setToStorage(key, value, useLocalStorage = false) {
     let val
     try {
         val = JSON.stringify(value)
@@ -30,12 +44,16 @@ export function setToStorage(key, value) {
         val = value
     }
 
-    sessionStorage.setItem(key, val)
+    useLocalStorage 
+        ? localStorage.setItem(key, val) 
+        : sessionStorage.setItem(key, val)
 }
 
-export function getFromStorage(key) {
+export function getFromStorage(key, useLocalStorage = false) {
     let item
-    let data = sessionStorage.getItem(key)
+    let data = useLocalStorage 
+        ? localStorage.getItem(key) 
+        : sessionStorage.getItem(key)
 
     try {
         item = JSON.parse(data)

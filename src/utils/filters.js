@@ -28,8 +28,8 @@ export const filterOpLabels = {
     GREATER_THAN_OR_EQUAL_TO_COLUMN: '>= column',
     LESS_THAN_COLUMN: '< column',
     LESS_THAN_OR_EQUAL_TO_COLUMN: '<= column',
-    IN: 'is one of',
-    NOT_IN: 'not one of',
+    IN: 'in list',
+    NOT_IN: 'not in list',
 }
 
 export const filterOpEnglish = {
@@ -44,8 +44,8 @@ export const filterOpEnglish = {
     GREATER_THAN_OR_EQUAL_TO_COLUMN: 'greater than or equal to column',
     LESS_THAN_COLUMN: 'less than column',
     LESS_THAN_OR_EQUAL_TO_COLUMN: 'less than or equal to column',
-    IN: 'is one of',
-    NOT_IN: 'not one of',
+    IN: 'in list',
+    NOT_IN: 'not in list',
 }
 
 export const labelForFilterOp = {
