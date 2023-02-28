@@ -73,7 +73,6 @@ function CodeInput(props, ref) {
 
     const onMount = useCallback((editor, monaco) => {
         editorRef.current = editor
-        focus()
         editor.onKeyDown(e => {
             if (e.keyCode == monaco.KeyCode.Enter) {
                 if (editor.getContribution('editor.contrib.suggestController').model.state == 0) {

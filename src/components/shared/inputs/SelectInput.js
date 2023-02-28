@@ -32,7 +32,7 @@ function SelectInput(props, ref) {
     })
 
     const focus = useCallback(() => inputRef.current?.focus(), [])
-    const blur = useCallback(() => inputRef.current?.focus(), [])
+    const blur = useCallback(() => inputRef.current?.blur(), [])
 
     useImperativeHandle(ref, () => ({
         focus,
