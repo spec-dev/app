@@ -205,18 +205,6 @@
     &.live-column-filters__filter-input-field--value {
         width: calc(#{$liveObjectFilterInputWidth} * 1.1);
 
-        &.live-column-filters__filter-input-field--showing-prompt {
-            .spec__single-value {
-                & > span:last-child {
-                    // color: $blueAccent;
-                }
-            }
-        }
-
-        .spec__value-container.spec__value-container--has-value {
-            padding-left: 3px !important;
-        }
-
         .spec__single-value {
             grid-area: 1/1/2/3;
             margin-left: 2px;
@@ -230,42 +218,21 @@
             flex-direction: row;
             align-items: center;
             justify-content: space-between;
-            
+
             & > span:first-child {
-                width: 17px;
-                display: inline-block;
-                height: auto;
-
-                svg {
-                    height: 12px;
-                    width: auto;
-                    stroke: currentColor;
-                    position: relative;
-                    opacity: 0.6;
-                    top: 1px;
-            
-                    &.data-type-icon--text {
-                        width: 11.5px;
-                    }
-            
-                    &.data-type-icon--datetime {
-                        width: 11.5px;
-                    }
-                }
-            }
-
-            & > span:nth-child(2) {
-                font-size: 11px;
-                color: $white;
-                display: inline-block;
+                width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                padding-left: 2px;
+            }
+
+            & > span:last-child {
                 position: relative;
-                flex: 1;
-                position: relative;
-                top: -0.5px;
+                margin-right: 10px;
+                font-size: 9.5px;
+                color: adjust-color($gray, $alpha: -0.2);
+                letter-spacing: 0;
+                margin-left: 9px;
             }
         }
 
@@ -278,47 +245,114 @@
             justify-content: space-between;
             padding-left: 8px;
 
-            &.spec__option--is-selected {
-                & > span:first-child {
-                    svg {
-                        opacity: 1;
-                    }
-                }
-            }
-
             & > span:first-child {
-                width: 17px;
-                display: inline-block;
-                height: auto;
-
-                svg {
-                    stroke: currentColor;
-                    position: relative;
-                    top: 2px;
-                    opacity: 0.6;
-                    fill: none;
-                    width: 12px;
-                    height: auto;
-            
-                    &.data-type-icon--text {
-                        width: 11.5px;
-                    }
-            
-                    &.data-type-icon--datetime {
-                        width: 11.5px;
-                    }
-                }
-            }
-
-            & > span:nth-child(2) {
-                font-size: 11px;
-                display: inline-block;
+                width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                padding-left: 3px;
+            }
+
+            & > span:last-child {
                 position: relative;
-                flex: 1;
+                margin-right: 3px;
+                font-size: 10px;
+                color: adjust-color($gray, $alpha: -0.2);
+                padding-left: 8px;
+                margin-left: 8px;
+                letter-spacing: 0;
+            }
+        }
+
+        &.live-column-filters__filter-input-field--col-value {
+            .spec__value-container.spec__value-container--has-value {
+                padding-left: 3px !important;
+            }
+
+            .spec__single-value {
+                & > span:first-child {
+                    width: 17px;
+                    display: inline-block;
+                    height: auto;
+
+                    svg {
+                        height: 12px;
+                        width: auto;
+                        stroke: currentColor;
+                        position: relative;
+                        opacity: 0.6;
+                        top: 1px;
+                
+                        &.data-type-icon--text {
+                            width: 11.5px;
+                        }
+                
+                        &.data-type-icon--datetime {
+                            width: 11.5px;
+                        }
+                    }
+                }
+
+                & > span:nth-child(2) {
+                    font-size: 11px;
+                    color: $white;
+                    display: inline-block;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    padding-left: 2px;
+                    position: relative;
+                    margin: 0;
+                    flex: 1;
+                    position: relative;
+                    top: -0.5px;
+                }
+            }
+
+            .spec__option {
+                &.spec__option--is-selected {
+                    & > span:first-child {
+                        svg {
+                            opacity: 1;
+                        }
+                    }
+                }
+
+                & > span:first-child {
+                    width: 17px;
+                    display: inline-block;
+                    height: auto;
+
+                    svg {
+                        stroke: currentColor;
+                        position: relative;
+                        top: 2px;
+                        opacity: 0.6;
+                        fill: none;
+                        width: 12px;
+                        height: auto;
+                
+                        &.data-type-icon--text {
+                            width: 11.5px;
+                        }
+                
+                        &.data-type-icon--datetime {
+                            width: 11.5px;
+                        }
+                    }
+                }
+
+                & > span:nth-child(2) {
+                    font-size: 11px;
+                    display: inline-block;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    color: inherit;
+                    white-space: nowrap;
+                    padding-left: 3px;
+                    margin: 0;
+                    position: relative;
+                    flex: 1;
+                }
             }
         }
 

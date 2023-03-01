@@ -51,7 +51,9 @@ function TablesPanel(props) {
                     </div>
                 </div>
                 <div className={pcn('__section', '__section--tables')}>
-                    <div className={pcn('__section-title')}>Tables</div>
+                    <div className={pcn('__section-title')}>
+                        { tableNames.length ? 'Tables' : null }
+                    </div>
                     <div className={pcn('__section-body')}>
                         { renderTableItems() }
                     </div>

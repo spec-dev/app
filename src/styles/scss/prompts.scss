@@ -18,7 +18,7 @@
     &.prompt--0 {
         background-color: adjust-color($blueAccent, $alpha: -0.95);
         border: 1px solid adjust-color($blueAccent, $alpha: -0.91);
-        height: 98px;
+        height: 100px;
 
         .prompt-title {
             color: $blueAccent;
@@ -143,7 +143,7 @@
 .add-foreign-key-prompt__fk-body {
     display: block;
     width: 100%;
-    padding: 8px 17px;
+    padding: 9px 17px 10px;
 }
 
 .add-foreign-key-prompt__fk-body-liner {
@@ -180,8 +180,8 @@
         padding-left: 12px;
         padding-right: 12px;
         outline: none !important;
-        background-color: adjust-color($blueAccent, $alpha: -0.96);
-        border: none;
+        background-color: adjust-color($blueAccent, $alpha: -1);
+        border: 1px solid adjust-color($blueAccent, $alpha: -0.89);
         cursor: text;
         border-radius: 4px;
         font-family: CodeRegular;
@@ -190,15 +190,15 @@
         color: $white;
 
         &::placeholder {
-            color: adjust-color($lightGray, $alpha: -0.2);
+            color: adjust-color($gray, $alpha: -0.2);
         }
 
         &::-webkit-input-placeholder {
-            color: adjust-color($lightGray, $alpha: -0.2);
+            color: adjust-color($gray, $alpha: -0.2);
         }
 
         &::-moz-placeholder {
-            color: adjust-color($lightGray, $alpha: -0.2);
+            color: adjust-color($gray, $alpha: -0.2);
         }
     }
 
@@ -250,12 +250,12 @@
             letter-spacing: normal;
         }
         .spec__placeholder {
-            color: adjust-color($lightGray, $alpha: -0.2);
+            color: adjust-color($gray, $alpha: -0.2);
         }
         .spec__control {
             height: 32px;
-            background-color: adjust-color($blueAccent, $alpha: -0.96) !important;
-            border: none !important;
+            background-color: adjust-color($blueAccent, $alpha: -1) !important;
+            border: 1px solid adjust-color($blueAccent, $alpha: -0.89) !important;
             border-radius: 4px;        
         }
 
