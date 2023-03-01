@@ -37,6 +37,7 @@ import newColIcon from './new-col'
 import newLiveColIcon from './new-live-col'
 import npmIcon from './npm'
 import numberIcon from './number'
+import openArrowIcon from './open-arrow'
 import previewIcon from './preview'
 import requiredIcon from './required'
 import searchIcon from './search'
@@ -94,6 +95,7 @@ export {
     newLiveColIcon,
     npmIcon,
     numberIcon,
+    openArrowIcon,
     previewIcon,
     requiredIcon,
     searchIcon,

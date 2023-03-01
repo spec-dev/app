@@ -3,24 +3,58 @@
     height: auto;
     width: 100%;
     border-radius: 5px;
-    padding: 17px 0 0;
+    padding: 16px 0 0;
     margin-top: 5px;
+    position: relative;
 
     .--code {
         font-family: CodeRegular;
         font-size: 11px;
         padding-left: 4px;
         padding-right: 2px;
-        // color: $white;
     }
 
     // info level
     &.prompt--0 {
         background-color: adjust-color($blueAccent, $alpha: -0.95);
         border: 1px solid adjust-color($blueAccent, $alpha: -0.91);
+        height: 98px;
 
         .prompt-title {
-            color: $white;
+            color: $blueAccent;
+
+            pre {
+                position: relative;
+                z-index: 1;
+                font-size: 11px;
+                font-family: CodeRegular;
+                color: $blueAccent;
+                display: inline-block;
+                padding: 0 1.5px;
+                margin-left: 4px;
+                margin-right: 4px;
+    
+                &:before {
+                    left: -3px;
+                    right: -3px;
+                    top: -3px;
+                    bottom: -4px;
+                    border-radius: 4px;
+                    background-color: adjust-color($blueAccent, $alpha: -0.95);
+                    display: inline-block;
+                    content: '';
+                    position: absolute;
+                    z-index: -1;
+                }
+            }
+
+            span {
+                font-family: Italic;
+                margin-left: 6px;
+                font-size: 10.5px;
+                opacity: 0.5;
+                color: $lightGray;
+            }
         }
 
         .prompt-icon svg {
@@ -51,7 +85,7 @@
     display: flex;
     flex-direction: row;
     align-items: flex-start;
-    justify-content: center;
+    justify-content: flex-start;
     height: 24px;
     padding: 0 17px;
     width: 100%;
@@ -72,11 +106,7 @@
 .prompt-title {
     display: inline-block;
     font-size: 13px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
     margin-left: 8px;
-    // font-family: Medium;
 }
 
 .prompt-main-bottom {
@@ -87,120 +117,33 @@
 .prompt-subtitle {
     display: inline-block;
     font-size: 12px;
-    color: adjust-color($lightGray, $alpha: -0);
+    color: adjust-color($lightGray, $alpha: -0.3);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-top: 4px;
+    margin-top: 2px;
     padding: 0 17px;
     letter-spacing: 0.1px;
+    margin-left: 1px;
 }
 
 .prompt-buttons-container {
-    display: flex;
-    height: 46px;
-    width: 100%;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    border-top: 1px solid adjust-color($blueAccent, $alpha: -0.92);
-    padding: 0 17px;
-}
-
-.add-foreign-key-prompt__fk-container {
-    display: block;
-    width: 100%;
-    margin-top: 9px;
-    border-top: 1px solid adjust-color($blueAccent, $alpha: -0.92);
-}
-
-.add-foreign-key-prompt__fk-header {
-    // background-color: adjust-color($blueAccent, $alpha: -0.96);
-    height: 24px;
     display: inline-flex;
-    flex-direction: row;
-    align-items: center;
-    justify-self: flex-end;
+    height: 100%;
     margin-left: auto;
+    justify-self: flex-end;
+    flex-direction: column;
+    align-items: flex-start;
     justify-content: flex-start;
-    position: relative;
-    z-index: 0;
-    user-select: none;
-    // margin-top: 7px;
-    // margin-bottom: 7px;
-    margin-top: -4px;
-
-
-    .add-foreign-key-prompt__fk-header-slider {
-        height: 28px;
-        border-radius: 14.5px;
-        display: inline-block;
-        position: absolute;
-        top: -2px;
-        cursor: pointer;
-        z-index: 1;
-        // border: 1px solid adjust-color($white, $alpha: -0.3);
-        // border: 1px solid adjust-color($blueAccent, $alpha: -0.8);
-        background-color: adjust-color($blueAccent, $alpha: -0.95);
-        // background-color: adjust-color($white, $alpha: -0.07);
-        transition: all 0.3s $defaultTiming;
-        pointer-events: none;
-    }
-
-    &.add-foreign-key-prompt__fk-header--index-0 .add-foreign-key-prompt__fk-header-slider {
-        left: 0;
-        width: 118px;
-    }
-
-    &.add-foreign-key-prompt__fk-header--index-1 {
-        .add-foreign-key-prompt__fk-header-slider {
-            left: calc(118px + 4px);
-            width: 99px;
-        }
-    }
-
-    &.add-foreign-key-prompt__fk-header--index-2 {
-        .add-foreign-key-prompt__fk-header-slider {
-            left: calc(118px + 4px + 99px + 4px);
-            width: 64px;
-        }
-    }
-}
-
-.add-foreign-key-prompt__fk-header-tab {
-    margin-left: 4px;
-    font-size: 11px;
-    letter-spacing: 0.1px;
-    cursor: pointer;
-    height: 28px;
-    display: inline-flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    color: $lightGray;
-    transition: all 0.13s ease;
-    padding: 0 12px;
-    border-radius: 14px;
-    position: relative;
-    z-index: 2;
-
-    &:nth-child(2) {
-        margin-left: 0;
-    }
-
-    &:not(.add-foreign-key-prompt__fk-header-tab--selected):hover {
-        color: $white;
-    }
-
-    &.add-foreign-key-prompt__fk-header-tab--selected {
-        color: $blueAccent;
-    }
+    position: absolute;
+    top: 16px;
+    right: 18px;
 }
 
 .add-foreign-key-prompt__fk-body {
     display: block;
     width: 100%;
-    padding: 20px 17px;
+    padding: 8px 17px;
 }
 
 .add-foreign-key-prompt__fk-body-liner {
@@ -209,38 +152,53 @@
     flex-direction: row;
     align-items: center;
     justify-content: flex-start;
+
+    & > span {
+        height: 12px;
+        width: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: $white;
+        margin: 0 8px;
+
+        svg {
+            width: 10px;
+            height: auto;
+        }
+    }
 }
 
 .add-foreign-key-prompt__fk-col-name {
-    width: calc(#{$liveObjectFilterInputWidth} / 1.1);
-    height: 35px;
+    width: 120px;
+    height: 32px;
     position: relative;
 
     input {
         width: 100%;
         position: relative;
         padding-left: 12px;
-        padding-right: 29px;
+        padding-right: 12px;
         outline: none !important;
-        background-color: transparent;
-        border: 1px solid adjust-color($blueAccent, $alpha: -0.7);
+        background-color: adjust-color($blueAccent, $alpha: -0.96);
+        border: none;
         cursor: text;
         border-radius: 4px;
         font-family: CodeRegular;
         font-size: 11px;
-        height: 35px;
+        height: 32px;
         color: $white;
 
         &::placeholder {
-            color: adjust-color($lightGray, $alpha: -.4);
+            color: adjust-color($lightGray, $alpha: -0.2);
         }
 
         &::-webkit-input-placeholder {
-            color: adjust-color($lightGray, $alpha: -.4);
+            color: adjust-color($lightGray, $alpha: -0.2);
         }
 
         &::-moz-placeholder {
-            color: adjust-color($lightGray, $alpha: -.4);
+            color: adjust-color($lightGray, $alpha: -0.2);
         }
     }
 
@@ -260,103 +218,9 @@
     }
 }
 
-.add-foreign-key-prompt__ref-arrow {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 35px;
-    position: relative;
-
-    .add-foreign-key-prompt__ref-arrow-point {
-        position: absolute;
-        right: -7px;
-        top: calc(50% - 10.5px);
-
-        svg {
-            height: auto;
-            width: 7px;
-            fill: adjust-color($blueAccent, $alpha: -0.45);
-        }
-    }
-
-    &:before {
-        left: 0;
-        width: 14px;
-        height: 1px;
-        background-color: adjust-color($blueAccent, $alpha: -0.7);
-        top: 17px;
-        content: '';
-        position: absolute;
-        display: block;
-    }
-
-    &:after {
-        right: 0;
-        width: 14px;
-        height: 1px;
-        background-color: adjust-color($blueAccent, $alpha: -0.7);
-        top: 17px;
-        content: '';
-        position: absolute;
-        display: block;
-    }
-
-    span:first-child {
-        padding-left: 20px;
-        padding-right: 20px;
-        font-size: 9.5px;
-        position: relative;
-        color: $blueAccent;
-        letter-spacing: 0.3px;
-        text-transform: uppercase;
-        display: inline-block;
-    }
-}
-
-.add-foreign-key-prompt__fixed-ref-key {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    height: 35px;
-    max-width: 44.5%;
-    flex: 1;
-    margin-left: 17px;
-}
-
-.add-foreign-key-prompt__fixed-ref-key-col {
-    display: inline-flex;
-    font-family: CodeRegular;
-    font-size: 11px;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    position: relative;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    height: 100%;
-    width: 100%;
-    background-color: adjust-color($blueAccent, $alpha: -0.96);
-    border-radius: 4px;
-    padding-left: 12px;
-
-    & > span {
-
-        span:first-child {
-            color: $white;
-        }
-        span:last-child {
-            color: $white;
-        }
-    }   
-}
-
 .add-foreign-key-prompt__ref-key-input {
-    height: 35px;
-    margin-left: 18px;
+    height: 32px;
     width: auto;
-    flex: 1;
 
     &.select-input {
         .spec__single-value,
@@ -386,21 +250,17 @@
             letter-spacing: normal;
         }
         .spec__placeholder {
-            color: adjust-color($lightGray, $alpha: -.4);
+            color: adjust-color($lightGray, $alpha: -0.2);
         }
         .spec__control {
-            height: 35px;
-            background-color: transparent !important;
-            border: 1px solid adjust-color($blueAccent, $alpha: -0.75) !important;
+            height: 32px;
+            background-color: adjust-color($blueAccent, $alpha: -0.96) !important;
+            border: none !important;
             border-radius: 4px;        
         }
 
         .spec__value-container {
             padding-left: 7px !important;
-        }
-
-        .spec__menu-list {
-            max-height: 70px;    
         }
     }
 }
@@ -409,73 +269,121 @@
     display: inline-flex;
     flex-direction: row;
     align-items: center;
-    // justify-content: space-between;
-    // width: 100%;
+    justify-content: center;
+    position: relative;
+    top: -3px;
+    right: -5px;
 }
 
 .add-foreign-key-prompt__button {
-    height: 26px;
-    width: auto;
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 11px;
-    border-radius: 4px;
+    font-size: 9.5px;
+    font-family: Medium;
+    text-transform: uppercase;
     letter-spacing: 0.3px;
     transition: all 0.2s ease;
     background-color: transparent;
-    padding: 0 12px;
     animation: none;
     cursor: pointer;
     position: relative;
     color: $blueAccent;
-    border: none;
+    border: 1px solid adjust-color($blueAccent, $alpha: -0.88);
     background-color: adjust-color($blueAccent, $alpha: -0.95);
 
     &:hover {
-        background-color: adjust-color($blueAccent, $alpha: -0.93);
+        background-color: adjust-color($blueAccent, $alpha: -0.9);
     }
 
     &:first-child {
-        margin-right: 10px;
-        border: none;
-        color: $lightGray;
-        background-color: adjust-color($blueAccent, $alpha: -0.97);
+        margin-right: 7px;
+    }
+    
+    & > span {
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+        height: 13px;
+        width: 13px;
+        color: currentColor;
+
+        svg {
+            stroke: currentColor;
+            height: 13px;
+            width: auto;
+        }
+    }
+    
+    &:not(.add-foreign-key-prompt__button--yes) svg {
+        stroke-width: 1.7;
     }
 
-    &.add-foreign-key-prompt__button--added,
-    &.add-foreign-key-prompt__button--animate {
-        background-color: adjust-color($blueAccent, $alpha: -0.93);
+    &.add-foreign-key-prompt__button--yes {
+        &.add-foreign-key-prompt__button--added {
+            div {
+                opacity: 0;
+            }
+            span {
+                opacity: 1;
+            }
+            div svg .stroke {
+                stroke-dashoffset: 12;
+            }
+        }
+        &.add-foreign-key-prompt__button--animate {  
+            div {
+                opacity: 1;
+            }
+            span {
+                opacity: 0;
+            }  
+            div svg .stroke {
+                transition: all 0.12s linear 0.1s;
+                stroke-dashoffset: 0;
+            }
+        }
+
+        div {
+            width: 10px;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate3d(-50%, -50%, 0);
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+
+            svg {
+                width: 10px;
+                height: auto;
+
+                .stroke {
+                    stroke-dashoffset: 0;
+                    stroke-dasharray: 12;
+                    stroke: $blueAccent;
+                }
+            }
+        }
 
         span {
             opacity: 0;
-        }
+            transition: opacity 0.2s ease;
 
-        div svg .stroke {
-            stroke-dashoffset: 0;
-        }
-    }
+            &.svg-spinner {
+                width: 12px;
+                height: 12px;
 
-    div {
-        width: 11px;
-        height: auto;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate3d(-50%, -50%, 0);
-        display: inline-flex;
-        justify-content: center;
-        align-items: center;
-
-        svg {
-            width: 11px;
-            height: auto;
-
-            .stroke {
-                stroke-dashoffset: 12;
-                stroke-dasharray: 12;
-                stroke: $blueAccent;
-                transition: all 0.12s linear 0.1s;
+                circle {
+                    stroke: $blueAccent;
+                }
             }
         }
     }

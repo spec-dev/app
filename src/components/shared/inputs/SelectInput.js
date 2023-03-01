@@ -24,6 +24,7 @@ function SelectInput(props, ref) {
         isMulti = false,
         comps = {},
         disabledOptions = [],
+        style = {},
     } = props
     const inputRef = useRef()
     const [data, setData] = useState({
@@ -116,7 +117,7 @@ function SelectInput(props, ref) {
     comps.DropdownIndicator = comps.DropdownIndicator || renderDropdownIcon
 
     return (
-        <div className={classes}>
+        <div className={classes} style={style}>
             <Select
                 classNamePrefix={classNamePrefix}
                 placeholder={placeholder}

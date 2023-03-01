@@ -29,6 +29,7 @@ function TextInput(props, ref) {
         updateFromAbove = false,
         validateWhenValueExists = false,
         renderAfter = noop,
+        autoWidth = null
     } = props
     const inputRef = useRef()
     const lastKeyCode = useRef(null)
@@ -122,13 +123,19 @@ function TextInput(props, ref) {
         props.className,
     );
 
+    const useValue = formattedValue === null ? '' : formattedValue
+    let style = {}
+    if (autoWidth !== null) {
+        style.width = autoWidth(useValue ? useValue : placeholder)
+    }
     return (
-        <div className={classes}>
+        <div className={classes} style={style}>
             <input
-                value={formattedValue === null ? '' : formattedValue}
+                value={useValue}
                 autoComplete={autoComplete ? 'on' : 'nah'}
                 onChange={e => !disabled && handleChange(e)}
                 ref={inputRef}
+                style={style}
                 {...{
                     type,
                     placeholder,

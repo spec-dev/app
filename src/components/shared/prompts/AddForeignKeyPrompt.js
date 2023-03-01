@@ -1,11 +1,11 @@
 import React, { useCallback, useState, useEffect, useMemo } from 'react'
 import { getPCN, cn } from '../../../utils/classes'
-import { helpIcon, checkIcon, keyIcon, triangleIcon, linkIcon } from '../../../svgs/icons'
+import { helpIcon, checkIcon, closeIcon, openArrowIcon } from '../../../svgs/icons'
 import { noop } from '../../../utils/nodash'
 import { camelToSnake } from '../../../utils/formatters'
 import TextInput from '../inputs/TextInput'
 import SelectInput from '../inputs/SelectInput'
-import { colTypeIcon } from '../../../utils/colTypes'
+import spinner from '../../../svgs/chasing-tail-spinner'
 
 const className = 'add-foreign-key-prompt'
 const pcn = getPCN(className)
@@ -16,28 +16,39 @@ const fkOptions = [
     { name: 'Custom' }
 ]
 
-const getInitialFkColName = (filterProperty, selectedFkOptionIndex, foreignTablePkColPath) => {
-    switch (selectedFkOptionIndex) {
-        case 0:
-            return camelToSnake(filterProperty || '')
-        case 1:
-            const [_, table, col] = foreignTablePkColPath.split('.')
-            const singularTableName = table.endsWith('s') ? table.slice(0, table.length - 1) : table
-            return [singularTableName, col].join('_')
-        case 2:
-            return null
+const getInitialFkColName = (
+    filterProperty,
+    filterColPath,
+    foreignTablePkColPath,
+    refKeyOptions,
+) => {
+    if (refKeyOptions.includes(filterColPath)) {
+        return camelToSnake(filterProperty || '')
     }
+
+    if (refKeyOptions.includes(foreignTablePkColPath)) {
+        const [_, table, col] = foreignTablePkColPath.split('.')
+        const singularTableName = table.endsWith('s') ? table.slice(0, table.length - 1) : table
+        return [singularTableName, col].join('_')
+    }
+    
+    return refKeyOptions[0]
 }
 
-const getInitialRefKeyColPath = (filterColPath, selectedFkOptionIndex, foreignTablePkColPath) => {
-    switch (selectedFkOptionIndex) {
-        case 0:
-            return filterColPath
-        case 1:
-            return foreignTablePkColPath
-        case 2:
-            return null
+const getInitialRefKeyColPath = (
+    filterColPath,
+    foreignTablePkColPath,
+    refKeyOptions,
+) => {
+    if (refKeyOptions.includes(filterColPath)) {
+        return filterColPath
     }
+
+    if (refKeyOptions.includes(foreignTablePkColPath)) {
+        return foreignTablePkColPath
+    }
+    
+    return refKeyOptions[0]
 }
 
 function AddForeignKeyPrompt(props) {
@@ -45,56 +56,59 @@ function AddForeignKeyPrompt(props) {
         filterProperty,
         filterColPath,
         foreignTablePkColPath,
-        foreignColOptions = [],
+        refKeyOptions = [],
         onYes = noop, 
         onNo = noop,
     } = props
     const [added, setAdded] = useState(false)
     const [animateToAdded, setAnimateToAdded] = useState(false)
-    const [selectedFkOptionIndex, setSelectedFkOptionIndex] = useState(0)
+    const refKeySelectOptions = useMemo(() => refKeyOptions.map(colPath => {
+        const [_, table, col] = colPath.split('.')
+        return { value: colPath, label: [table, col].join('.') }
+    }), [refKeyOptions])
+    const selectInputWidth = useMemo(() => {
+        const maxLength = Math.max(...refKeySelectOptions.map(opt => opt.label.length))
+        return 44 + maxLength * 7
+    }, [refKeySelectOptions])
+
     const [fkColName, setFkColName] = useState(getInitialFkColName(
         filterProperty,
-        selectedFkOptionIndex,
+        filterColPath,
         foreignTablePkColPath,
+        refKeyOptions,
     ))
+
     const [refKeyColPath, setRefKeyColPath] = useState(getInitialRefKeyColPath(
         filterColPath,
-        selectedFkOptionIndex,
         foreignTablePkColPath,
+        refKeyOptions,
     ))
 
     useEffect(() => {
         if (added && !animateToAdded) {
-            setAnimateToAdded(true)
+            setTimeout(() => {
+                setAnimateToAdded(true)
+                onYes(fkColName, refKeyColPath)
+            }, 700)
         }
-    }, [added, animateToAdded])
+    }, [added, animateToAdded, fkColName, refKeyColPath])
 
     const onClickYes = useCallback(() => { 
         if (!fkColName || !refKeyColPath) return
         setAdded(true)
-        onYes(fkColName, refKeyColPath)
-    }, [onYes, fkColName, refKeyColPath])
+    }, [onYes])
 
     useEffect(() => {
-        const newFkColName = getInitialFkColName(
-            filterProperty, 
-            selectedFkOptionIndex, 
-            foreignTablePkColPath,
-        )
-        setFkColName(newFkColName)
-
-        const newRefKeyColPath = getInitialRefKeyColPath(
-            filterColPath,
-            selectedFkOptionIndex,
-            foreignTablePkColPath,    
-        )
-        setRefKeyColPath(newRefKeyColPath)
-    }, [
-        filterProperty,
-        filterColPath,
-        selectedFkOptionIndex,
-        foreignTablePkColPath,
-    ])
+        if (refKeyColPath === filterColPath) {
+            setFkColName(camelToSnake(filterProperty))
+        } else if (refKeyColPath === foreignTablePkColPath) {
+            const [_, table, col] = foreignTablePkColPath.split('.')
+            const singularTableName = table.endsWith('s') ? table.slice(0, table.length - 1) : table
+            setFkColName([singularTableName, col].join('_'))
+        } else {
+            setFkColName('')
+        }
+    }, [refKeyColPath, filterColPath])
     
     const renderForeignKeyColumnTextInput = useCallback(() => {
         return (
@@ -106,12 +120,7 @@ function AddForeignKeyPrompt(props) {
                 updateFromAbove={true}
                 spellCheck={false}
                 onChange={value => setFkColName(value)}
-                renderAfter={() => (
-                    <span
-                        className={pcn('__fk-col-name-link-icon')}
-                        dangerouslySetInnerHTML={{ __html: linkIcon }}>
-                    </span>
-                )}
+                autoWidth={value => 24 + value.length * 7}
             />
         )
     }, [fkColName])
@@ -121,79 +130,18 @@ function AddForeignKeyPrompt(props) {
             className={pcn('__ref-key-input')}
             classNamePrefix='spec'
             value={refKeyColPath}
-            options={foreignColOptions}
+            options={refKeySelectOptions}
             placeholder='reference_column'
             isRequired={true}
             updateFromAbove={true}
+            style={{ width: selectInputWidth }}
             onChange={value => setRefKeyColPath(value)}
         />
     ), [
         refKeyColPath,
-        foreignColOptions,
+        refKeySelectOptions,
+        selectInputWidth,
     ])
-
-    const renderFixedRefKey = useCallback(() => {
-        const splitColPath = refKeyColPath?.split('.')
-        return (
-            <div className={pcn('__fixed-ref-key')}>
-                <div className={pcn('__fixed-ref-key-col')}>
-                    { splitColPath ? <span><span>{splitColPath[1]}</span>.<span>{splitColPath[2]}</span></span> : '' }
-                </div>
-            </div>
-        )
-    }, [selectedFkOptionIndex, refKeyColPath])
-
-    const renderFkBody = useCallback(() => {
-        const refKeyComp = selectedFkOptionIndex === 2 
-            ? renderRefKeyColInput() 
-            : renderFixedRefKey()
-
-        return (
-            <div className={pcn('__fk-body')}>
-                <div className={pcn('__fk-body-liner')}>
-                    { renderForeignKeyColumnTextInput() }
-                    <div className={pcn('__ref-arrow')}>
-                        <span>references</span>
-                        <span
-                            className={pcn('__ref-arrow-point')}
-                            dangerouslySetInnerHTML={{ __html: triangleIcon}}>
-                        </span>
-                    </div>
-                    { refKeyComp }
-                </div>
-            </div>
-        )
-    }, [
-        selectedFkOptionIndex, 
-        renderRefKeyColInput,
-        renderFixedRefKey,
-        renderForeignKeyColumnTextInput,
-    ])
-
-    const renderFkContainer = useCallback(() => {
-        return (
-            <div className={pcn('__fk-container')}>
-                {/* <div className={pcn(
-                    '__fk-header',
-                    `__fk-header--index-${selectedFkOptionIndex}`,
-                )}>
-                    <div className={pcn('__fk-header-slider')}></div>
-                    { fkOptions.map((tab, i) => (
-                        <div
-                            key={i}
-                            className={pcn(
-                                '__fk-header-tab', 
-                                i === selectedFkOptionIndex ? '__fk-header-tab--selected' : '',
-                            )}
-                            onClick={i === selectedFkOptionIndex ? noop : () => setSelectedFkOptionIndex(i)}>
-                            <span>{tab.name}</span>
-                        </div>
-                    ))}
-                </div> */}
-                { renderFkBody() }
-            </div>
-        )
-    }, [selectedFkOptionIndex, renderFkBody])
 
     return (
         <div className={cn('prompt', className, `prompt--0`)}>
@@ -205,48 +153,35 @@ function AddForeignKeyPrompt(props) {
                             dangerouslySetInnerHTML={{ __html: helpIcon }}>
                         </div>
                         <div className='prompt-title'>
-                            Create a foreign key?
-                        </div>
-                        <div className={pcn(
-                            '__fk-header',
-                            `__fk-header--index-${selectedFkOptionIndex}`,
-                        )}>
-                            <div className={pcn('__fk-header-slider')}></div>
-                            { fkOptions.map((tab, i) => (
-                                <div
-                                    key={i}
-                                    className={pcn(
-                                        '__fk-header-tab', 
-                                        i === selectedFkOptionIndex ? '__fk-header-tab--selected' : '',
-                                    )}
-                                    onClick={i === selectedFkOptionIndex ? noop : () => setSelectedFkOptionIndex(i)}>
-                                    <span>{tab.name}</span>
-                                </div>
-                            ))}
+                            Add a foreign key reference to <pre>{filterColPath.split('.')[1]}</pre>?
                         </div>
                     </div>
                     <div className='prompt-main-bottom'>
-                        {/* <div className='prompt-subtitle'>
-                            This is optional and won't affect filtering, but it could improve join-query performance.
-                        </div> */}
-                        { renderFkContainer() }
-                        <div className='prompt-buttons-container'>
-                            <div className={pcn('__buttons')}>
-                                <div className={pcn('__button')} onClick={onNo}>
-                                    <span>Not now</span>
-                                </div>
-                                <div
-                                    className={pcn(
-                                        '__button', 
-                                        added ? `__button--added` : '',
-                                        animateToAdded ? `__button--animate` : '',
-                                    )}
-                                    onClick={onClickYes}>
-                                    <span>Add</span>
-                                    <div dangerouslySetInnerHTML={{ __html: checkIcon }}>
-                                    </div>
-                                </div>
+                        <div className={pcn('__fk-body')}>
+                            <div className={pcn('__fk-body-liner')}>
+                                { renderForeignKeyColumnTextInput() }
+                                <span dangerouslySetInnerHTML={{ __html: openArrowIcon }}></span>
+                                { renderRefKeyColInput() }
                             </div>
+                        </div>
+                    </div>
+                </div>
+                <div className='prompt-buttons-container'>
+                    <div className={pcn('__buttons')}>
+                        <div className={pcn('__button')} onClick={onNo}>
+                            <span dangerouslySetInnerHTML={{ __html: closeIcon }}></span>
+                        </div>
+                        <div
+                            className={pcn(
+                                '__button', 
+                                '__button--yes',
+                                added ? `__button--added` : '',
+                                animateToAdded ? `__button--animate` : '',
+                            )}
+                            onClick={onClickYes}>
+                            <div dangerouslySetInnerHTML={{ __html: checkIcon }}>
+                            </div>
+                            <span className='svg-spinner svg-spinner--chasing-tail' dangerouslySetInnerHTML={{ __html: spinner }}></span>
                         </div>
                     </div>
                 </div>

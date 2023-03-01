@@ -55,6 +55,7 @@ function LiveColumnFilters(props, ref) {
     const extraConfig = !useFilters || !useFiltersRef.current ? {} : { duration: 0 }
     const tablePathsPromptedAboutForeignKeys = useRef(new Set())
     const promptForeignKeyAddition = useRef(null)
+    const fkPromptContainerRef = useRef(null)
 
     const updateOverflow = useCallback((value) => {
         value = useFilters ? value : 'hidden'
@@ -285,24 +286,24 @@ function LiveColumnFilters(props, ref) {
         filterLengths.current = filters.map(inner => inner?.length || 0)
     }, [filters])
 
-    useEffect(() => {
-        if (focusOnLastPropertyInput.current !== null) {
-            const i = focusOnLastPropertyInput.current
-            focusOnLastPropertyInput.current = null
-            const j = (filters[i] || []).length - 1
-            if (j < 0) return
-            // setTimeout(() => {
-            //     const propertyRef = inputRefs.current[`${i}-${j}-property`]
-            //     propertyRef?.focus()    
-            // }, 20)
-        }
-    }, [filters])
+    // useEffect(() => {
+    //     if (focusOnLastPropertyInput.current !== null) {
+    //         const i = focusOnLastPropertyInput.current
+    //         focusOnLastPropertyInput.current = null
+    //         const j = (filters[i] || []).length - 1
+    //         if (j < 0) return
+    //         setTimeout(() => {
+    //             const propertyRef = inputRefs.current[`${i}-${j}-property`]
+    //             propertyRef?.focus()    
+    //         }, 20)
+    //     }
+    // }, [filters])
 
     useEffect(() => {
         if (promptForeignKeyAddition.current && firstForeignSelectedColFilter) {
             const [i, j, foreignTablePkColPath] = promptForeignKeyAddition.current
             promptForeignKeyAddition.current = null
-            // setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'will-open'])      
+            setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'will-open'])      
         }
     }, [firstForeignSelectedColFilter])
 
@@ -310,7 +311,11 @@ function LiveColumnFilters(props, ref) {
         if (!showForeignKeyAdditionPrompt?.length) return
         const [i, j, foreignTablePkColPath, mod] = showForeignKeyAdditionPrompt
         if (mod === 'will-open') {
-            // setTimeout(() => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'open']), 30)
+            setTimeout(() => {
+                setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'open'])
+            }, 30)
+        } else if (mod === 'open') {
+            setTimeout(() => $(fkPromptContainerRef.current).css('overflow', 'visible'), 550)
         }
     }, [showForeignKeyAdditionPrompt])
 
@@ -660,34 +665,35 @@ function LiveColumnFilters(props, ref) {
     ])
 
     const renderAddForeignKeyPrompt = useCallback((filter, foreignTablePkColPath, mod, i, j) => {
-        return null
         const id = `${i}-${j}-prompt-fk`
         const close = () => setShowForeignKeyAdditionPrompt([i, j, foreignTablePkColPath, 'close'])
-        const [foreignSchema, foreignTable, _] = foreignTablePkColPath.split('.')
-        const foreignTablePath = [foreignSchema, foreignTable].join('.')
-        const foreignColOptions = columnPathOptions
-            .filter(opt => opt.value.startsWith(`${foreignTablePath}.`))
-            .map(opt => {
-                const colPath = opt.value
-                const [_, table, col] = colPath.split('.')
-                return {
-                    value: colPath,
-                    label: [table, col].join('.')
-                }
-            })
+        const [foreignSchema, foreignTableName, _] = foreignTablePkColPath.split('.')
+        const foreignTablePath = [foreignSchema, foreignTableName].join('.')
+        const foreignTable = (getSchema(foreignSchema) || []).find(table => table.name === foreignTableName)
+        const singleUniqueColPaths = (foreignTable?.unique_columns || [])
+            .filter(colGroup => colGroup.length === 1)
+            .flat()
+            .map(colName => [foreignTablePath, colName].join('.'))
 
         return (
             <div
                 id={id}
                 key={id}
-                className={pcn('__prompt', '__prompt--fk', `__prompt--${mod}`)}>
+                className={pcn('__prompt', '__prompt--fk', `__prompt--${mod}`)}
+                ref={fkPromptContainerRef}>
                 <AddForeignKeyPrompt
                     filterProperty={filter.property}
                     filterColPath={filter.value}
                     foreignTablePkColPath={foreignTablePkColPath}
-                    foreignColOptions={foreignColOptions}
-                    onYes={(foreignKeyColName, targetColPath) => onAddForeignKeyRefToTable(foreignKeyColName, targetColPath, close)}
-                    onNo={close}
+                    refKeyOptions={singleUniqueColPaths}
+                    onYes={(foreignKeyColName, targetColPath) => {
+                        $(fkPromptContainerRef.current).css('overflow', 'hidden')
+                        onAddForeignKeyRefToTable(foreignKeyColName, targetColPath, close)
+                    }}
+                    onNo={() => {
+                        $(fkPromptContainerRef.current).css('overflow', 'hidden')
+                        close()
+                    }}
                 />
             </div>
         )
