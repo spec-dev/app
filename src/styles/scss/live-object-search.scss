@@ -2,6 +2,11 @@
     display: block;
     width: 100%;
     height: 100%;
+    position: relative;
+
+    .tutorial-anno--search {
+        top: 3px;
+    }
 }
 
 .live-object-search__search {

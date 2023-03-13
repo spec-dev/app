@@ -243,6 +243,7 @@ function DashboardPage(props) {
                     <TablesBody
                         schema={currentSchemaName}
                         table={currentTable}
+                        tablesLoaded={Array.isArray(tables)}
                         config={config}
                         refetchTables={refetchTables}
                         seedCursor={(seedCursors || []).find(sc => (

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, forwardRef, useImperativeHandle } from 'react'
+import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { getPCN } from '../../../utils/classes'
 import $ from 'jquery'
 import searchIcon from '../../../svgs/search'
@@ -7,6 +7,7 @@ import LiveObjectSearchResult from './LiveObjectSearchResult'
 import { noop } from '../../../utils/nodash'
 import { keyCodes } from '../../../utils/keyboard'
 import hEllipsisIcon from '../../../svgs/h-ellipsis'
+import TutorialAnno from '../tutorial/TutorialAnno'
 
 const className = 'live-object-search'
 const pcn = getPCN(className)
@@ -16,6 +17,7 @@ function LiveObjectSearch(props, ref) {
     const lastKeyCode = useRef(null)
     const searchInputRef = useRef()
     const [searchResults, setSearchResults] = useState(liveObjects)
+    const [showSearchTutorialAnno, setShowSearchTutorialAnno] = useState(false)
 
     useImperativeHandle(ref, () => ({
         focusSearchBar: () => {
@@ -81,8 +83,28 @@ function LiveObjectSearch(props, ref) {
         }
     }
 
+    useEffect(() => {
+        if (!showSearchTutorialAnno) {
+            // setTimeout(() => {
+            //     setShowSearchTutorialAnno(true)
+            //     $('.slider__backdrop').addClass('--darker')
+            // }, 1200)
+        }
+    }, [showSearchTutorialAnno])
+
+    const renderSearchTutorialAnno = useCallback(() => (
+        <TutorialAnno
+            className='tutorial-anno--search'
+            icon={searchIcon}
+            title='Select a Live Object'
+            desc='Assign a property of the Live Object as the source of data for your new column.'
+            show={showSearchTutorialAnno}
+        />
+    ), [showSearchTutorialAnno])
+
     return (
         <div className={className}>
+            { renderSearchTutorialAnno() }
             <div className={pcn('__search')}>
                 <div className={pcn('__search-liner')}>
                     <span dangerouslySetInnerHTML={{ __html: searchIcon }}></span>

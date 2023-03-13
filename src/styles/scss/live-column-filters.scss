@@ -752,9 +752,9 @@
     padding-right: 30px;
     height: 0;
     overflow: hidden;
-    transition: height 0.5s $defaultTiming;
+    transition: height 0.55s $defaultTiming;
 
     &.live-column-filters__prompt--open {
-        height: 112px;
+        height: 144px;
     }
 }

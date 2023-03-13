@@ -1,0 +1,124 @@
+$tutorialAnnoWidth: 240px;
+
+.tutorial-anno {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    position: absolute;
+    right: calc(100% + 1px);
+    width: $tutorialAnnoWidth;
+    top: 150px;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+
+    &.tutorial-anno--show {
+        opacity: 1;
+
+        .tutorial-anno__top {
+            span {
+                &:first-child {
+                    opacity: 0.9;
+                }
+                &:last-child {
+                    opacity: 1;
+                }
+            }
+
+            &:after {
+                left: 0;
+            }
+        }
+
+        .tutorial-anno__bottom {
+            opacity: 0.65;
+        }
+    }
+}
+
+.tutorial-anno__liner {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+}
+
+.tutorial-anno__top {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 17px;
+    position: relative;
+
+    span {
+        transition: opacity .85s ease;
+        transition-delay: .475s;
+    }
+    
+    &:after {
+        content: '';
+        position: absolute;
+        top: 31px;
+        height: 1px;
+        right: 0;
+        left: 100%;
+        background-color: $tealAccent;
+        transition: left .75s $defaultTiming;
+        opacity: 0.1;
+    }
+
+    span:first-child {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 10px;
+        height: 10px;
+        margin-left: 14px;
+        margin-right: 8px;
+        z-index: 1;
+        opacity: 0;
+        color: $tealAccent;
+
+        svg {
+            height: 10px;
+            width: auto;
+            fill: currentColor;
+        }
+    }
+
+    span:last-child {
+        opacity: 0;
+        display: inline-block;
+        font-size: 13px;
+        line-height: 22px;
+        letter-spacing: 0.22px;
+        color: $tealAccent;
+        text-align: left;
+
+        svg {
+            height: 10px;
+            width: auto;
+            fill: $tealAccent;
+            opacity: 0.75;
+        }
+    }
+}
+
+.tutorial-anno__bottom {
+    display: inline-block;
+    font-size: 12.5px;
+    font-family: Regular;
+    line-height: 23px;
+    letter-spacing: 0.2px;
+    color: #D2D2E6;
+    margin-left: 15px;
+    text-align: left;
+    white-space: pre-wrap;
+    max-width: calc(#{$tutorialAnnoWidth} - 70px);
+    opacity: 0;
+    transition: opacity .85s ease;
+    transition-delay: .475s;
+}

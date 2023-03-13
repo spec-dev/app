@@ -84,14 +84,6 @@ $loaderTime: 2.3s;
                 }
             }
         }
-
-        // &.tables-body--populating-page {
-        //     .tables-body__cell {
-        //         span {
-        //             color: $tealAccent;
-        //         }
-        //     }
-        // }
     }
 
     &.tables-body--in-sync {
@@ -610,10 +602,6 @@ $loaderTime: 2.3s;
     border-bottom: 1px solid adjust-color($gray, $alpha: -0.92);
     padding-left: 15px;
     padding-right: 15px;
-
-    // &:not(:first-child) {
-    //     min-width: 100px;
-    // }
 }
 
 .tables-body__cell {
@@ -653,7 +641,6 @@ $loaderTime: 2.3s;
 // Header cells
 .tables-body__col-header {
     background-color: #14132d;
-    // background-color: adjust-color($backgroundMedium, $alpha: -0.35);
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -842,6 +829,81 @@ $loaderTime: 2.3s;
             color: $gray;
             opacity: 0.5;
         }
+    }
+}
+
+// ####################
+// NO TABLES
+// ####################
+
+.tables-body__empty {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tables-body__empty-liner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    max-width: 400px;
+    max-height: 400px;
+    position: relative;
+    top: -5px;
+    left: -5px;
+}
+
+.tables-body__empty-icon {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+
+    svg {
+        height: 50px;
+        width: auto;
+    }
+}
+
+.tables-body__empty-text {
+    font-size: 14px;
+    color: $lightGray;
+    letter-spacing: 0.15px;
+    line-height: 27px;
+    text-align: center;
+    margin: 34px 0 20px;
+}
+
+.tables-body__empty-button {
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-family: Medium;
+    background-color: $white;
+    color: $backgroundMedium;
+    border-radius: 15px;
+    border: transparent;
+    outline: transparent;
+    transition: all 0.12s ease;
+    padding: 0 20px;
+    cursor: pointer;
+
+    & > span {
+        position: relative;
+        top: 1px;
+    }
+
+    &:hover {
+        background-color: adjust-color($white, $alpha: -0.13);
     }
 }
 

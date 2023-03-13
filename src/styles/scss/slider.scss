@@ -17,6 +17,11 @@
     background-color: adjust-color(#0B0B20, $alpha: -0.25);
     z-index: 1;
     pointer-events: initial;
+
+    &.--darker {
+        transition: background-color 0.7s ease;
+        background-color: adjust-color(#0B0B20, $alpha: -0.05);
+    }
 }
 
 .slider__panel {

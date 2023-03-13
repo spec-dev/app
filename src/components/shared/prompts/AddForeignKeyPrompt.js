@@ -157,6 +157,9 @@ function AddForeignKeyPrompt(props) {
                         </div>
                     </div>
                     <div className='prompt-main-bottom'>
+                        <div className={'prompt-subtitle'}>
+                            This is completely optional and won't affect filtering.
+                        </div>
                         <div className={pcn('__fk-body')}>
                             <div className={pcn('__fk-body-liner')}>
                                 { renderForeignKeyColumnTextInput() }

@@ -18,7 +18,7 @@
     &.prompt--0 {
         background-color: adjust-color($blueAccent, $alpha: -0.95);
         border: 1px solid adjust-color($blueAccent, $alpha: -0.91);
-        height: 100px;
+        height: 125px;
 
         .prompt-title {
             color: $blueAccent;
@@ -26,7 +26,7 @@
             pre {
                 position: relative;
                 z-index: 1;
-                font-size: 11px;
+                font-size: 11.5px;
                 font-family: CodeRegular;
                 color: $blueAccent;
                 display: inline-block;
@@ -107,6 +107,7 @@
     display: inline-block;
     font-size: 13px;
     margin-left: 8px;
+    font-family: Medium;
 }
 
 .prompt-main-bottom {
@@ -116,7 +117,7 @@
 
 .prompt-subtitle {
     display: inline-block;
-    font-size: 12px;
+    font-size: 12.5px;
     color: adjust-color($lightGray, $alpha: -0.3);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -124,7 +125,7 @@
     margin-top: 2px;
     padding: 0 17px;
     letter-spacing: 0.1px;
-    margin-left: 1px;
+    margin-left: 2px;
 }
 
 .prompt-buttons-container {
@@ -143,15 +144,18 @@
 .add-foreign-key-prompt__fk-body {
     display: block;
     width: 100%;
-    padding: 9px 17px 10px;
+    padding: 7px 17px;
 }
 
 .add-foreign-key-prompt__fk-body-liner {
     display: flex;
     width: 100%;
     flex-direction: row;
+    // border-top: 1px solid adjust-color($blueAccent, $alpha: -0.97);
     align-items: center;
     justify-content: flex-start;
+    // padding-top: 12px;
+    padding-top: 5px;
 
     & > span {
         height: 12px;
@@ -163,7 +167,7 @@
         margin: 0 8px;
 
         svg {
-            width: 10px;
+            width: 9px;
             height: auto;
         }
     }
@@ -180,8 +184,8 @@
         padding-left: 12px;
         padding-right: 12px;
         outline: none !important;
-        background-color: adjust-color($blueAccent, $alpha: -1);
-        border: 1px solid adjust-color($blueAccent, $alpha: -0.89);
+        background-color: adjust-color($blueAccent, $alpha: -0.95);
+        border: 1px solid adjust-color($blueAccent, $alpha: -1);
         cursor: text;
         border-radius: 4px;
         font-family: CodeRegular;
@@ -221,6 +225,8 @@
 .add-foreign-key-prompt__ref-key-input {
     height: 32px;
     width: auto;
+    min-width: 100px;
+    flex: 1;
 
     &.select-input {
         .spec__single-value,
@@ -254,8 +260,8 @@
         }
         .spec__control {
             height: 32px;
-            background-color: adjust-color($blueAccent, $alpha: -1) !important;
-            border: 1px solid adjust-color($blueAccent, $alpha: -0.89) !important;
+            background-color: adjust-color($blueAccent, $alpha: -0.95) !important; 
+            border: 1px solid adjust-color($blueAccent, $alpha: -1) !important; 
             border-radius: 4px;        
         }
 

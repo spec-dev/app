@@ -23,6 +23,7 @@ import {
     modelRelationshipIcon,
     keyIcon,
     checkIcon,
+    specIcon,
     linkIcon,
 } from '../../svgs/icons'
 import Flipper from '../shared/Flipper'
@@ -152,7 +153,7 @@ const timing = {
 
 function TablesBody(props, ref) {
     // Props.
-    const { schema, config = {}, refetchTables = noop } = props
+    const { schema, config = {}, tablesLoaded, refetchTables = noop } = props
 
     // State.
     const [table, setTable] = useState(props.table || {})
@@ -782,12 +783,33 @@ function TablesBody(props, ref) {
         )
     }, [mainWidth])
 
+    const renderEmptySchema = useCallback(() => (
+        <div className={pcn('__empty')}>
+            <div className={pcn('__empty-liner')}>
+                <div
+                    className={pcn('__empty-icon')}
+                    dangerouslySetInnerHTML={{ __html: specIcon }}>
+                </div>
+                <div className={pcn('__empty-text')}>
+                    <div>Your Postgres instance is empty.</div>
+                    <div>Let's change that.</div>
+                </div>
+                <button
+                    className={pcn('__empty-button')}
+                    onClick={() => showLiveDataPanel(referrers.NEW_LIVE_TABLE)}>
+                    <span>New Live Table</span>
+                </button>
+            </div>
+        </div>
+    ), [showLiveDataPanel])
+
     return (
         <div className={cn(
             className,
             `${className}--${status}`,
             records === null ? `${className}--loading` : '',
         )} ref={tablesBodyRef}>
+            {tablesLoaded && !table?.name && renderEmptySchema() }
             { table?.name && (
                 <div className={pcn('__header')}>
                     <div className={pcn('__header-left')}>
