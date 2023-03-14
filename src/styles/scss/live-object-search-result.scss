@@ -98,7 +98,8 @@
         text-transform: uppercase;
     }
 
-    &.live-object-search-result__chain--ethereum {
+    &.live-object-search-result__chain--ethereum,
+    &.live-object-search-result__chain--goerli {
         color: $blueAccent;
         background-color: adjust-color($blueAccent, $alpha: -0.9);
     }
