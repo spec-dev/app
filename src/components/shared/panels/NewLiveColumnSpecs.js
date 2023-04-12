@@ -150,7 +150,6 @@ function NewLiveColumnSpecs(props, ref) {
     }, [liveObjectVersion?.displayName, liveObject?.isContractEvent])
 
     const getFilters = useCallback(() => liveColumnFiltersRef.current?.serialize() || [], [])
-    const getUniqueMappings = useCallback(() => uniqueMappingsRef.current?.serialize() || [], [])
 
     useImperativeHandle(ref, () => ({
         serialize: () => {
@@ -159,7 +158,7 @@ function NewLiveColumnSpecs(props, ref) {
             const [newColumns, liveColumns, uniqueBy] = editableLiveColumnsRef.current?.serialize()
             return { filters, newTable, newColumns, liveColumns, uniqueBy }
         }
-    }), [getFilters, getUniqueMappings, useFilters, liveObjectVersion, isNewTable])
+    }), [getFilters, useFilters, liveObjectVersion, isNewTable])
 
     const calculateExpandedDocsHeight = useCallback(ref => {
         if (expandedDocsHeight.current || !ref) return
