@@ -11,7 +11,8 @@ export const NUMBER = 'number'
 export const BOOLEAN = 'boolean'
 export const DATE = 'date'
 export const OBJECT = 'object'
-export const BIGINT = 'bigint'
+export const BIGINT = 'BigInt'
+export const BIGFLOAT = 'BigFloat'
 export const UNDEFINED = 'undefined'
 export const SYMBOL = 'symbol'
 export const NULL = 'null'
@@ -44,11 +45,12 @@ export function guessColTypeFromPropertyType(propertyType) {
         case CHAIN_ID:
         case BLOCK_HASH:
         case TRANSACTION_HASH:
+        case BIGINT:
+        case BIGFLOAT:
             return VARCHAR
 
         // Integers
         case NUMBER:
-        case BIGINT:
         case INTEGER:
         case BLOCK_NUMBER:
             return INT8

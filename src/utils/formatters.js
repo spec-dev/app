@@ -1,4 +1,5 @@
 import humps from 'humps'
+import pluralize from 'pluralize'
 
 const vowels = new Set(['a', 'e', 'i', 'o', 'u'])
 
@@ -35,3 +36,7 @@ export const withIndefiniteArticle = val => {
     const startsWithVowel = vowels.has(firstChar)
     return startsWithVowel || val.toLowerCase().startsWith('nft') ? `an ${val}` : `a ${val}`
 }
+
+export const toSingular = word => pluralize(word, 1)
+
+export const toPlural = word => pluralize(word, 2)
