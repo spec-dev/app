@@ -49,7 +49,7 @@ function EditColumnPanel(props, ref) {
 
     const refKeyOptions = useMemo(() => {
         const options = []
-        for (const table of tables) {
+        for (const table of tables || []) {
             const uniqueColNames = (table.unique_columns || []).filter(group => group.length === 1).flat()
             if (!uniqueColNames.length) continue
             options.push(...uniqueColNames.map(colName => ({
