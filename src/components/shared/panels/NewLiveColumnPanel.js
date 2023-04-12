@@ -80,7 +80,7 @@ function NewLiveColumnPanel(props, ref) {
         from: { opacity: 0 },
         enter: { opacity: 1 },
         leave: { opacity: 0 },
-        config: { tension: 460, friction: 34 },
+        config: { tension: 500, friction: 34 },
     })
 
     useImperativeHandle(ref, () => ({
