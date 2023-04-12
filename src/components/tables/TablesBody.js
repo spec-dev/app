@@ -828,13 +828,6 @@ function TablesBody(props, ref) {
                             </div>
                         </div>
                     </div>
-                    <div className={pcn('__header-right')}>
-                        <div className={pcn('__header-right-liner')}>
-                            <div className={pcn('__header-right-bottom')}>
-                                {/* { renderHistoryButton() } */}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             )}
             { table?.name && (  
