@@ -91,7 +91,7 @@ class ApiClient {
 class CoreApiClient extends ApiClient {
 
     constructor() {
-        super('/core')
+        super(constants.CORE_API_ORIGIN)
     }
 
     liveObjects = async () => await this.get('/live-objects')

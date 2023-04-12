@@ -9,6 +9,7 @@ const constants = {
     PROJECT_ORG: process.env.REACT_APP_PROJECT_ORG || 'local',
     PROJECT_NAME: process.env.REACT_APP_PROJECT_NAME || 'local',
 
+    CORE_API_ORIGIN: process.env.REACT_APP_CORE_API_HOSTNAME || 'https://api.spec.dev',
     META_API_HOSTNAME: process.env.REACT_APP_META_API_HOSTNAME || 'localhost',
     META_API_PORT: parseInt(process.env.REACT_APP_META_API_PORT || 54322),
 
