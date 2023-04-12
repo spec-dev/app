@@ -39,7 +39,7 @@ $gutterPadding: 24px;
 
     &.tables-panel__section--tables {
         flex: 1;
-        overflow-y: scroll;
+        overflow-y: auto;
         position: relative;
         padding-top: 0;
 
