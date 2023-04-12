@@ -12,6 +12,7 @@ import spinner from '../../../svgs/chasing-tail-spinner'
 import { s3 } from '../../../utils/path'
 import { getAllLiveObjects } from '../../../utils/liveObjects'
 import { pendingSeeds } from '../../../utils/pendingSeeds'
+import { CSSTransition } from 'react-transition-group'
 
 const className = 'new-live-column-panel'
 const pcn = getPCN(className)
@@ -26,6 +27,9 @@ export const referrers = {
     ADD_LIVE_DATA: 'addLiveData',
     NEW_LIVE_COLUMN: 'newLiveColumn',
     NEW_LIVE_TABLE: 'newLiveTable',
+}
+const timing = {
+    PANEL_DURATION: 125,
 }
 
 const getHeaderTitle = (index, referrer) => {
@@ -73,6 +77,8 @@ function NewLiveColumnPanel(props, ref) {
     const migrationTimer = useRef(null)
     const migrationCallback = useRef()
     const saveCalled = useRef(false)
+    const section0Ref = useRef(null)
+    const section1Ref = useRef(null)
 
     // Transitions.
     const transitions = useTransition(state.index, {
@@ -358,40 +364,40 @@ function NewLiveColumnPanel(props, ref) {
     return (
         <div className={className}>
             { renderHeader() }
-            { transitions(({ opacity }, i) => {
-                switch (i) {
-                    case 0:
-                        return (
-                            <animated.div
-                                className={pcn('__section', '__section--0')}
-                                style={{ opacity: opacity.to({ range: [0.0, 1.0], output: [0, 1] }) }}>
-                                <LiveObjectSearch
-                                    liveObjects={liveObjects}
-                                    onSelectLiveObject={onSelectLiveObject}
-                                    ref={liveObjectSearchRef}
-                                />
-                            </animated.div>
-                        )
-                    case 1:
-                        return (
-                            <animated.div
-                                className={pcn('__section', '__section--1')}
-                                style={{ opacity: opacity.to({ range: [1.0, 0.0], output: [1, 0] }) }}>
-                                <NewLiveColumnSpecs
-                                    table={table}
-                                    schema={schema}
-                                    config={config}
-                                    purpose={referrer}
-                                    liveObject={state.liveObject}
-                                    addTransform={addTransform}
-                                    addHook={addHook}
-                                    editColumn={editColumn}
-                                    ref={newLiveColumnSpecsRef}
-                                />
-                            </animated.div>
-                        )
-                }
-            })}
+            <CSSTransition
+                nodeRef={section0Ref}
+                in={!state.index}
+                timeout={timing.PANEL_DURATION}
+                unmountOnExit={true}
+                classNames={pcn('__section')}>
+                <div className={pcn('__section', '__section--0')} ref={section0Ref}>
+                    <LiveObjectSearch
+                        liveObjects={liveObjects}
+                        onSelectLiveObject={onSelectLiveObject}
+                        ref={liveObjectSearchRef}
+                    />
+                </div>
+            </CSSTransition>
+            <CSSTransition
+                nodeRef={section1Ref}
+                in={!!state.index}
+                timeout={timing.PANEL_DURATION}
+                unmountOnExit={true}
+                classNames={pcn('__section')}>
+                <div className={pcn('__section', '__section--1')} ref={section1Ref}>
+                    <NewLiveColumnSpecs
+                        table={table}
+                        schema={schema}
+                        config={config}
+                        purpose={referrer}
+                        liveObject={state.liveObject}
+                        addTransform={addTransform}
+                        addHook={addHook}
+                        editColumn={editColumn}
+                        ref={newLiveColumnSpecsRef}
+                    />
+                </div>
+            </CSSTransition>
             { renderFooter() }
         </div>
     )

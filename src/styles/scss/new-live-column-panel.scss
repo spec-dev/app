@@ -1,3 +1,5 @@
+$sectionDuration: 0.125s;
+
 .new-live-column-panel {
     display: block;
     width: 100%;
@@ -207,4 +209,28 @@
     bottom: $sliderPanelFooterHeight;
     display: block;
     color: white;
+    will-change: opacity;
+    opacity: 1;
+
+    // &.new-live-column-panel__section--0 {
+    //     opacity: 1;
+    
+        &.new-live-column-panel__section-enter {
+            opacity: 0;
+        }
+          
+        &.new-live-column-panel__section-enter-active {
+            transition: opacity $sectionDuration ease;
+            opacity: 1;
+        }
+    
+        &.new-live-column-panel__section-exit {
+            opacity: 1;
+        }
+          
+        &.new-live-column-panel__section-exit-active {
+            transition: opacity $sectionDuration ease;
+            opacity: 0;
+        }
+    // }
 }
