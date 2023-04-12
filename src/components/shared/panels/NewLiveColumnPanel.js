@@ -2,14 +2,10 @@ import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle, 
 import { getPCN } from '../../../utils/classes'
 import LiveObjectSearch from './LiveObjectSearch'
 import NewLiveColumnSpecs from './NewLiveColumnSpecs'
-import { animated, useTransition } from 'react-spring'
 import { noop } from '../../../utils/nodash'
-import { camelToSnake } from '../../../utils/formatters'
-import $ from 'jquery'
 import api from '../../../utils/api'
 import { toNamespacedVersion } from '../../../utils/formatters'
 import spinner from '../../../svgs/chasing-tail-spinner'
-import { s3 } from '../../../utils/path'
 import { getAllLiveObjects } from '../../../utils/liveObjects'
 import { pendingSeeds } from '../../../utils/pendingSeeds'
 import { CSSTransition } from 'react-transition-group'
@@ -79,15 +75,6 @@ function NewLiveColumnPanel(props, ref) {
     const saveCalled = useRef(false)
     const section0Ref = useRef(null)
     const section1Ref = useRef(null)
-
-    // Transitions.
-    const transitions = useTransition(state.index, {
-        initial: { opacity: 1 },
-        from: { opacity: 0 },
-        enter: { opacity: 1 },
-        leave: { opacity: 0 },
-        config: { tension: 500, friction: 34 },
-    })
 
     useImperativeHandle(ref, () => ({
         focusSearchBar: () => liveObjectSearchRef.current?.focusSearchBar(),
