@@ -2,18 +2,16 @@ import React, { useMemo, useState, useRef, useEffect, useCallback, forwardRef, u
 import { getPCN, cn } from '../../../utils/classes'
 import $ from 'jquery'
 import { noop } from '../../../utils/nodash'
-import { s3 } from '../../../utils/path'
 import EditableLiveColumns from './EditableLiveColumns'
 import LiveColumnFilters from './LiveColumnFilters'
 import { referrers as purposes } from './NewLiveColumnPanel'
 import Toggle from '../inputs/Toggle'
 import NewTableBasicInputs from './NewTableBasicInputs'
-import UniqueMappings from './UniqueMappings'
-import { caretDownIcon, filterIcon, linkIcon, githubIcon, tableEditorIcon } from '../../../svgs/icons'
+import { caretDownIcon, filterIcon, githubIcon, tableEditorIcon } from '../../../svgs/icons'
 import hljs from 'highlight.js/lib/core'
 import { formatExistingFiltersForEdit } from '../../../utils/config'
 import typescript from 'highlight.js/lib/languages/typescript'
-import { camelToSnake } from '../../../utils/formatters'
+import { camelToSnake, toPlural } from '../../../utils/formatters'
 import { sortInts } from '../../../utils/math'
 import { chainNames } from '../../../utils/chains'
 import Snippet from '../snippets/InterfaceExampleSnippet'
@@ -345,9 +343,9 @@ function NewLiveColumnSpecs(props, ref) {
     const renderLiveColumnsSection = useCallback(() => {
         let initialTableName = liveObjectVersion.config?.tableName
         if (!initialTableName) {
-            initialTableName = camelToSnake(
+            initialTableName = toPlural(camelToSnake(
                 liveObject.isContractEvent ? `${liveObject.displayName}Event` : liveObjectVersion.name
-            ) + 's'
+            ))
         }
 
         return (
@@ -376,9 +374,9 @@ function NewLiveColumnSpecs(props, ref) {
     const renderTableInfoSection = useCallback(() => {
         let initialTableName = liveObjectVersion.config?.tableName
         if (!initialTableName) {
-            initialTableName = camelToSnake(
+            initialTableName = toPlural(camelToSnake(
                 liveObject.isContractEvent ? `${liveObject.displayName}Event` : liveObjectVersion.name
-            ) + 's'
+            ))
         }
 
         return (
