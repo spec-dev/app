@@ -13,6 +13,7 @@ import hljs from 'highlight.js/lib/core'
 import TimestampInput from '../inputs/TimestampInput'
 import { parse, stringify } from '../../../utils/json'
 import { noop } from '../../../utils/nodash'
+import { chainIds, chainNames } from '../../../utils/chains'
 import CodeInput from '../inputs/CodeInput'
 import { colTypeIcon, displayColType } from '../../../utils/colTypes'
 import {
@@ -20,6 +21,7 @@ import {
     STRING,
     BOOLEAN,
     TIMESTAMP,
+    CHAIN_ID
 } from '../../../utils/propertyTypes'
 import AddForeignKeyPrompt from '../prompts/AddForeignKeyPrompt'
 
@@ -635,12 +637,17 @@ function LiveColumnFilters(props, ref) {
             )
         }
 
-        // Enums and booleans.
-        if (propertyIsEnum(property)) {
+        // Enums, booleans, and chain ids.
+        const isChainId = property.type === CHAIN_ID
+        if (propertyIsEnum(property) || isChainId) {
             let options = formatPropertyOptionsForSelection(property)
-            if (property.type === 'ChainId') {
-                const supportedChainIds = liveObjectVersion.config.chains || {}
-                options = options.filter(opt => supportedChainIds.hasOwnProperty(opt.value))
+            if (isChainId) {
+                const supportedChainIds = Object.keys(liveObjectVersion.config.chains || {}).map(v => v.toString())
+                options = supportedChainIds.map(chainId => ({
+                    value: chainId,
+                    name: chainNames[chainId],
+                    type: 'string',
+                }))
             }
 
             return multiValueOps.has(op) 
