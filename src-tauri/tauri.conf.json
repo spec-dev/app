@@ -3,7 +3,7 @@
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm start",
-    "devPath": "http://localhost:54321",
+    "devPath": "http://localhost:3000",
     "distDir": "../build"
   },
   "package": {
@@ -56,10 +56,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 982,
+        "width": 1512,
         "resizable": true,
-        "title": "Spec",
-        "width": 800
+        "title": "Spec"
       }
     ]
   }
