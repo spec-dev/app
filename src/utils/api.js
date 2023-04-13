@@ -128,18 +128,18 @@ class MetaSocketClient {
         this.onConfigUpdate = () => {}
         this.onSeedChange = () => {}
         this.onTableDataChange = () => {}
-        this.client = createEventClient({
-            hostname: constants.META_API_HOSTNAME,
-            port: constants.isLocal() ? constants.META_API_PORT : 54321,
-            onConnect: () => this._subscribeToChannels(),
-        })
+        // this.client = createEventClient({
+        //     hostname: constants.META_API_HOSTNAME,
+        //     port: constants.isLocal() ? constants.META_API_PORT : 54321,
+        //     onConnect: () => this._subscribeToChannels(),
+        // })
     }
 
-    _subscribeToChannels() {
-        this.client.on(MetaSocketClient.channels.CONFIG_UPDATE, data => this.onConfigUpdate(data))
-        this.client.on(MetaSocketClient.channels.SEED_CHANGE, data => this.onSeedChange(data))
-        this.client.on(MetaSocketClient.channels.TABLE_DATA_CHANGE, data => this.onTableDataChange(data))
-    }
+    // _subscribeToChannels() {
+    //     this.client.on(MetaSocketClient.channels.CONFIG_UPDATE, data => this.onConfigUpdate(data))
+    //     this.client.on(MetaSocketClient.channels.SEED_CHANGE, data => this.onSeedChange(data))
+    //     this.client.on(MetaSocketClient.channels.TABLE_DATA_CHANGE, data => this.onTableDataChange(data))
+    // }
 }
 
 const api = {

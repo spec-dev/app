@@ -156,35 +156,35 @@ function DashboardPage(props) {
         return [unsubscribe, promise]
     }, [])
     
-    useEffect(async () => {
-        if (currentSection === sections.TABLES && !tables) {
-            const [tablesResult, seedCursorsResult, configData] = await Promise.all([
-                resolveSchema(getCurrentSchemaName()),
-                getSeedCursors(),
-                getConfig(),
-            ])
-            if (!tablesResult.ok) {
-                // TODO: Show error.
-                return
-            }
-            if (!seedCursorsResult.ok) {
-                // TODO: Show error.
-                return
-            }
-            if (!configData) {
-                // TODO: Show error
-                return
-            }
+    // useEffect(async () => {
+    //     if (currentSection === sections.TABLES && !tables) {
+    //         const [tablesResult, seedCursorsResult, configData] = await Promise.all([
+    //             resolveSchema(getCurrentSchemaName()),
+    //             getSeedCursors(),
+    //             getConfig(),
+    //         ])
+    //         if (!tablesResult.ok) {
+    //             // TODO: Show error.
+    //             return
+    //         }
+    //         if (!seedCursorsResult.ok) {
+    //             // TODO: Show error.
+    //             return
+    //         }
+    //         if (!configData) {
+    //             // TODO: Show error
+    //             return
+    //         }
 
-            setSeedCursors(seedCursorsResult.data)
-            setConfig(configData)
-            setTables(tablesResult.data)
+    //         setSeedCursors(seedCursorsResult.data)
+    //         setConfig(configData)
+    //         setTables(tablesResult.data)
 
-            api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
-        }
-        api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
-        api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
-    }, [projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
+    //         api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
+    //     }
+    //     api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
+    //     api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
+    // }, [projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
 
     useEffect(() => {
         if (navToTable.current) {
