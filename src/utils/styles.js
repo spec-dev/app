@@ -147,7 +147,7 @@ const styles = {
             ],
             colors: {
                 'editor.background': '#00000000',
-                'editor.foreground': '#EEEEEE',
+                'editor.foreground': '#00000000',
                 'editor.inactiveSelectionBackground': '#00000000',
                 'editorIndentGuide.background': '#8193B235',
                 'editor.selectionHighlightBackground': '#ADD6FF4D',

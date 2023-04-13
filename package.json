@@ -33,6 +33,7 @@
         "react-transition-group": "^4.4.5",
         "react-use-measure": "^2.1.1",
         "short-uuid": "^4.2.0",
+        "tauri-plugin-sql-api": "github:tauri-apps/tauri-plugin-sql",
         "typewriter-effect": "^2.18.0"
     },
     "resolutions": {

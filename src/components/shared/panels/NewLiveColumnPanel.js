@@ -25,7 +25,7 @@ export const referrers = {
     NEW_LIVE_TABLE: 'newLiveTable',
 }
 const timing = {
-    PANEL_DURATION: 105,
+    PANEL_DURATION: 50,
 }
 
 const getHeaderTitle = (index, referrer) => {

@@ -27,6 +27,9 @@ import {
     bubbleIcon,
 } from '../../svgs/icons'
 import api from '../../utils/api'
+import Database from 'tauri-plugin-sql-api'
+import { appWindow as tauri } from '@tauri-apps/api/window'
+import { invoke } from '@tauri-apps/api/tauri'
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -138,7 +141,21 @@ function DashboardPage(props) {
         });
         monaco.current.editor.defineTheme('spec', styles.editor.theme)
     }, [])
+    
+    useEffect(() => {
+        loadMonaco()
+    }, [])
 
+    useEffect(async () => {
+        const unsubscribe = await tauri.listen('data:change', (event) => {
+            console.log('Event', JSON.parse(event?.payload?.message || '{}'))
+        })
+
+        const promise = invoke('listen', { url: 'postgres://benwhittle:@localhost:5432/station' })
+
+        return [unsubscribe, promise]
+    }, [])
+    
     useEffect(async () => {
         if (currentSection === sections.TABLES && !tables) {
             const [tablesResult, seedCursorsResult, configData] = await Promise.all([
@@ -164,8 +181,6 @@ function DashboardPage(props) {
             setTables(tablesResult.data)
 
             api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
-
-            loadMonaco()
         }
         api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
         api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 

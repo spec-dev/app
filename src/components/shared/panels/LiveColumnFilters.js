@@ -808,8 +808,14 @@ function LiveColumnFilters(props, ref) {
         <AnimateHeight
             className={className}
             height={useFilters ? 'auto' : 0}
-            duration={useFilters ? 400 : 315}
-            easing={'cubic-bezier(.16,1,.3,1)'}>
+            duration={useFilters ? 400 : 375}
+            easing={'cubic-bezier(.16,1,.3,1)'}
+            onHeightAnimationStart={() => {
+                $(`.${className}`).css('overflow', 'hidden')
+            }}
+            onHeightAnimationEnd={() => {
+                $(`.${className}`).css('overflow', useFilters ? 'visible' : 'hidden')
+            }}>
             <div className={pcn('__liner')}>
                 { renderFilterGroups() }
             </div>
