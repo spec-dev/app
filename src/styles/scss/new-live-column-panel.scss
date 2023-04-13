@@ -1,4 +1,4 @@
-$sectionDuration: 0.05s;
+$sectionDuration: 0.075s;
 
 .new-live-column-panel {
     display: block;
@@ -229,7 +229,7 @@ $sectionDuration: 0.05s;
         }
           
         &.new-live-column-panel__section-exit-active {
-            transition: opacity $sectionDuration ease;
+            transition: opacity calc(#{$sectionDuration} - 0.007s) ease;
             opacity: 0;
         }
     // }
