@@ -40,3 +40,12 @@ export const withIndefiniteArticle = val => {
 export const toSingular = word => pluralize(word, 1)
 
 export const toPlural = word => pluralize(word, 2)
+
+export function unique(arr) {
+    return Array.from(new Set(arr))
+}
+
+export function toPostgresUrl(params) {
+    const { user, password, host, port, name } = params || {}
+    return `postgres://${user}:${password}@${host}:${port}/${name}`
+}

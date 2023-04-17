@@ -25,7 +25,7 @@ import {
 } from '../../svgs/icons'
 import Flipper from '../shared/Flipper'
 import { pendingSeeds } from '../../utils/pendingSeeds'
-import constants from '../../utils/constants'
+import constants from '../../constants'
 import { noop } from '../../utils/nodash'
 import { hasTableBeenSeeded, markTableAsSeeded } from '../../utils/cache'
 

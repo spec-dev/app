@@ -4,7 +4,7 @@ use sqlx::postgres::PgListener;
 // the payload type must implement `Serialize` and `Clone`.
 #[derive(Clone, serde::Serialize)]
 struct Payload {
-  message: String,
+    message: String,
 }
 
 pub async fn start_listening(

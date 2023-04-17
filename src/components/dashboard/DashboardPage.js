@@ -1,17 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { cn, getPCN } from '../../utils/classes'
+import { getPCN } from '../../utils/classes'
 import { paths, sections } from '../../utils/nav'
 import TablesPanel from '../tables/TablesPanel'
 import TablesBody from '../tables/TablesBody'
 import { Link } from 'react-router-dom'
-import { getCurrentProject, getCurrentSchemaName } from '../../utils/cache'
-import { getSchema, resolveSchema } from '../../utils/schema'
+import { resolveSchema, DEFAULT_SCHEMA_NAME } from '../../utils/schema'
 import { updateTableCountWithEvents } from '../../utils/counts'
 import { getSeedCursors } from '../../utils/queries'
-import { getConfig } from '../../utils/config'
 import styles from '../../utils/styles'
-import { loader } from '@monaco-editor/react'
 import { useHistory } from 'react-router-dom'
+import { loader } from '@monaco-editor/react'
 import {
     barChartIcon,
     blistIcon,
@@ -27,9 +25,10 @@ import {
     bubbleIcon,
 } from '../../svgs/icons'
 import api from '../../utils/api'
-import Database from 'tauri-plugin-sql-api'
-import { appWindow as tauri } from '@tauri-apps/api/window'
-import { invoke } from '@tauri-apps/api/tauri'
+import useCurrentProject from '../../hooks/useCurrentProject'
+import projectManager from '../../managers/projectManager'
+const { path, shell } = window.__TAURI__
+const { Command } = shell
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -44,17 +43,20 @@ const getSidePanelHeaderTitle = section => {
 }
 
 function DashboardPage(props) {
+    // Location props.
     const history = useHistory()
     const params = (props.match || {}).params || {}
-    const projectId = useMemo(() => params.projectId, [params])
     const currentSection = useMemo(() => params.section || sections.TABLES, [params])
     const currentSubSection = useMemo(() => params.subSection || null, [params])
-    const currentProject = useMemo(() => getCurrentProject(), [projectId])
 
-    const [config, setConfig] = useState(null)
+    // Current project & associated vars.
+    const project = useCurrentProject()
+    const config = useMemo(() => project?.config, [project])
+    const env = useMemo(() => project?.currentEnv, [project])
+
     const [seedCursors, setSeedCursors] = useState([])
-    const [currentSchemaName, _] = useState(getCurrentSchemaName())
-    const [tables, setTables] = useState(getSchema(currentSchemaName))
+    const [currentSchemaName, _] = useState(DEFAULT_SCHEMA_NAME)
+    const [tables, setTables] = useState(null)
 
     const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
     const tablesBodyRef = useRef()
@@ -65,7 +67,7 @@ function DashboardPage(props) {
         if (currentSection !== sections.TABLES) return null
         if (!tables) return null
         return tables.find(t => t.name === currentSubSection) || tables[0]
-    }, [projectId, currentSection, currentSubSection, tables])
+    }, [currentSection, currentSubSection, tables])
     
     const currentTableIndex = useMemo(() => {
         if (!tableNames || !currentTable) return 0
@@ -132,7 +134,7 @@ function DashboardPage(props) {
         }
     }, [currentSchemaName, currentTable])
 
-    const loadMonaco = useCallback(async () => {
+    useEffect(async () => {
         if (monaco.current) return
         monaco.current = await loader.init()
         monaco.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -141,23 +143,47 @@ function DashboardPage(props) {
         });
         monaco.current.editor.defineTheme('spec', styles.editor.theme)
     }, [])
-    
-    useEffect(() => {
-        loadMonaco()
-    }, [])
 
     useEffect(async () => {
-        const unsubscribe = await tauri.listen('data:change', (event) => {
-            console.log('Event', JSON.parse(event?.payload?.message || '{}'))
-        })
+        // const unsubscribe = await tauri.listen('data:change', (event) => {
+        //     console.log('Event', JSON.parse(event?.payload?.message || '{}'))
+        // })
 
-        const promise = invoke('listen', { url: 'postgres://benwhittle:@localhost:5432/station' })
+        // const promise = invoke('listen', { url: 'postgres://benwhittle:@localhost:5432/station' })
 
-        return [unsubscribe, promise]
+        const cmd = Command.sidecar('bin/spec-client', [], { env: {
+            SPEC_CONFIG_DIR: '/Users/benwhittle/spec/local/.spec',
+            DB_USER: 'benwhittle',
+            DB_PASSWORD: 'spec',
+            DB_HOST: 'localhost',
+            DB_PORT: '5432',
+            DB_NAME: 'station',
+            PROJECT_ID: 'fuck',
+            PROJECT_API_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImxhamFpanZldXRyZmFuYnVmdXN1Iiwicm9sZSI6ImV2ZW50LXN1YnNjcmliZXIiLCJrZXkiOiJaQS5kdE1vUnNPWXV6RjViVFp1cEJ1UGpzbTNhbUhwcVMxNnd4ZzlELmF0a1cyL0ZITmJlQyIsImlhdCI6MTY3ODY4MjE0NCwiZXhwIjoxOTk0MjU4MTQ0fQ.MIrivszAeCmtbPKz8N3sVwIZ7zQEoPr9xeFmLERW7y8',
+            STREAM_LOGS: 'local',
+            FORCE_COLOR: 'true',
+            DEBUG: 'true',
+        }})
+        const child = await cmd.spawn()
+
+        console.log('Got child', child)
+
+        // const pid = await invoke('new_spec_client', {
+        //     configDir: '/Users/benwhittle/spec/local/.spec',
+        //     dbUser: 'benwhittle',
+        //     dbPassword: 'spec',
+        //     dbHost: 'localhost',
+        //     dbPort: '5432',
+        //     dbName: 'station',
+        //     projectId: 'sidecar',
+        //     projectApiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImxhamFpanZldXRyZmFuYnVmdXN1Iiwicm9sZSI6ImV2ZW50LXN1YnNjcmliZXIiLCJrZXkiOiJaQS5kdE1vUnNPWXV6RjViVFp1cEJ1UGpzbTNhbUhwcVMxNnd4ZzlELmF0a1cyL0ZITmJlQyIsImlhdCI6MTY3ODY4MjE0NCwiZXhwIjoxOTk0MjU4MTQ0fQ.MIrivszAeCmtbPKz8N3sVwIZ7zQEoPr9xeFmLERW7y8',
+        // }, )
     }, [])
     
     // useEffect(async () => {
-    //     if (currentSection === sections.TABLES && !tables) {
+    //     if (currentSection === sections.TABLES && !tables && currentProjectEnv) {
+
+    //         console.log('Start initializing DB', projectManager.currentProjectEnv)
     //         const [tablesResult, seedCursorsResult, configData] = await Promise.all([
     //             resolveSchema(getCurrentSchemaName()),
     //             getSeedCursors(),
@@ -181,19 +207,23 @@ function DashboardPage(props) {
     //         setTables(tablesResult.data)
 
     //         api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
-    //     }
+        // }
     //     api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
     //     api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
-    // }, [projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
+    // }, [currentProject, currentProjectEnv, projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
+
+    useEffect(() => {
+        env && projectManager.connectToDatabase()
+    }, [env])
 
     useEffect(() => {
         if (navToTable.current) {
-            const toPath = paths.toTable(projectId, navToTable.current.name)
+            const toPath = paths.toTable(navToTable.current.name)
             navToTable.current = null
             history.push(toPath)
         }
     })
-
+    
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
             <div className={pcn('__side-nav-liner')}>
@@ -204,7 +234,7 @@ function DashboardPage(props) {
                     className={ currentSection === sections.TABLES ? '--selected' : '' } 
                     dangerouslySetInnerHTML={{ __html: tableEditorIcon }}
                     // TODO: This needs to be set to the last visited table
-                    to={paths.toTables(projectId)}>
+                    to={paths.tables}>
                 </Link>
                 <div>
                     <span>{'{}'}</span>
@@ -219,14 +249,14 @@ function DashboardPage(props) {
                 <div dangerouslySetInnerHTML={{ __html: userIcon }}></div>
             </div>
         </div>
-    ), [currentSection, projectId])
+    ), [currentSection])
 
     const renderSidePanelBodyComp = useCallback(() => {
         switch (currentSection) {
             case sections.TABLES:
                 return (
                     <TablesPanel
-                        projectId={projectId}
+                        projectId={project?.id}
                         tableNames={tableNames}
                         currentTableIndex={currentTableIndex}
                         seedCursors={seedCursors}
@@ -236,7 +266,7 @@ function DashboardPage(props) {
             default:
                 return null
         }
-    }, [currentSection, tableNames, currentTableIndex])
+    }, [project, currentSection, tableNames, currentTableIndex])
 
     const renderSidePanel = useCallback(() => (
         <div className={pcn('__side-panel')}>
@@ -272,13 +302,13 @@ function DashboardPage(props) {
         }
     }, [currentSection, currentTable, config, seedCursors, currentSchemaName, refetchTables])
 
-    const renderHeaderProjectPath = useCallback(() => currentProject?.org && currentProject?.name ? (
+    const renderHeaderProjectPath = useCallback(() => project?.org && project?.name ? (
         <div className={pcn('__project-path')}>
-            <span>{ currentProject.org }</span>
+            <span>{ project.org }</span>
             <span>/</span>
-            <span>{ currentProject.name }</span>
+            <span>{ project.name }</span>
         </div>
-    ) : null, [currentProject])
+    ) : null, [project])
 
     const renderContent = useCallback(() => (
         <div className={pcn('__content')}>

@@ -1,4 +1,4 @@
-import constants from './constants'
+import constants from '../constants'
 import { SPEC_SCHEMA_NAME, specTableNames } from './schema'
 import api from './api'
 import { ident } from 'pg-format'

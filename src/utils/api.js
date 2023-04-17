@@ -4,7 +4,7 @@ import humps from 'humps'
 import Timer from './timer'
 import { stringify } from './json'
 import { createEventClient } from '@spec.dev/event-client'
-import constants from './constants'
+import constants from '../constants'
 
 class ApiClient {
 
