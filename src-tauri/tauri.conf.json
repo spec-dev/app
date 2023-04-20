@@ -25,6 +25,7 @@
                 "sidecar": true,
                 "scope": [
                     { "name": "bin/spec-client", "sidecar": true },
+                    { "name": "bin/db", "sidecar": true, "args": true },
                     { "name": "bin/pm", "sidecar": true, "args": true }
                 ]
             }
@@ -38,6 +39,7 @@
             },
             "externalBin": [
                 "bin/spec-client",
+                "bin/db",
                 "bin/pm"
             ],
             "icon": [

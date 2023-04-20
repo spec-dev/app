@@ -3,12 +3,15 @@ import { getPCN } from '../../../utils/classes'
 import LiveObjectSearch from './LiveObjectSearch'
 import NewLiveColumnSpecs from './NewLiveColumnSpecs'
 import { noop } from '../../../utils/nodash'
-import api from '../../../utils/api'
 import { toNamespacedVersion } from '../../../utils/formatters'
 import spinner from '../../../svgs/chasing-tail-spinner'
 import { getAllLiveObjects } from '../../../utils/liveObjects'
 import { pendingSeeds } from '../../../utils/pendingSeeds'
 import { CSSTransition } from 'react-transition-group'
+import createTable from '../../../services/createTable'
+import addColumns from '../../../services/addColumns'
+import pm from '../../../managers/project/projectManager'
+import { upsertLiveColumns } from '../../../tauri'
 
 const className = 'new-live-column-panel'
 const pcn = getPCN(className)
@@ -135,15 +138,15 @@ function NewLiveColumnPanel(props, ref) {
             }
         }
 
-        const { ok } = await api.meta.liveColumns({
-            tablePath, 
+        const error = await upsertLiveColumns(pm.currentProject.location, {
+            tablePath,
             liveObjectVersionId,
             liveColumns,
             filters,
             uniqueBy: ub,
         })
 
-        if (!ok) {
+        if (error) {
             // TODO: Show error
             saveCalled.current = false
             setState(prevState => ({ ...prevState, status: status.DEFAULT }))
@@ -167,7 +170,7 @@ function NewLiveColumnPanel(props, ref) {
         migrationTimer.current = setTimeout(() => {
             migrationCallback.current && migrationCallback.current()
             migrationTimer.current = null
-        }, 700)
+        }, 500)
 
         const ub = []
         for (const colName in liveColumns) {
@@ -176,7 +179,7 @@ function NewLiveColumnPanel(props, ref) {
             }
         }
 
-        const { ok } = await api.meta.createTable({
+        const { error } = await createTable({
             schema,
             name: newTable.name,
             desc: newTable.desc,
@@ -184,7 +187,7 @@ function NewLiveColumnPanel(props, ref) {
             uniqueBy: [ub],
         })
 
-        if (!ok) {
+        if (error) {
             clearTimeout(migrationTimer.current)
             saveCalled.current = false
             setState(prevState => ({ ...prevState, status: status.DEFAULT }))
@@ -226,15 +229,15 @@ function NewLiveColumnPanel(props, ref) {
         migrationTimer.current = setTimeout(() => {
             migrationCallback.current && migrationCallback.current()
             migrationTimer.current = null
-        }, 700)
+        }, 500)
 
-        const { ok } = await api.meta.addColumns({
+        const { error } = await addColumns({
             schema,
             table: table.name,
             columns: newColumns || [],
         })
 
-        if (!ok) {
+        if (error) {
             clearTimeout(migrationTimer.current)
             saveCalled.current = false
             setState(prevState => ({ ...prevState, status: status.DEFAULT }))

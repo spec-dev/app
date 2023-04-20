@@ -49,3 +49,17 @@ export function toPostgresUrl(params) {
     const { user, password, host, port, name } = params || {}
     return `postgres://${user}:${password}@${host}:${port}/${name}`
 }
+
+export function parseColNamesFromConstraint(raw) {
+    const matches = raw.match(/\(([-a-zA-Z0-9_," ]+)\)/i)
+    if (!matches || matches.length !== 2) return null
+    const columns = matches[1]
+        .split(',')
+        .map((col) => col.trim())
+        .sort()
+    return { columns }
+}
+
+export function sqlStatementsAsTx(statements) {
+    return ['BEGIN;', ...statements.map((s) => `    ${s}`), 'COMMIT;'].join('\n')
+}

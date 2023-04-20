@@ -4,6 +4,9 @@ const EXTRA_PADDING_DUE_TO_FOLDING = 16
 const SNIPPET_EDITOR_VOFFSET = 4
 const VSTACKED_SNIPPET_OUTPUT_HEIGHT = 140
 
+/**
+ * TODO: Almost all of this is stale
+ */
 const styles = {
     spec: {
         sideBarWidth: 228,

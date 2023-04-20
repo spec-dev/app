@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react'
 import { getPCN } from '../../../utils/classes'
-import { s3 } from '../../../utils/path'
 import { noop } from '../../../utils/nodash'
 import { sortInts } from '../../../utils/math'
 import { chainNames } from '../../../utils/chains'

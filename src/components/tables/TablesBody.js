@@ -5,7 +5,8 @@ import Slider from '../shared/sliders/Slider'
 import NewLiveColumnPanel, { referrers } from '../shared/panels/NewLiveColumnPanel'
 import CountUp from 'react-countup'
 import NewColumnDropdown from '../shared/dropdowns/NewColumnDropdown'
-import { getPageRecords, getTableCount } from '../../utils/queries'
+import pm from '../../managers/project/projectManager'
+import { selectTableRecords, selectTableCount } from '../../sql'
 import { sum } from '../../utils/math'
 import { displayColType, isJSONColumn } from '../../utils/colTypes'
 import { getNewCount, tableCounts } from '../../utils/counts'
@@ -28,6 +29,7 @@ import { pendingSeeds } from '../../utils/pendingSeeds'
 import constants from '../../constants'
 import { noop } from '../../utils/nodash'
 import { hasTableBeenSeeded, markTableAsSeeded } from '../../utils/cache'
+import logger from '../../utils/logger'
 
 const className = 'tables-body'
 const pcn = getPCN(className)
@@ -145,7 +147,7 @@ const defaultSortRules = (primaryKeyColNames) => (
 ) 
 
 const timing = {
-    rowFadeInDelay: 34,
+    rowFadeInDelay: 32,
 }
 
 function TablesBody(props, ref) {
@@ -181,10 +183,15 @@ function TablesBody(props, ref) {
         colWidthConfig.NEW_COLUMN_WIDTH,
     ].map(w => `${w}px`).join(' '), [columnWidths])
     const mainWidth = useMemo(() => sum([
-        colWidthConfig.CHECK_COLUMN_WIDTH,
-        ...columnWidths,
+        // colWidthConfig.CHECK_COLUMN_WIDTH,
+        ...columnWidths.slice(1),
         colWidthConfig.NEW_COLUMN_WIDTH,
     ], [columnWidths]))
+
+    const pkGridTemplateColumnsValue = useMemo(() => [
+        colWidthConfig.CHECK_COLUMN_WIDTH,
+        columnWidths[0],
+    ].map(w => `${w}px`).join(' '), [columnWidths])
 
     // Refs.
     const newLiveColumnSliderRef = useRef()
@@ -271,15 +278,15 @@ function TablesBody(props, ref) {
         const offset = 0
         const limit = Math.max(records?.length || 0, constants.RECORDS_PER_PAGE)
 
-        const { data, ok } = await getPageRecords(
+        const { rows: data, error } = await pm.query(selectTableRecords(
             table.name, 
             sortBy, 
             offset,
             limit,
-        )
+        ))
 
-        if (!ok) {
-            // TODO: Log/display error
+        if (error) {
+            logger.error(error)
             fadeInRowIndexesRange.current = []
             setRecords([])
             return
@@ -313,15 +320,15 @@ function TablesBody(props, ref) {
             sortBy = defaultSortRules(primaryKeyColNames)
         }
 
-        const { data, ok } = await getPageRecords(
+        const { rows: data, error } = await pm.query(selectTableRecords(
             table.name,
             sortBy, 
             records.length,
             constants.RECORDS_PER_PAGE,
-        )
+        ))
 
-        if (!ok) {
-            // TODO: Log/display error
+        if (error) {
+            logger.error(error)
             return
         }
 
@@ -330,9 +337,9 @@ function TablesBody(props, ref) {
 
     const loadRecordCount = useCallback(async () => {
         const tablePath = [schema, table.name].join('.')
-        const { data, ok } = await getTableCount(tablePath)
-        if (!ok) {
-            // TODO: Log/display error
+        const { rows: data, error } = await pm.query(selectTableCount(tablePath))
+        if (error) {
+            logger.error(error)
             return
         }
 
@@ -393,8 +400,7 @@ function TablesBody(props, ref) {
     }), [onDataChange, showLiveDataPanel])
 
     useEffect(() => {
-        if (!props.table) return
-        if (props.table.name !== table.name) {
+        if (props.table?.name !== table.name) {
             if (backfillingTimer.current) {
                 clearTimeout(backfillingTimer.current)
                 backfillingTimer.current = null
@@ -414,19 +420,25 @@ function TablesBody(props, ref) {
             }
             fadeInRowIndexesRange.current = []
             nextPageFetchOffset.current = null
-            setTable(props.table)
-            const initialStatus = defaultInitialStatus(props.seedCursor, schema, props.table.name)
-            if (initialStatus === tableStatus.BACKFILLING.id) {
+            setTable(props.table || {})
+
+            const initialStatus = props.table 
+                ? defaultInitialStatus(props.seedCursor, schema, props.table.name)
+                : tableStatus.IN_SYNC.id
+
+            if (props.table && initialStatus === tableStatus.BACKFILLING.id) {
                 isFirstSeed.current = !hasTableBeenSeeded(props.table.id)
             }
             setStatus(initialStatus)
-            const nextCount = props.table.name ? (tableCounts[[schema, props.table.name].join('.')] || null) : null
+            const nextCount = props.table?.name ? (tableCounts[[schema, props.table.name].join('.')] || null) : null
             prevCount.current = nextCount
             setCount(nextCount)
             resetScroll.current = true
             setRecords(null)
             return
-        } else if (didColumnsChange(props.table.columns, table.columns)) {
+        } 
+        
+        if (props.table && didColumnsChange(props.table.columns, table.columns)) {
             if (backfillingTimer.current) {
                 clearTimeout(backfillingTimer.current)
                 backfillingTimer.current = null
@@ -774,7 +786,7 @@ function TablesBody(props, ref) {
             maxWidth = Math.min(mainRef.current.offsetWidth, maxWidth)
         }
         return (
-            <div key='fixed' className={pcn('__table-loading')} style={{ maxWidth: `${maxWidth}px` }}>
+            <div className={pcn('__table-loading')} style={{ maxWidth: `${maxWidth}px` }}>
                 <div className='indeterminate'></div>
             </div>
         )
@@ -832,9 +844,9 @@ function TablesBody(props, ref) {
             )}
             { table?.name && (  
                 <div className={pcn('__main')} onScroll={onScroll} ref={mainRef}>
+                    { status === tableStatus.BACKFILLING.id && isFirstSeed.current && renderTableLoading() }
                     <div style={{ height: 'auto', width: mainWidth + ROW_HEIGHT }}>
                         <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
-                            { status === tableStatus.BACKFILLING.id && isFirstSeed.current && renderTableLoading() }
                             { renderColHeaders(status) }
                         </div>
                         <div className={pcn('__records')} ref={recordsRef}>

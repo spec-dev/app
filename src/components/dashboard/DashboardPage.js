@@ -4,12 +4,14 @@ import { paths, sections } from '../../utils/nav'
 import TablesPanel from '../tables/TablesPanel'
 import TablesBody from '../tables/TablesBody'
 import { Link } from 'react-router-dom'
-import { resolveSchema, DEFAULT_SCHEMA_NAME } from '../../utils/schema'
+import { resolveSchema, DEFAULT_SCHEMA_NAME, specTableNames } from '../../utils/schema'
 import { updateTableCountWithEvents } from '../../utils/counts'
-import { getSeedCursors } from '../../utils/queries'
+import { selectSeedCursors } from '../../sql'
+import pm from '../../managers/project/projectManager'
 import styles from '../../utils/styles'
 import { useHistory } from 'react-router-dom'
 import { loader } from '@monaco-editor/react'
+import { subscribe, events, unsubscribe } from '../../events'
 import {
     barChartIcon,
     blistIcon,
@@ -24,11 +26,8 @@ import {
     helpIcon,
     bubbleIcon,
 } from '../../svgs/icons'
-import api from '../../utils/api'
 import useCurrentProject from '../../hooks/useCurrentProject'
-import projectManager from '../../managers/projectManager'
-const { path, shell } = window.__TAURI__
-const { Command } = shell
+import logger from '../../utils/logger'
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -52,7 +51,6 @@ function DashboardPage(props) {
     // Current project & associated vars.
     const project = useCurrentProject()
     const config = useMemo(() => project?.config, [project])
-    const env = useMemo(() => project?.currentEnv, [project])
 
     const [seedCursors, setSeedCursors] = useState([])
     const [currentSchemaName, _] = useState(DEFAULT_SCHEMA_NAME)
@@ -75,9 +73,10 @@ function DashboardPage(props) {
     }, [tableNames, currentTable])
 
     const refetchTables = useCallback(async (andNavToTable) => {
-        const result = await resolveSchema(currentSchemaName)
-        if (!result.ok) {
-            // Show error
+        logger.info('Fetching tables...')
+        const { rows, error } = await resolveSchema(currentSchemaName)
+        if (error) {
+            logger.error(error)
             return
         }
 
@@ -85,7 +84,7 @@ function DashboardPage(props) {
             navToTable.current = andNavToTable
         }
 
-        setTables(result.data)
+        setTables(rows)
     }, [currentSchemaName])
 
     const onSeedCursorsChange = useCallback(events => {
@@ -122,7 +121,6 @@ function DashboardPage(props) {
 
     const onTableDataChange = useCallback(events => {
         if (!currentSchemaName || !currentTable?.name) return
-        
         const firstEvent = events[0] || {}
         const eventSchema = firstEvent.schema
         const eventTable = firstEvent.table
@@ -144,77 +142,28 @@ function DashboardPage(props) {
         monaco.current.editor.defineTheme('spec', styles.editor.theme)
     }, [])
 
-    useEffect(async () => {
-        // const unsubscribe = await tauri.listen('data:change', (event) => {
-        //     console.log('Event', JSON.parse(event?.payload?.message || '{}'))
-        // })
-
-        // const promise = invoke('listen', { url: 'postgres://benwhittle:@localhost:5432/station' })
-
-        const cmd = Command.sidecar('bin/spec-client', [], { env: {
-            SPEC_CONFIG_DIR: '/Users/benwhittle/spec/local/.spec',
-            DB_USER: 'benwhittle',
-            DB_PASSWORD: 'spec',
-            DB_HOST: 'localhost',
-            DB_PORT: '5432',
-            DB_NAME: 'station',
-            PROJECT_ID: 'fuck',
-            PROJECT_API_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImxhamFpanZldXRyZmFuYnVmdXN1Iiwicm9sZSI6ImV2ZW50LXN1YnNjcmliZXIiLCJrZXkiOiJaQS5kdE1vUnNPWXV6RjViVFp1cEJ1UGpzbTNhbUhwcVMxNnd4ZzlELmF0a1cyL0ZITmJlQyIsImlhdCI6MTY3ODY4MjE0NCwiZXhwIjoxOTk0MjU4MTQ0fQ.MIrivszAeCmtbPKz8N3sVwIZ7zQEoPr9xeFmLERW7y8',
-            STREAM_LOGS: 'local',
-            FORCE_COLOR: 'true',
-            DEBUG: 'true',
-        }})
-        const child = await cmd.spawn()
-
-        console.log('Got child', child)
-
-        // const pid = await invoke('new_spec_client', {
-        //     configDir: '/Users/benwhittle/spec/local/.spec',
-        //     dbUser: 'benwhittle',
-        //     dbPassword: 'spec',
-        //     dbHost: 'localhost',
-        //     dbPort: '5432',
-        //     dbName: 'station',
-        //     projectId: 'sidecar',
-        //     projectApiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImxhamFpanZldXRyZmFuYnVmdXN1Iiwicm9sZSI6ImV2ZW50LXN1YnNjcmliZXIiLCJrZXkiOiJaQS5kdE1vUnNPWXV6RjViVFp1cEJ1UGpzbTNhbUhwcVMxNnd4ZzlELmF0a1cyL0ZITmJlQyIsImlhdCI6MTY3ODY4MjE0NCwiZXhwIjoxOTk0MjU4MTQ0fQ.MIrivszAeCmtbPKz8N3sVwIZ7zQEoPr9xeFmLERW7y8',
-        // }, )
-    }, [])
-    
-    // useEffect(async () => {
-    //     if (currentSection === sections.TABLES && !tables && currentProjectEnv) {
-
-    //         console.log('Start initializing DB', projectManager.currentProjectEnv)
-    //         const [tablesResult, seedCursorsResult, configData] = await Promise.all([
-    //             resolveSchema(getCurrentSchemaName()),
-    //             getSeedCursors(),
-    //             getConfig(),
-    //         ])
-    //         if (!tablesResult.ok) {
-    //             // TODO: Show error.
-    //             return
-    //         }
-    //         if (!seedCursorsResult.ok) {
-    //             // TODO: Show error.
-    //             return
-    //         }
-    //         if (!configData) {
-    //             // TODO: Show error
-    //             return
-    //         }
-
-    //         setSeedCursors(seedCursorsResult.data)
-    //         setConfig(configData)
-    //         setTables(tablesResult.data)
-
-    //         api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
-        // }
-    //     api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
-    //     api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
-    // }, [currentProject, currentProjectEnv, projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
-
     useEffect(() => {
-        env && projectManager.connectToDatabase()
-    }, [env])
+        pm.onDataChange = events => {
+            if (!events.length) return
+            console.log('Received', events[0].table, events.length)
+            const isSeedCursorEvents = events[0].table === specTableNames.SEED_CURSORS
+            isSeedCursorEvents ? onSeedCursorsChange(events) : onTableDataChange(events)
+        }
+    }, [onSeedCursorsChange, onTableDataChange])
+
+    useEffect(async () => {
+        if (!project?.id || !project?.env) return
+
+        if (currentSection === sections.TABLES) {
+            const { rows, error } = await pm.query(selectSeedCursors())
+            if (error) {
+                logger.error(error)
+                return
+            }
+            setSeedCursors(rows)
+            await refetchTables()
+        }
+    }, [project?.id, project?.env, refetchTables])
 
     useEffect(() => {
         if (navToTable.current) {
@@ -223,7 +172,7 @@ function DashboardPage(props) {
             history.push(toPath)
         }
     })
-    
+
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
             <div className={pcn('__side-nav-liner')}>
@@ -266,7 +215,7 @@ function DashboardPage(props) {
             default:
                 return null
         }
-    }, [project, currentSection, tableNames, currentTableIndex])
+    }, [currentSection, project, tableNames, currentTableIndex, seedCursors])
 
     const renderSidePanel = useCallback(() => (
         <div className={pcn('__side-panel')}>
@@ -300,7 +249,7 @@ function DashboardPage(props) {
             default:
                 return null
         }
-    }, [currentSection, currentTable, config, seedCursors, currentSchemaName, refetchTables])
+    }, [currentSection, currentTable, Array.isArray(tables), config, seedCursors, currentSchemaName, refetchTables])
 
     const renderHeaderProjectPath = useCallback(() => project?.org && project?.name ? (
         <div className={pcn('__project-path')}>

@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react'
-import projectManager from '../managers/projectManager'
+import pm from '../managers/project/projectManager'
+import { subscribe, events } from '../events'
 
 function useCurrentProject() {
     const [project, setProject] = useState(null)
 
     useEffect(async () => {
-        if (project === null && !projectManager.initialized) {
-            await projectManager.init(() => {
-                const project = projectManager.currentProject || {}
-                project.currentEnv = projectManager.currentProjectEnv
-                setProject(project)
+        // Initialize the global project manager only once.
+        if (project === null && !pm.initialized) {
+            subscribe(events.PROJECT_UPDATED, () => {
+                setProject(pm.getCurrentProject())
             })
+            await pm.init()
         }
     }, [project])
 

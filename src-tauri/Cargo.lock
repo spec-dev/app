@@ -3042,7 +3042,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-sql"
 version = "0.1.0"
-source = "git+https://github.com/tauri-apps/plugins-workspace?branch=dev#cea1d4f7b54b94354e8100daf804b810c680efd7"
+source = "git+https://github.com/whittlbc/plugins-workspace?branch=dev#f990f95216785246115bf518c66843f8a808ec86"
 dependencies = [
  "futures-core",
  "log",

@@ -14,7 +14,6 @@
     "dependencies": {
         "@ltd/j-toml": "^1.30.0",
         "@monaco-editor/react": "^4.4.5",
-        "@spec.dev/event-client": "^0.0.8",
         "@tauri-apps/api": "^1.2.0",
         "@tauri-apps/toml": "^2.2.4",
         "highlight.js": "^11.6.0",
@@ -35,6 +34,7 @@
         "react-spring": "^9.2.4",
         "react-transition-group": "^4.4.5",
         "react-use-measure": "^2.1.1",
+        "sha.js": "^2.4.11",
         "short-uuid": "^4.2.0",
         "tauri-plugin-fs-watch-api": "github:tauri-apps/tauri-plugin-fs-watch",
         "tauri-plugin-sql-api": "github:tauri-apps/tauri-plugin-sql",

@@ -33,7 +33,7 @@ function TablesPanel(props) {
                 '__table-item',
                 i === currentTableIndex ? '__table-item--selected' : '',
             )}
-            to={paths.toTable(projectId, name)}>
+            to={paths.toTable(name)}>
             <span>{name}</span>
         </Link>
     )), [tableNames, currentTableIndex])
