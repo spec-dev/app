@@ -9,7 +9,8 @@
         "build:main": "react-scripts build",
         "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
         "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css",
-        "tauri": "tauri"
+        "tauri": "tauri",
+        "tauri-build": "tauri build --target x86_64-apple-darwin"
     },
     "dependencies": {
         "@ltd/j-toml": "^1.30.0",

@@ -87,6 +87,82 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION spec_track_ops() RETURNS trigger AS $$
+DECLARE
+    default_chain_id TEXT := TG_ARGV[0];
+    chain_id_column_name TEXT := TG_ARGV[1];
+    block_number_column_name TEXT := TG_ARGV[2];
+    rec RECORD;
+    rec_before JSON;
+    rec_after JSON;
+    block_number BIGINT;
+    chain_id TEXT;
+    block_number_floor BIGINT;
+    pk_names_array TEXT[] := ARRAY[]::TEXT[];
+    pk_names TEXT := '';
+    pk_values_array TEXT[] := ARRAY[]::TEXT[];
+    pk_values TEXT := '';
+    pk_column_name TEXT;
+    pk_column_value TEXT;
+    insert_stmt TEXT;
+    table_path TEXT;
+    i INT = 0;
+BEGIN
+    table_path := TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME;
+
+    CASE TG_OP
+    WHEN 'INSERT' THEN
+        rec := NEW;
+        rec_before := NULL;
+        rec_after := row_to_json(NEW);
+    WHEN 'UPDATE' THEN
+        rec := NEW;
+        rec_before := row_to_json(OLD);
+        rec_after := row_to_json(NEW);
+    WHEN 'DELETE' THEN
+        rec := OLD;
+        rec_before := row_to_json(OLD);
+        rec_after := NULL;
+    END CASE;
+
+    EXECUTE format('SELECT $1.%I', block_number_column_name)
+    INTO block_number
+    USING rec;
+
+    IF default_chain_id != '' THEN
+        chain_id = default_chain_id;
+    ELSE
+        EXECUTE format('SELECT ($1.%I)::TEXT', chain_id_column_name)
+        INTO chain_id
+        USING rec;
+    END IF;
+
+    EXECUTE format('SELECT is_enabled_above from spec.op_tracking where table_path = $1 and chain_id = $2')
+        INTO block_number_floor
+        USING table_path, chain_id::TEXT;
+    IF (block_number_floor IS NULL or block_number < block_number_floor) THEN
+        RETURN rec;
+    END IF;
+
+    FOREACH pk_column_name IN ARRAY TG_ARGV LOOP
+        i := i + 1;
+        CONTINUE WHEN i < 4;
+        EXECUTE format('SELECT ($1.%I)::TEXT', pk_column_name)
+        INTO pk_column_value
+        USING rec;
+        pk_names_array := array_append(pk_names_array, pk_column_name::TEXT);
+        pk_values_array := array_append(pk_values_array, pk_column_value::TEXT);
+    END LOOP;
+    pk_names := array_to_string(pk_names_array, ',');
+    pk_values := array_to_string(pk_values_array, ',');
+
+    EXECUTE format('INSERT INTO spec.ops ("table_path", "pk_names", "pk_values", "before", "after", "block_number", "chain_id") VALUES ($1, $2, $3, $4, $5, $6, $7)') 
+    USING table_path, pk_names, pk_values, rec_before, rec_after, block_number, chain_id;
+
+    RETURN rec;
+END;
+$$ LANGUAGE plpgsql;
+
 create table if not exists spec.event_cursors (
     name character varying not null,
     id character varying not null,
@@ -132,5 +208,43 @@ create table if not exists spec.migrations (
     "version" character varying not null primary key
 );
 comment on table spec.migrations is 'Spec: Stores the latest schema migration version.';
-alter table spec.migrations owner to spec;`
+alter table spec.migrations owner to spec;
+
+create table spec.ops (
+    id serial primary key,
+    table_path varchar not null,
+    pk_names text not null,
+    pk_values text not null,
+    "before" json,
+    "after" json,
+    block_number bigint not null,
+    chain_id text not null,
+    ts timestamp with time zone not null default(now() at time zone 'utc')
+);
+comment on table spec.ops is 'Spec: Stores before & after snapshots of records at specific block numbers.';
+create index idx_ops_table_pk_values on spec.ops(table_path, pk_values);
+create index idx_ops_snapshot on spec.ops(block_number, chain_id);
+create index idx_ops_table_snapshot on spec.ops(table_path, block_number, chain_id);
+create index idx_ops_ordered on spec.ops(table_path, pk_values, block_number, ts);
+alter table spec.ops owner to spec;
+
+create table spec.op_tracking (
+    id serial primary key,
+    table_path varchar not null,
+    chain_id varchar not null,
+    is_enabled_above bigint not null
+);
+comment on table spec.ops is 'Spec: Specifies whether ops should be tracked for a given table.';
+create unique index idx_op_tracking_table_chain on spec.op_tracking(table_path, chain_id); 
+alter table spec.op_tracking owner to spec;
+
+create table spec.frozen_tables (
+    id serial primary key,
+    table_path varchar not null,
+    chain_id varchar not null
+);
+comment on table spec.frozen_tables is 'Spec: Live tables actively ignoring new updates.';
+create unique index idx_frozen_table_chain on spec.frozen_tables(table_path, chain_id); 
+create index idx_frozen_tables_by_chain on spec.frozen_tables(chain_id); 
+alter table spec.frozen_tables owner to spec;`
 export default initDb

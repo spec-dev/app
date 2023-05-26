@@ -4,7 +4,7 @@ import { parse } from './utils/json'
 import { watch } from 'tauri-plugin-fs-watch-api'
 import { listen, TauriEvent } from '@tauri-apps/api/event'
 import { stringify } from './utils/json'
-const { path, shell } = window.__TAURI__
+const { path, shell } = window.__TAURI__ || {}
 const { Command } = shell
 
 // Spawned child processes.

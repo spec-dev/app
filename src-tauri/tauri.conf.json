@@ -33,7 +33,7 @@
         "bundle": {
             "active": true,
             "category": "DeveloperTool",
-            "copyright": "",
+            "copyright": "Spec",
             "deb": {
                 "depends": []
             },
@@ -56,7 +56,8 @@
                 "exceptionDomain": "",
                 "frameworks": [],
                 "providerShortName": null,
-                "signingIdentity": null
+                "signingIdentity": null,
+                "minimumSystemVersion": "10.13"
             },
             "resources": [],
             "shortDescription": "",

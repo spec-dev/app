@@ -11,7 +11,6 @@ import pm from '../../managers/project/projectManager'
 import styles from '../../utils/styles'
 import { useHistory } from 'react-router-dom'
 import { loader } from '@monaco-editor/react'
-import { subscribe, events, unsubscribe } from '../../events'
 import {
     barChartIcon,
     blistIcon,

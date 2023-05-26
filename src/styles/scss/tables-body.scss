@@ -528,11 +528,11 @@ $loaderTime: 2.3s;
 }
 
 .tables-body__row {
-    &:hover {
-        .tables-body__cell {
-            background-color: #14132d;
-        }
-    }
+    // &:hover {
+    //     .tables-body__cell {
+    //         background-color: #14132d;
+    //     }
+    // }
 
     &.tables-body__row--new-accent {
         .tables-body__cell {

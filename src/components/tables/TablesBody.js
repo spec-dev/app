@@ -845,7 +845,7 @@ function TablesBody(props, ref) {
             { table?.name && (  
                 <div className={pcn('__main')} onScroll={onScroll} ref={mainRef}>
                     { status === tableStatus.BACKFILLING.id && isFirstSeed.current && renderTableLoading() }
-                    <div style={{ height: 'auto', width: mainWidth + ROW_HEIGHT }}>
+                    <div style={{ height: 'auto', width: mainWidth + ROW_HEIGHT + 150 }}>
                         <div className={pcn('__col-headers')} style={{ gridTemplateColumns: gridTemplateColumnsValue }}>
                             { renderColHeaders(status) }
                         </div>
