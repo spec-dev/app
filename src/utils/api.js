@@ -3,8 +3,7 @@ import $ from 'jquery'
 import humps from 'humps'
 import Timer from './timer'
 import { stringify } from './json'
-import { createEventClient } from '@spec.dev/event-client'
-import constants from './constants'
+import constants from '../constants'
 
 class ApiClient {
 
@@ -97,55 +96,8 @@ class CoreApiClient extends ApiClient {
     liveObjects = async () => await this.get('/live-objects')
 }
 
-class MetaApiClient extends ApiClient {
-
-    constructor() {
-        super('/meta', false)
-    }
-
-    tables = async params => await this.get('/tables', params)
-
-    query = async payload => await this.post('/query', payload)
-
-    liveColumns = async payload => await this.post('/live-columns', payload)
-
-    createTable = async payload => await this.post('/table', payload)
-
-    addColumns = async payload => await this.post('/columns', payload)
-
-    config = async () => await this.get('/config')
-}
-
-class MetaSocketClient {
-
-    static channels = {
-        CONFIG_UPDATE: 'config:update',
-        SEED_CHANGE: 'seed:change',
-        TABLE_DATA_CHANGE: 'table-data:change',    
-    }
-
-    constructor() {
-        this.onConfigUpdate = () => {}
-        this.onSeedChange = () => {}
-        this.onTableDataChange = () => {}
-        this.client = createEventClient({
-            hostname: constants.META_API_HOSTNAME,
-            port: constants.isLocal() ? constants.META_API_PORT : 54321,
-            onConnect: () => this._subscribeToChannels(),
-        })
-    }
-
-    _subscribeToChannels() {
-        this.client.on(MetaSocketClient.channels.CONFIG_UPDATE, data => this.onConfigUpdate(data))
-        this.client.on(MetaSocketClient.channels.SEED_CHANGE, data => this.onSeedChange(data))
-        this.client.on(MetaSocketClient.channels.TABLE_DATA_CHANGE, data => this.onTableDataChange(data))
-    }
-}
-
 const api = {
     core: new CoreApiClient(),
-    meta: new MetaApiClient(),
-    metaSocket: new MetaSocketClient(),
 }
 
 export default api

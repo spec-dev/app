@@ -1,14 +1,14 @@
 const paths = {
     HOME: '/',
-    DASHBOARD: '/project/:projectId/:section/:subSection?/:mod?',
+    DASHBOARD: '/project/:section/:subSection?/:mod?',
 }
 
 const sections = {
-    TABLES: 'tables',
+    TABLES: 'tables'
 }
 
-paths.toTables = projectId => `/project/${projectId}/${sections.TABLES}`
-paths.toTable = (projectId, tableName) => `${paths.toTables(projectId)}/${tableName}`
+paths.tables = `/project/${sections.TABLES}`
+paths.toTable = tableName => `${paths.tables}/${tableName}`
 
 export {
     paths,

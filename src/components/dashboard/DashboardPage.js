@@ -1,17 +1,16 @@
 import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react'
-import { cn, getPCN } from '../../utils/classes'
+import { getPCN } from '../../utils/classes'
 import { paths, sections } from '../../utils/nav'
 import TablesPanel from '../tables/TablesPanel'
 import TablesBody from '../tables/TablesBody'
 import { Link } from 'react-router-dom'
-import { getCurrentProject, getCurrentSchemaName } from '../../utils/cache'
-import { getSchema, resolveSchema } from '../../utils/schema'
+import { resolveSchema, DEFAULT_SCHEMA_NAME, specTableNames } from '../../utils/schema'
 import { updateTableCountWithEvents } from '../../utils/counts'
-import { getSeedCursors } from '../../utils/queries'
-import { getConfig } from '../../utils/config'
+import { selectSeedCursors } from '../../sql'
+import pm from '../../managers/project/projectManager'
 import styles from '../../utils/styles'
-import { loader } from '@monaco-editor/react'
 import { useHistory } from 'react-router-dom'
+import { loader } from '@monaco-editor/react'
 import {
     barChartIcon,
     blistIcon,
@@ -26,7 +25,8 @@ import {
     helpIcon,
     bubbleIcon,
 } from '../../svgs/icons'
-import api from '../../utils/api'
+import useCurrentProject from '../../hooks/useCurrentProject'
+import logger from '../../utils/logger'
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -41,17 +41,19 @@ const getSidePanelHeaderTitle = section => {
 }
 
 function DashboardPage(props) {
+    // Location props.
     const history = useHistory()
     const params = (props.match || {}).params || {}
-    const projectId = useMemo(() => params.projectId, [params])
     const currentSection = useMemo(() => params.section || sections.TABLES, [params])
     const currentSubSection = useMemo(() => params.subSection || null, [params])
-    const currentProject = useMemo(() => getCurrentProject(), [projectId])
 
-    const [config, setConfig] = useState(null)
+    // Current project & associated vars.
+    const project = useCurrentProject()
+    const config = useMemo(() => project?.config, [project])
+
     const [seedCursors, setSeedCursors] = useState([])
-    const [currentSchemaName, _] = useState(getCurrentSchemaName())
-    const [tables, setTables] = useState(getSchema(currentSchemaName))
+    const [currentSchemaName, _] = useState(DEFAULT_SCHEMA_NAME)
+    const [tables, setTables] = useState(null)
 
     const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
     const tablesBodyRef = useRef()
@@ -62,7 +64,7 @@ function DashboardPage(props) {
         if (currentSection !== sections.TABLES) return null
         if (!tables) return null
         return tables.find(t => t.name === currentSubSection) || tables[0]
-    }, [projectId, currentSection, currentSubSection, tables])
+    }, [currentSection, currentSubSection, tables])
     
     const currentTableIndex = useMemo(() => {
         if (!tableNames || !currentTable) return 0
@@ -70,9 +72,10 @@ function DashboardPage(props) {
     }, [tableNames, currentTable])
 
     const refetchTables = useCallback(async (andNavToTable) => {
-        const result = await resolveSchema(currentSchemaName)
-        if (!result.ok) {
-            // Show error
+        logger.info('Fetching tables...')
+        const { rows, error } = await resolveSchema(currentSchemaName)
+        if (error) {
+            logger.error(error)
             return
         }
 
@@ -80,7 +83,7 @@ function DashboardPage(props) {
             navToTable.current = andNavToTable
         }
 
-        setTables(result.data)
+        setTables(rows)
     }, [currentSchemaName])
 
     const onSeedCursorsChange = useCallback(events => {
@@ -117,7 +120,6 @@ function DashboardPage(props) {
 
     const onTableDataChange = useCallback(events => {
         if (!currentSchemaName || !currentTable?.name) return
-        
         const firstEvent = events[0] || {}
         const eventSchema = firstEvent.schema
         const eventTable = firstEvent.table
@@ -129,7 +131,7 @@ function DashboardPage(props) {
         }
     }, [currentSchemaName, currentTable])
 
-    const loadMonaco = useCallback(async () => {
+    useEffect(async () => {
         if (monaco.current) return
         monaco.current = await loader.init()
         monaco.current.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -139,41 +141,32 @@ function DashboardPage(props) {
         monaco.current.editor.defineTheme('spec', styles.editor.theme)
     }, [])
 
-    useEffect(async () => {
-        if (currentSection === sections.TABLES && !tables) {
-            const [tablesResult, seedCursorsResult, configData] = await Promise.all([
-                resolveSchema(getCurrentSchemaName()),
-                getSeedCursors(),
-                getConfig(),
-            ])
-            if (!tablesResult.ok) {
-                // TODO: Show error.
-                return
-            }
-            if (!seedCursorsResult.ok) {
-                // TODO: Show error.
-                return
-            }
-            if (!configData) {
-                // TODO: Show error
-                return
-            }
-
-            setSeedCursors(seedCursorsResult.data)
-            setConfig(configData)
-            setTables(tablesResult.data)
-
-            api.metaSocket.onConfigUpdate = newConfig => setConfig(newConfig)
-
-            loadMonaco()
+    useEffect(() => {
+        pm.onDataChange = events => {
+            if (!events.length) return
+            console.log('Received', events[0].table, events.length)
+            const isSeedCursorEvents = events[0].table === specTableNames.SEED_CURSORS
+            isSeedCursorEvents ? onSeedCursorsChange(events) : onTableDataChange(events)
         }
-        api.metaSocket.onSeedChange = events => events && onSeedCursorsChange(events)
-        api.metaSocket.onTableDataChange = events => events && onTableDataChange(events) 
-    }, [projectId, currentSection, tables, onSeedCursorsChange, onTableDataChange])
+    }, [onSeedCursorsChange, onTableDataChange])
+
+    useEffect(async () => {
+        if (!project?.id || !project?.env) return
+
+        if (currentSection === sections.TABLES) {
+            const { rows, error } = await pm.query(selectSeedCursors())
+            if (error) {
+                logger.error(error)
+                return
+            }
+            setSeedCursors(rows)
+            await refetchTables()
+        }
+    }, [project?.id, project?.env, refetchTables])
 
     useEffect(() => {
         if (navToTable.current) {
-            const toPath = paths.toTable(projectId, navToTable.current.name)
+            const toPath = paths.toTable(navToTable.current.name)
             navToTable.current = null
             history.push(toPath)
         }
@@ -189,7 +182,7 @@ function DashboardPage(props) {
                     className={ currentSection === sections.TABLES ? '--selected' : '' } 
                     dangerouslySetInnerHTML={{ __html: tableEditorIcon }}
                     // TODO: This needs to be set to the last visited table
-                    to={paths.toTables(projectId)}>
+                    to={paths.tables}>
                 </Link>
                 <div>
                     <span>{'{}'}</span>
@@ -204,14 +197,14 @@ function DashboardPage(props) {
                 <div dangerouslySetInnerHTML={{ __html: userIcon }}></div>
             </div>
         </div>
-    ), [currentSection, projectId])
+    ), [currentSection])
 
     const renderSidePanelBodyComp = useCallback(() => {
         switch (currentSection) {
             case sections.TABLES:
                 return (
                     <TablesPanel
-                        projectId={projectId}
+                        projectId={project?.id}
                         tableNames={tableNames}
                         currentTableIndex={currentTableIndex}
                         seedCursors={seedCursors}
@@ -221,7 +214,7 @@ function DashboardPage(props) {
             default:
                 return null
         }
-    }, [currentSection, tableNames, currentTableIndex])
+    }, [currentSection, project, tableNames, currentTableIndex, seedCursors])
 
     const renderSidePanel = useCallback(() => (
         <div className={pcn('__side-panel')}>
@@ -255,15 +248,15 @@ function DashboardPage(props) {
             default:
                 return null
         }
-    }, [currentSection, currentTable, config, seedCursors, currentSchemaName, refetchTables])
+    }, [currentSection, currentTable, Array.isArray(tables), config, seedCursors, currentSchemaName, refetchTables])
 
-    const renderHeaderProjectPath = useCallback(() => currentProject?.org && currentProject?.name ? (
+    const renderHeaderProjectPath = useCallback(() => project?.org && project?.name ? (
         <div className={pcn('__project-path')}>
-            <span>{ currentProject.org }</span>
+            <span>{ project.org }</span>
             <span>/</span>
-            <span>{ currentProject.name }</span>
+            <span>{ project.name }</span>
         </div>
-    ) : null, [currentProject])
+    ) : null, [project])
 
     const renderContent = useCallback(() => (
         <div className={pcn('__content')}>

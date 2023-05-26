@@ -6,16 +6,15 @@ import { columnOps, filterOptions, filterOps, multiValueOps } from '../../../uti
 import { propertyIsEnum, formatPropertyOptionsForSelection, resolvedPropertyType } from '../../../utils/liveObjects'
 import closeIcon from '../../../svgs/close'
 import { getSchema } from '../../../utils/schema'
-import useMeasure from 'react-use-measure'
-import { animated, useSpring } from 'react-spring'
 import { cloneDeep } from 'lodash-es'
 import hljs from 'highlight.js/lib/core'
 import TimestampInput from '../inputs/TimestampInput'
 import { parse, stringify } from '../../../utils/json'
 import { noop } from '../../../utils/nodash'
-import { chainIds, chainNames } from '../../../utils/chains'
+import { chainNames } from '../../../utils/chains'
 import CodeInput from '../inputs/CodeInput'
 import { colTypeIcon, displayColType } from '../../../utils/colTypes'
+import AnimateHeight from 'react-animate-height'
 import {
     NUMBER,
     STRING,
@@ -47,34 +46,13 @@ function LiveColumnFilters(props, ref) {
     const [filters, setFilters] = useState(props.filters || [[{ op: filterOps.EQUAL_TO }]])
     const [showForeignKeyAdditionPrompt, setShowForeignKeyAdditionPrompt] = useState(null)
     const useFiltersRef = useRef(useFilters)
-    const overflow = useRef('hidden')
-    const containerRef = useRef()
     const inputRefs = useRef({})
     const andButtonRefs = useRef({})
     const focusOnLastPropertyInput = useRef(null)
     const filterLengths = useRef([])
-    const [linerRef, { height }] = useMeasure()
-    const extraConfig = !useFilters || !useFiltersRef.current ? {} : { duration: 0 }
     const tablePathsPromptedAboutForeignKeys = useRef(new Set())
     const promptForeignKeyAddition = useRef(null)
     const fkPromptContainerRef = useRef(null)
-
-    const updateOverflow = useCallback((value) => {
-        value = useFilters ? value : 'hidden'
-        containerRef.current && $(containerRef.current).css('overflow', value)
-        overflow.current = value
-    }, [useFilters, filters.length])
-
-    const containerProps = useSpring({ 
-        height: useFilters ? height : 0, 
-        config: {
-            tension: 390,
-            friction: 32,
-            ...extraConfig
-        },
-        onRest: () => updateOverflow('visible'),
-        onStart: () => updateOverflow('hidden')
-    })
 
     const propertyOptions = useMemo(() => (liveObjectVersion.properties || []).map(p => {
         const example = (liveObjectVersion.example || {})[p.name] || null
@@ -827,14 +805,21 @@ function LiveColumnFilters(props, ref) {
     )), [filters, renderFilterInput, setAndButtonRef])
 
     return (
-        <animated.div
+        <AnimateHeight
             className={className}
-            style={{ ...containerProps, overflow: overflow.current }}
-            ref={containerRef}>
-            <div className={pcn('__liner')} ref={linerRef}>
+            height={useFilters ? 'auto' : 0}
+            duration={useFilters ? 400 : 375}
+            easing={'cubic-bezier(.16,1,.3,1)'}
+            onHeightAnimationStart={() => {
+                $(`.${className}`).css('overflow', 'hidden')
+            }}
+            onHeightAnimationEnd={() => {
+                $(`.${className}`).css('overflow', useFilters ? 'visible' : 'hidden')
+            }}>
+            <div className={pcn('__liner')}>
                 { renderFilterGroups() }
             </div>
-        </animated.div>
+        </AnimateHeight>
     )
 }
 

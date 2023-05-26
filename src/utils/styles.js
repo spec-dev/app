@@ -4,6 +4,9 @@ const EXTRA_PADDING_DUE_TO_FOLDING = 16
 const SNIPPET_EDITOR_VOFFSET = 4
 const VSTACKED_SNIPPET_OUTPUT_HEIGHT = 140
 
+/**
+ * TODO: Almost all of this is stale
+ */
 const styles = {
     spec: {
         sideBarWidth: 228,
@@ -147,7 +150,7 @@ const styles = {
             ],
             colors: {
                 'editor.background': '#00000000',
-                'editor.foreground': '#EEEEEE',
+                'editor.foreground': '#00000000',
                 'editor.inactiveSelectionBackground': '#00000000',
                 'editorIndentGuide.background': '#8193B235',
                 'editor.selectionHighlightBackground': '#ADD6FF4D',

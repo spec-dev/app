@@ -1,10 +1,4 @@
-import api from './api'
 import { getColumnOpForSpecConfigOp } from './filters'
-
-export async function getConfig() {
-    const { data, ok } = await api.meta.config()
-    return ok ? data : null
-}
 
 export function getLiveColumnsForTable(schema, table, config) {
     const liveColumns = ((config.tables || {})[schema] || {})[table] || {}

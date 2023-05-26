@@ -94,6 +94,7 @@
     align-items: flex-start;
     justify-content: flex-start;
     scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
 
     &::-webkit-scrollbar {
         width: 8px;

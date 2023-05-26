@@ -12,41 +12,20 @@
 @import 'tables-panel';
 @import 'tables-body';
 
-// Live Objects Section
-@import 'live-objects-panel';
-@import 'live-objects-body';
-@import 'live-objects-ecosystem';
-@import 'live-object-page';
-@import 'live-object-data-flow';
-
-// Docs Section
-@import 'docs-panel';
-@import 'docs-body';
-@import 'docs-section';
-
 // Shared
 @import 'dropdown';
 @import 'new-column-dropdown';
 @import 'new-table-dropdown';
 @import 'slider';
 @import 'new-live-column-panel';
-@import 'transform-panel';
-@import 'transform-object-panel';
-@import 'function-panel';
-@import 'hook-panel';
 @import 'live-object-search';
-@import 'live-table-search';
 @import 'live-object-search-result';
 @import 'new-live-column-specs';
 @import 'editable-live-columns';
-@import 'editable-standard-columns';
 @import 'select-input';
-@import 'select-live-column-formatter-panel';
-@import 'required-links';
 @import 'spinner';
 @import 'new-table-basic-inputs';
 @import 'live-column-filters';
-@import 'unique-mappings';
 @import 'flipper';
 @import 'toggle';
 @import 'snippets';

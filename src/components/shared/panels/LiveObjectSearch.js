@@ -111,6 +111,7 @@ function LiveObjectSearch(props, ref) {
                     <input
                         type='text'
                         placeholder='What data do you need?'
+                        spellCheck={false}
                         onChange={onTypeQuery}
                         onKeyUp={onKeyUp}
                         onKeyDown={onKeyDown}

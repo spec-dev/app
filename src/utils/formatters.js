@@ -40,3 +40,26 @@ export const withIndefiniteArticle = val => {
 export const toSingular = word => pluralize(word, 1)
 
 export const toPlural = word => pluralize(word, 2)
+
+export function unique(arr) {
+    return Array.from(new Set(arr))
+}
+
+export function toPostgresUrl(params) {
+    const { user, password, host, port, name } = params || {}
+    return `postgres://${user}:${password}@${host}:${port}/${name}`
+}
+
+export function parseColNamesFromConstraint(raw) {
+    const matches = raw.match(/\(([-a-zA-Z0-9_," ]+)\)/i)
+    if (!matches || matches.length !== 2) return null
+    const columns = matches[1]
+        .split(',')
+        .map((col) => col.trim())
+        .sort()
+    return { columns }
+}
+
+export function sqlStatementsAsTx(statements) {
+    return ['BEGIN;', ...statements.map((s) => `    ${s}`), 'COMMIT;'].join('\n')
+}

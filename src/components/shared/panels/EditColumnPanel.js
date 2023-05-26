@@ -1,13 +1,13 @@
-import React, { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle, useEffect } from 'react'
+import React, { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react'
 import { getPCN, cn } from '../../../utils/classes'
 import SelectInput from '../inputs/SelectInput'
-import $ from 'jquery'
 import { noop } from '../../../utils/nodash'
 import { keyIcon, modelRelationshipIcon, requiredIcon } from '../../../svgs/icons'
 import { cloneDeep } from 'lodash-es'
 import { getSchema } from '../../../utils/schema'
 import { colTypeIcon, displayColType } from '../../../utils/colTypes'
-import { animated, useSpring } from 'react-spring'
+import AnimateHeight from 'react-animate-height'
+import $ from 'jquery'
 
 const className = 'edit-column-panel'
 const pcn = getPCN(className)
@@ -17,39 +17,10 @@ function EditColumnPanel(props, ref) {
     const [column, setColumn] = useState({})
     const callback = useRef()
     const tables = useMemo(() => getSchema(schema), [schema])
-    const overflow = useRef('hidden')
-    const containerRef = useRef()
-    const fkLock = useRef(false)
-    const fkChangeTimeout = useRef()
-
-    const updateOverflow = useCallback((value) => {
-        value = !!column.relationship ? value : 'hidden'
-        if (containerRef.current) {
-            clearTimeout(fkChangeTimeout.current)
-            fkChangeTimeout.current = setTimeout(() => {
-                $(containerRef.current).css('overflow', value)
-            }, value === 'visible' ? 300 : 0)
-        }
-        overflow.current = value
-    }, [column.relationship])
-
-    const containerProps = useSpring({
-        height: !!column.relationship ? 51 : 0,
-        config: {
-            tension: 1000,
-            friction: 0,
-            clamp: true,
-        },
-        onRest: () => {
-            updateOverflow('visible')
-            fkLock.current = false
-        },
-        onStart: () => updateOverflow('hidden'),
-    })
 
     const refKeyOptions = useMemo(() => {
         const options = []
-        for (const table of tables) {
+        for (const table of tables || []) {
             const uniqueColNames = (table.unique_columns || []).filter(group => group.length === 1).flat()
             if (!uniqueColNames.length) continue
             options.push(...uniqueColNames.map(colName => ({
@@ -94,7 +65,6 @@ function EditColumnPanel(props, ref) {
     }, [column])
 
     const toggleIsForeignKey = useCallback(() => {
-        fkLock.current = true
         const newColumn = { ...column }
         if (newColumn.hasOwnProperty('relationship')) {
             delete newColumn.relationship
@@ -219,15 +189,22 @@ function EditColumnPanel(props, ref) {
                         <div className={pcn('__section-toggle')}>
                             <button
                                 className={cn('toggle-button', !!rel ? `toggle-button--true` : '')}
-                                onClick={() => !fkLock.current && toggleIsForeignKey()}>
+                                onClick={toggleIsForeignKey}>
                                 <span></span>
                             </button>
                         </div>
                     </div>
-                    <animated.div
-                        style={{ ...containerProps, overflow: overflow.current }}
-                        ref={containerRef}
-                        className={pcn('__ref-key-container')}>
+                    <AnimateHeight
+                        className={pcn('__ref-key-container')}
+                        height={!!column.relationship ? 51 : 0}
+                        duration={!!column.relationship ? 280 : 260}
+                        easing={'cubic-bezier(.16,1,.3,1)'}
+                        onHeightAnimationStart={() => {
+                            $(`.${pcn('__ref-key-container')}`).css('overflow', 'hidden')
+                        }}
+                        onHeightAnimationEnd={(newHeight) => {
+                            $(`.${pcn('__ref-key-container')}`).css('overflow', !!newHeight ? 'visible' : 'hidden')
+                        }}>
                         <SelectInput
                             className={pcn('__ref-key-input')}
                             classNamePrefix='spec'
@@ -242,7 +219,7 @@ function EditColumnPanel(props, ref) {
                                 Option: renderColumnValueOption,
                             }}
                         />
-                    </animated.div>
+                    </AnimateHeight>
                 </div>
             </div>
         )

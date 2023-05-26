@@ -1,3 +1,5 @@
+$sliderDuration: 0.46s;
+
 .slider {
     position: fixed;
     top: 0;
@@ -17,10 +19,25 @@
     background-color: adjust-color(#0B0B20, $alpha: -0.25);
     z-index: 1;
     pointer-events: initial;
+    will-change: opacity, transform;
+    opacity: 1;
 
-    &.--darker {
-        transition: background-color 0.7s ease;
-        background-color: adjust-color(#0B0B20, $alpha: -0.05);
+    &.slider__backdrop-enter {
+        opacity: 0;
+    }
+      
+    &.slider__backdrop-enter-active {
+        transition: opacity calc(#{$sliderDuration} - 0.05s) $defaultTiming;
+        opacity: 1;
+    }
+
+    &.slider__backdrop-exit {
+        opacity: 1;
+    }
+      
+    &.slider__backdrop-exit-active {
+        transition: opacity calc(#{$sliderDuration} - 0.05s) $defaultTiming;
+        opacity: 0;
     }
 }
 
@@ -30,11 +47,37 @@
     bottom: 0;
     left: 100%;
     width: 50%;
+    max-width: 725px;
     position: absolute;
     background-color: $backgroundMedium;
     border-left: 1px solid adjust-color($gray, $alpha: -0.84);
     z-index: 2;
     pointer-events: initial;
+    will-change: opacity, transform;
+    opacity: 1;
+    transform: translateX(-94%);
+
+    &.slider__panel-enter {
+        opacity: 0;
+        transform: translateX(0%);
+    }
+      
+    &.slider__panel-enter-active {
+        transition: opacity $sliderDuration $defaultTiming, transform $sliderDuration $defaultTiming;
+        opacity: 1;
+        transform: translateX(-94%);
+    }
+
+    &.slider__panel-exit {
+        opacity: 1;
+        transform: translateX(-94%);
+    }
+      
+    &.slider__panel-exit-active {
+        transition: opacity $sliderDuration $defaultTiming, transform $sliderDuration $defaultTiming;
+        opacity: 0;
+        transform: translateX(0%);
+    }
 }
 
 .slider__panel-liner {

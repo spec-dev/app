@@ -1,34 +1,20 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react'
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { getPCN } from '../../../utils/classes'
 import { noop } from '../../../utils/nodash'
-import { animated, useTransition } from 'react-spring'
+import { CSSTransition } from 'react-transition-group'
 
 const className = 'slider'
 const pcn = getPCN(className)
 
+const timing = {
+    SLIDER_DURATION: 460,
+}
+
 function Slider(props, ref) {
     const { id, children, onShown = noop, willHide = noop } = props
     const [shown, setShown] = useState(false)
-    const backdropTransitions = useTransition(shown, {
-        from: { opacity: 0 },
-        enter: { opacity: 1 },
-        leave: { opacity: 0 },
-        config: enter => key => {
-            return enter
-                ? { tension: 315, friction: 32 }
-                : { tension: 330, friction: 31 }
-        }
-    })
-    const sliderTransitions = useTransition(shown, {
-        from: { opacity: 0, transform: 'translateX(0%)' },
-        enter: { opacity: 1, transform: 'translateX(-94%)' },
-        leave: { opacity: 0, transform: 'translateX(0%)' },
-        config: enter => key => {
-            return enter
-                ? { tension: 320, friction: 32 }
-                : { tension: 330, friction: 31 }
-        }
-    })
+    const sliderRef = useRef(null)
+    const backdropRef = useRef(null)
 
     useImperativeHandle(ref, () => ({
         show: () => setShown(true),
@@ -37,36 +23,38 @@ function Slider(props, ref) {
     }), [shown])
 
     useEffect(() => {
-        if (shown) {
-            onShown()
-        }
+        shown && onShown()
     }, [shown, onShown])
 
     return (
         <div id={id} className={className}>
-            { backdropTransitions(
-                (styles, item) => item && (
-                    <animated.div
-                        className={pcn('__backdrop')}
-                        onClick={() => {
-                            willHide()
-                            setShown(false)
-                        }}
-                        style={styles}>
-                    </animated.div>
-                ))
-            }
-            { sliderTransitions(
-                (styles, item) => item && (
-                    <animated.div
-                        className={pcn('__panel')}
-                        style={styles}>
-                        <div className={pcn('__panel-liner')}>
-                            { children }
-                        </div>
-                    </animated.div>
-                ))
-            }
+            <CSSTransition
+                nodeRef={backdropRef}
+                in={shown}
+                timeout={timing.SLIDER_DURATION - 50}
+                unmountOnExit={true}
+                classNames={pcn('__backdrop')}>
+                <div
+                    className={pcn('__backdrop')}
+                    onClick={() => {
+                        willHide()
+                        setShown(false)
+                    }}
+                    ref={backdropRef}>
+                </div>
+            </CSSTransition>
+            <CSSTransition
+                nodeRef={sliderRef}
+                in={shown}
+                timeout={timing.SLIDER_DURATION}
+                unmountOnExit={true}
+                classNames={pcn('__panel')}>
+                <div className={pcn('__panel')} ref={sliderRef}>
+                    <div className={pcn('__panel-liner')}>
+                        { children }
+                    </div>
+                </div>
+            </CSSTransition>
         </div>
     )
 }

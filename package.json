@@ -9,11 +9,14 @@
         "build:main": "react-scripts build",
         "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
         "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css",
-        "tauri": "tauri"
+        "tauri": "tauri",
+        "tauri-build": "tauri build --target x86_64-apple-darwin"
     },
     "dependencies": {
+        "@ltd/j-toml": "^1.30.0",
         "@monaco-editor/react": "^4.4.5",
-        "@spec.dev/event-client": "^0.0.8",
+        "@tauri-apps/api": "^1.2.0",
+        "@tauri-apps/toml": "^2.2.4",
         "highlight.js": "^11.6.0",
         "humps": "^2.0.1",
         "jquery": "^3.6.0",
@@ -22,6 +25,7 @@
         "pg-format": "^1.0.4",
         "pluralize": "^8.0.0",
         "react": "^17.0.2",
+        "react-animate-height": "^3.1.1",
         "react-countup": "^6.2.0",
         "react-dom": "^17.0.2",
         "react-router": "^5.2.0",
@@ -29,8 +33,12 @@
         "react-scripts": "4.0.3",
         "react-select": "^5.3.2",
         "react-spring": "^9.2.4",
+        "react-transition-group": "^4.4.5",
         "react-use-measure": "^2.1.1",
+        "sha.js": "^2.4.11",
         "short-uuid": "^4.2.0",
+        "tauri-plugin-fs-watch-api": "github:tauri-apps/tauri-plugin-fs-watch",
+        "tauri-plugin-sql-api": "github:tauri-apps/tauri-plugin-sql",
         "typewriter-effect": "^2.18.0"
     },
     "resolutions": {
