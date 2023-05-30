@@ -1,10 +1,9 @@
-import { getDatabaseConnection, newSpecClient } from '../../tauri'
+import { createDatabasePool, teardownDatabasePool, subscribeToDatabase, unsubscribeFromDatabase, query, createSpecClient, killSpecClient } from '../../electronClient'
 import { toPostgresUrl } from '../../utils/formatters'
 import logger from '../../utils/logger'
 import { selectSpecUser, createSpecUser, selectSpecSchema, initDb, deleteSpecEventCursors } from '../../sql'
 import { stringify } from '../../utils/json'
 import { emit, events } from '../../events'
-import short from 'short-uuid'
 import constants from '../../constants'
 import { areObjectsEquivalent } from '../../utils/hash'
 
@@ -48,8 +47,6 @@ class ProjectEnv {
         this.projectApiKey = projectApiKey
         this.projectConfigPath = projectConfigPath
         this.status = dbConnectionStatus.DISCONNECTED
-        this.db = null
-        this.spec = null
         this.onDataChange = onDataChange
     }
 
@@ -80,20 +77,13 @@ class ProjectEnv {
         this._setStatus(dbConnectionStatus.CONNECTED)
     }
 
-    async query(sql) {
-        const id = short.generate()
-        return new Promise((res, _) => {
-            window.addEventListener(id, event => res(event.detail || {}), { once: true })
-            this.db.write(this._newQueryPayload(id, sql))
-        })
-    }
-
     async teardown() {
         try {
-            this.db && await this.db.kill()
-            this.db = null
-            this.spec && await this.spec.kill()
-            this.spec = null
+            await Promise.all([
+                teardownDatabasePool(), 
+                unsubscribeFromDatabase(),
+                killSpecClient(),
+            ])
             this._setStatus(dbConnectionStatus.DISCONNECTED)
         } catch (err) {
             logger.error(`Error tearing down current DB connection`, this.url, err)
@@ -103,14 +93,12 @@ class ProjectEnv {
     async _connectToDb() {
         try {
             this._setStatus(dbConnectionStatus.CONNECTING)
-            this.db = await getDatabaseConnection(this.connParams, data => {
-                data && this._onDbMessage(data)
-            })
+            if (!(await createDatabasePool(this.connParams))) return false
+            return await subscribeToDatabase(this.connParams, events => this.onDataChange(events))
         } catch (err) {
             logger.error(`Failed to connect to DB ${this.url}`, err)
             return false
         }
-        return true
     }
 
     async _initDbForSpec() {
@@ -131,7 +119,7 @@ class ProjectEnv {
 
     async _resetSpecEventCursors() {
         try {
-            const { error } = await this.query(deleteSpecEventCursors)
+            const { error } = await query(deleteSpecEventCursors)
             if (error) throw error
         } catch (err) {
             logger.error(
@@ -145,7 +133,7 @@ class ProjectEnv {
     async _createSpecClient() {
         logger.info(`Creating Spec client...`)
         try {
-            this.spec = await newSpecClient(
+            await createSpecClient(
                 this.projectId,
                 this.projectApiKey,
                 this.projectConfigPath,
@@ -156,38 +144,26 @@ class ProjectEnv {
         }
     }
 
-    _onDbMessage(data) {
-        // Query returned.
-        if (data.id) {
-            window.dispatchEvent(new CustomEvent(data.id, { detail: data }))
-            return
-        }
-        // Table data changed.
-        if (data.events) {
-            this.onDataChange(data.events)
-        }
-    }
-
     async _specUserExists() {
-        const { rows, error } = await this.query(selectSpecUser)
+        const { rows, error } = await query(selectSpecUser)
         if (error) throw error
         return !!rows?.length
     }
 
     async _createSpecUser() {
         logger.info(`Creating "spec" user (url=${this.url})...`)
-        await this.query(createSpecUser('spec'))
+        await query(createSpecUser('spec'))
     }
 
     async _specSchemaExists() {
-        const { rows, error } = await this.query(selectSpecSchema)
+        const { rows, error } = await query(selectSpecSchema)
         if (error) throw error
         return !!rows?.length
     }
 
     async _initDb() {
         logger.info(`Initializing database for Spec (url=${this.url})...`)
-        await this.query(initDb)
+        await query(initDb)
     }
 
     _setStatus(status) {

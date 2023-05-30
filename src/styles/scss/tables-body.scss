@@ -528,11 +528,11 @@ $loaderTime: 2.3s;
 }
 
 .tables-body__row {
-    // &:hover {
-    //     .tables-body__cell {
-    //         background-color: #14132d;
-    //     }
-    // }
+    &:hover {
+        .tables-body__cell {
+            background-color: #14132d;
+        }
+    }
 
     &.tables-body__row--new-accent {
         .tables-body__cell {
@@ -605,7 +605,7 @@ $loaderTime: 2.3s;
 }
 
 .tables-body__cell {
-    // transition: all 0.01s ease;
+    transition: all 0.01s ease;
 }
 
 // All check cells
@@ -613,7 +613,7 @@ $loaderTime: 2.3s;
 .tables-body__cell.tables-body__cell--check-col {
     min-width: 47px;
     z-index: 2;
-    // position: sticky;
+    position: sticky;
     left: 0;
 
     span {
@@ -628,8 +628,8 @@ $loaderTime: 2.3s;
 .tables-body__col-header.tables-body__col-header--primary,
 .tables-body__cell.tables-body__cell--primary {
     z-index: 2;
-    // position: sticky;
-    // left: 47px;
+    position: sticky;
+    left: 47px;
     border-right: 2px solid adjust-color($gray, $alpha: -0.92);
 }
 

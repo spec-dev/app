@@ -210,7 +210,7 @@ create table if not exists spec.migrations (
 comment on table spec.migrations is 'Spec: Stores the latest schema migration version.';
 alter table spec.migrations owner to spec;
 
-create table spec.ops (
+create table if not exists spec.ops (
     id serial primary key,
     table_path varchar not null,
     pk_names text not null,
@@ -228,7 +228,7 @@ create index idx_ops_table_snapshot on spec.ops(table_path, block_number, chain_
 create index idx_ops_ordered on spec.ops(table_path, pk_values, block_number, ts);
 alter table spec.ops owner to spec;
 
-create table spec.op_tracking (
+create table if not exists spec.op_tracking (
     id serial primary key,
     table_path varchar not null,
     chain_id varchar not null,
@@ -238,7 +238,7 @@ comment on table spec.ops is 'Spec: Specifies whether ops should be tracked for 
 create unique index idx_op_tracking_table_chain on spec.op_tracking(table_path, chain_id); 
 alter table spec.op_tracking owner to spec;
 
-create table spec.frozen_tables (
+create table if not exists spec.frozen_tables (
     id serial primary key,
     table_path varchar not null,
     chain_id varchar not null

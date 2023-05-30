@@ -1,5 +1,5 @@
 import logger from '../utils/logger'
-import { saveLatestMigration } from '../tauri'
+import { saveLatestMigration } from '../electronClient'
 import { sqlStatementsAsTx } from '../utils/formatters'
 import { newMigration } from '../utils/migrations'
 import pm from '../managers/project/projectManager'
