@@ -143,17 +143,19 @@ At this point, you should be ready to run the app (next section).
 
 ## Run the App
 
-Make sure you have the following environment variables set (however you prefer to do this, I personally use autoenv):
-```
-export ENV=local
-```
-
 To run the desktop app, you'll need 3 different terminal tabs:
 1) The react app
 2) Sass live-compiling into CSS
 3) The electron app
 
 ### Tab 1 - The react app
+
+First, make sure you have the following environment variables set:
+```
+export ENV=local
+```
+
+Start the react dev server:
 ```bash
 $ npm start
 ```
@@ -164,6 +166,11 @@ $ npm run sass
 ```
 
 ### Tab 3 - Electron
+
+First, make sure you have the following environment variables set:
+```
+export ENV=local
+```
 
 *Make sure Tab 1 is fully running before even trying to run this*
 ```bash
