@@ -358,7 +358,7 @@ function TablesBody(props, ref) {
             tableCounts[tablePath] = getNewCount(count, events)
         }
 
-        if (records.length < constants.RECORDS_PER_PAGE) {
+        if (records !== null && records.length < constants.RECORDS_PER_PAGE) {
             await loadPageRecords(true)
         }
 
