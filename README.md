@@ -148,7 +148,7 @@ To run the desktop app, you'll need 3 different terminal tabs:
 2) Sass live-compiling into CSS
 3) The electron app
 
-### Tab 1 - The react app
+### Tab 1 - React
 
 First, make sure you have the following environment variables set:
 ```
