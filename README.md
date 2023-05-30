@@ -7,6 +7,7 @@ This repo contains the react app and sidecar libraries for our Electron desktop 
 - node >= 16
 - npm >= 8
 - postgres >= 14
+- Sass
 - [Spec Client](https://github.com/spec-dev/spec) (no docs yet just check below)
 - [Spec CLI](https://github.com/spec-dev/cli) (no docs yet just check below)
 
@@ -23,7 +24,9 @@ https://gist.github.com/ibraheem4/ce5ccd3e4d7a65589ce84f2a3b7c23a3
 ### 1) Clone & install dependencies for this repo
 
 ```bash
-$ git clone https://github.com/spec-dev/app && cd app && npm i && cd ..
+$ git clone https://github.com/spec-dev/app && cd app && npm install
+$ mkdir src/styles/css
+$ cd ..
 ```
 
 ### 2) Clone & install dependencies for the Spec client
@@ -70,13 +73,13 @@ The Spec client should now be available as a binary at `sidecars/bin/mac/spec` w
 
 ### 4) Setup a test project on Spec to use with the desktop app
 
-[Go to section](/#test-project-setup)
+At this point, you will need to have a Spec project to test the desktop app with, so follow steps in the next section to make that happen.
 
-# Test Project Setup
+## Test Project Setup
 
 ### 1) Install the Spec CLI
 
-Before running the desktop app, you'll want to install the Spec CLI. Currently the CLI is what controls user auth and all things project management, while the desktop app is just used for adding live tables to a database. Ultimately, everything will migrate over to the desktop app, but currently they work in tandem.
+Before running the desktop app, you'll want to install the Spec CLI. Currently the CLI is what controls user auth and all things project management, while the desktop app is used for more quickly adding live tables to a customer's database and writing the config for the data mappings. Ultimately, everything will migrate over to the desktop app, but currently they work in tandem.
 
 ```bash
 $ npm install -g @spec.dev/cli @spec.dev/spec
@@ -116,7 +119,7 @@ This will create 2 files inside a new `.spec` folder:
 
 ### 5) Link the remote Spec project to this local folder
 
-I went ahead and created a new Spec project named `test` that exists under the `test` namespace in our Core DB. This project (like all of them) has its own set of API credentials. When you run the following command, the Spec CLI will automatically pull down those API credentials for you. It then tells the CLI that this folder (`client-test`, or `.`) is the local location of the `test/test` project.
+I went ahead and created a new Spec project named `test` that exists under the `test` namespace in our Core DB. This project (like all of them) has its own set of API credentials. When you run the following command, the Spec CLI will automatically pull down those API credentials for you. It then tells the CLI that this folder (`test-project`, or `.`) is the local location of the `test/test` project.
 
 ```bash
 $ spec link project test/test .
@@ -124,7 +127,7 @@ $ spec link project test/test .
 
 ### 6) Specify the database you want the Spec client to run against
 
-Open `.spec/connect` and configure the rest of the local database connection info. For the `user`, use whatever the default user prefix is when you type `psql` and enter the interactive `psql` shell. 
+Open `.spec/connect` and configure the rest of the local database connection info. For the `user`, use whatever the default user "prefix" is when you type `psql` and enter the interactive `psql` shell. 
 
 ```toml
 # Local database
@@ -136,4 +139,35 @@ user = 'your-username'
 password = '' # Should be able to leave blank
 ```
 
-## Environment Variables
+At this point, you should be ready to run the app (next section).
+
+## Run the App
+
+Make sure you have the following environment variables set (however you prefer to do this, I personally use autoenv):
+```
+export ENV=local
+```
+
+To run the desktop app, you'll need 3 different terminal tabs:
+1) The react app
+2) Sass live-compiling into CSS
+3) The electron app
+
+### Tab 1 - The react app
+```bash
+$ npm start
+```
+
+### Tab 2 - Sass
+```bash
+$ npm run sass
+```
+
+### Tab 3 - Electron
+
+*Make sure Tab 1 is fully running before even trying to run this*
+```bash
+$ npm run electron
+```
+
+Once the Electron tab is running, the desktop app should open and show you your (presumably empty) database.
