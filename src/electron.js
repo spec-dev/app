@@ -231,6 +231,9 @@ function createWindow() {
         }
     })
     mainWindow.setWindowButtonVisibility(false)
+
+    // Do some env check for local dev and only loadURL in that mode.
+    // For prod, most likely load index.html.
     mainWindow.loadURL('http://localhost:3000')
 }
 
