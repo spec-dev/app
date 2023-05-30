@@ -2,15 +2,16 @@ import constants from '../../constants'
 import ProjectEnv from './projectEnv'
 import logger from '../../utils/logger'
 import { emit, events } from '../../events'
+import path from 'path'
 import { 
     getProjects, 
     getState, 
     getProjectApiKey,
     getProjectConfig,
     getProjectEnvs,
-    subscribeToFile,
-    path,
-} from '../../tauri'
+    subscribeToPath,
+    query,
+} from '../../electronClient'
 
 class ProjectManager {
 
@@ -57,7 +58,6 @@ class ProjectManager {
         }
 
         const newProjectEnv = this._getCurrentProjectEnv()
-        logger.info(`Connecting to project env "${newProjectEnv?.env}"...`)
 
         if (this.currentProjectEnv) {
             if (this.currentProjectEnv.isEquivalent(newProjectEnv)) {
@@ -73,21 +73,24 @@ class ProjectManager {
             return
         }
 
+        logger.info(`Connecting to project env "${newProjectEnv.env}"...`)
+
         this.currentProjectEnv = new ProjectEnv(
             newProjectEnv, 
             this.currentProject.apiKey,
             await this._getCurrentProjectDirectory(),
             events => this.onDataChange && this.onDataChange(events),
         )
+
         await this.currentProjectEnv.connect()
     }
 
     async query(sql) {
         const projectEnv = this.currentProjectEnv
-        if (!projectEnv?.db || !projectEnv?.isConnected) {
+        if (!projectEnv?.isConnected) {
             return { error: `DB client not accepting queries (status=${projectEnv?.status})` }
         }
-        return projectEnv.query(sql)
+        return query(sql)
     }
 
     getCurrentProject() {
@@ -105,10 +108,10 @@ class ProjectManager {
 
     async _watchGlobalConfigFiles() {
         await Promise.all([
-            subscribeToFile(await constants.globalStatePath(), false, () => {
+            subscribeToPath(await constants.globalStatePath(), false, () => {
                 this._onStateFileChanged()
             }),
-            subscribeToFile(await constants.globalProjectsPath(), false, () => {
+            subscribeToPath(await constants.globalProjectsPath(), false, () => {
                 this._onProjectsFileChanged()
             })
         ])
@@ -172,30 +175,27 @@ class ProjectManager {
     }
 
     async _watchCurrentProjectFiles() {
-        return subscribeToFile(
+        return subscribeToPath(
             await this._getCurrentProjectDirectory(), 
             true, // recursive (i.e. subscribe to all files in folder)
-            fileEvents => this._onProjectFilesChanged(fileEvents),
+            (data) => this._onProjectFilesChanged(data),
         )
     }
 
-    async _onProjectFilesChanged(fileEvents) {
-        const eventsToProcess = fileEvents.filter(e => e.kind !== 'AnyContinuous')
-        if (!eventsToProcess.length) return
-
-        const filePathsChanged = new Set((fileEvents || []).map(e => e.path))
+    async _onProjectFilesChanged(data) {
+        const { filePath } = data
         const [projectConfigFilePath, projectEnvsFilePath] = await Promise.all([
             this._getCurrentProjectConfigFilePath(),
             this._getCurrentProjectEnvsFilePath(),
         ])
 
-        if (filePathsChanged.has(projectConfigFilePath)) {
-            await this._loadCurrentProjectConfig()
-        }
-
-        if (filePathsChanged.has(projectEnvsFilePath)) {
+        if (filePath === projectEnvsFilePath) {
             await this._onProjectEnvChanged()
             return
+        }
+
+        if (filePath === projectConfigFilePath) {
+            await this._loadCurrentProjectConfig()
         }
 
         this._onProjectUpdated()

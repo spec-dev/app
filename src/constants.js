@@ -1,4 +1,5 @@
-import { path } from './tauri'
+import path from 'path'
+import { getHomeDir } from './electronClient'
 
 let homeDir = null
 
@@ -35,7 +36,7 @@ const constants = {
     DEFAULT_DB_NAME: 'postgres',
 
     globalStatePath: async () => {
-        homeDir = homeDir || await path.homeDir()
+        homeDir = homeDir || await getHomeDir()
         return path.join(
             homeDir,
             constants.SPEC_CONFIG_DIR_NAME,
@@ -44,7 +45,8 @@ const constants = {
     },
 
     globalProjectsPath: async () => {
-        homeDir = homeDir || await path.homeDir()
+        homeDir = homeDir || await getHomeDir()
+        
         return path.join(
             homeDir,
             constants.SPEC_CONFIG_DIR_NAME,

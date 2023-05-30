@@ -11,7 +11,7 @@ import { CSSTransition } from 'react-transition-group'
 import createTable from '../../../services/createTable'
 import addColumns from '../../../services/addColumns'
 import pm from '../../../managers/project/projectManager'
-import { upsertLiveColumns } from '../../../tauri'
+import { upsertLiveColumns } from '../../../electronClient'
 
 const className = 'new-live-column-panel'
 const pcn = getPCN(className)

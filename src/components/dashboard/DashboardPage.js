@@ -143,6 +143,7 @@ function DashboardPage(props) {
 
     useEffect(() => {
         pm.onDataChange = events => {
+            console.log('events', events)
             if (!events.length) return
             console.log('Received', events[0].table, events.length)
             const isSeedCursorEvents = events[0].table === specTableNames.SEED_CURSORS
