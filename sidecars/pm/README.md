@@ -1,1 +1,1 @@
-# Spec Project Manager
+# Spec Project Manager Library
