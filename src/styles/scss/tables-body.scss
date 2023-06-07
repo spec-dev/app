@@ -544,8 +544,6 @@ $loaderTime: 2.3s;
 }
 
 .tables-body__col-headers {
-    position: sticky;
-    z-index: 8;
     top: 0;
 }
 
@@ -612,8 +610,6 @@ $loaderTime: 2.3s;
 .tables-body__col-header.tables-body__col-header--check-col,
 .tables-body__cell.tables-body__cell--check-col {
     min-width: 47px;
-    z-index: 2;
-    position: sticky;
     left: 0;
 
     span {
@@ -627,15 +623,19 @@ $loaderTime: 2.3s;
 
 .tables-body__col-header.tables-body__col-header--primary,
 .tables-body__cell.tables-body__cell--primary {
-    z-index: 2;
-    position: sticky;
     left: 47px;
     border-right: 2px solid adjust-color($gray, $alpha: -0.92);
+    &.tables-body__cell--hover {
+        background-color: #14132d;
+    }
 }
 
 .tables-body__cell.tables-body__cell--check-col,
 .tables-body__cell.tables-body__cell--primary {
     background-color: $backgroundDark;
+    &.tables-body__cell--hover {
+        background-color: #14132d;
+    }
 }
 
 // Header cells
@@ -830,6 +830,10 @@ $loaderTime: 2.3s;
             opacity: 0.5;
         }
     }
+}
+
+.tables-body__cell--hover {
+    background-color: #14132d;
 }
 
 // ####################
