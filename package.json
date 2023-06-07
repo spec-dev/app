@@ -7,10 +7,12 @@
         "clean": "rimraf build",
         "build": "run-s clean build:main",
         "start": "react-scripts start",
+        "start-local": "ENV=local react-scripts start",
         "build:main": "react-scripts build",
         "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
         "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css",
-        "electron": "electron ."
+        "electron": "electron .",
+        "electron-local": "ENV=local electron ."
     },
     "dependencies": {
         "@ltd/j-toml": "^1.30.0",
@@ -38,6 +40,7 @@
         "react-spring": "^9.2.4",
         "react-transition-group": "^4.4.5",
         "react-use-measure": "^2.1.1",
+        "react-virtualized": "^9.22.5",
         "sha.js": "^2.4.11",
         "short-uuid": "^4.2.0",
         "typewriter-effect": "^2.18.0"
@@ -74,7 +77,9 @@
             {
                 "from": "resources/mac",
                 "to": "Resources/bin",
-                "filter": ["**/*"]
+                "filter": [
+                    "**/*"
+                ]
             }
         ]
     }
