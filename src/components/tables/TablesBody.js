@@ -210,6 +210,7 @@ function TablesBody(props, ref) {
     )
 
     // Refs.
+    const gridRef = useRef()
     const newLiveColumnSliderRef = useRef()
     const newLiveColumnPanelRef = useRef()
     const editColumnSliderRef = useRef()
@@ -417,6 +418,7 @@ function TablesBody(props, ref) {
     )
 
     useEffect(() => {
+        gridRef?.current?.recomputeGridSize()
         if (props.table?.name !== table.name) {
             if (backfillingTimer.current) {
                 clearTimeout(backfillingTimer.current)
@@ -688,7 +690,6 @@ function TablesBody(props, ref) {
 
             const hoverClass = hoveredRow === rowIndex ? '__cell--hover' : ''
             const handleMouseOver = () => {
-                console.log('handleMouseOver', rowIndex)
                 setHoveredRow(rowIndex)
             }
             const handleMouseOut = () => {
@@ -985,35 +986,74 @@ function TablesBody(props, ref) {
                                 >
                                     {({ onRowsRendered, registerChild }) => {
                                         return (
-                                            <MultiGrid
-                                                ref={registerChild}
-                                                fixedColumnCount={2}
-                                                fixedRowCount={1}
-                                                cellRenderer={renderCell}
-                                                columnWidth={({ index }) => {
-                                                    if (index === 0) {
-                                                        return colWidthConfig.CHECK_COLUMN_WIDTH
-                                                    }
-                                                    if (index === table.columns.length + 1) {
-                                                        return colWidthConfig.CHECK_COLUMN_WIDTH
-                                                    }
-                                                    return columnWidths[index - 1]
-                                                }}
-                                                columnCount={table.columns.length + 2}
-                                                height={height}
-                                                width={width}
-                                                rowHeight={ROW_HEIGHT}
-                                                rowCount={(records?.length ?? 0) + 1}
-                                                onSectionRendered={({
-                                                    rowStartIndex,
-                                                    rowStopIndex,
-                                                }) => {
-                                                    onRowsRendered({
-                                                        startIndex: rowStartIndex,
-                                                        stopIndex: rowStopIndex,
-                                                    })
-                                                }}
-                                            />
+                                            <div className={pcn('__waterfall-animation')}>
+                                                <MultiGrid
+                                                    ref={(el) => {
+                                                        registerChild.current = el
+                                                        gridRef.current = el
+                                                    }}
+                                                    fixedColumnCount={primaryKeyColNames?.size + 1}
+                                                    fixedRowCount={1}
+                                                    cellRenderer={({ rowIndex, ...otherProps }) => {
+                                                        const delay = 0.032 * rowIndex
+                                                        const style = {
+                                                            animationDelay: `${delay}s`,
+                                                        }
+                                                        const isNew =
+                                                            fadeInRowIndexesRange.current &&
+                                                            fadeInRowIndexesRange.current.length &&
+                                                            rowIndex >=
+                                                                fadeInRowIndexesRange.current[0] &&
+                                                            rowIndex <=
+                                                                fadeInRowIndexesRange.current[1]
+                                                        const useNewAccent =
+                                                            status === tableStatus.IN_SYNC.id &&
+                                                            !isFirstSeed.current
+
+                                                        return (
+                                                            <div
+                                                                className={pcn(
+                                                                    '__row',
+                                                                    isNew ? '__row-animation' : '',
+                                                                    isNew ? '__row--new' : '',
+                                                                    isNew && useNewAccent
+                                                                        ? '__row--new-accent'
+                                                                        : ''
+                                                                )}
+                                                                style={style}
+                                                            >
+                                                                {renderCell({
+                                                                    rowIndex,
+                                                                    ...otherProps,
+                                                                })}
+                                                            </div>
+                                                        )
+                                                    }}
+                                                    columnWidth={({ index }) => {
+                                                        if (index === 0) {
+                                                            return colWidthConfig.CHECK_COLUMN_WIDTH
+                                                        }
+                                                        if (index === table.columns.length + 1) {
+                                                            return colWidthConfig.CHECK_COLUMN_WIDTH
+                                                        }
+                                                        return columnWidths[index - 1]
+                                                    }}
+                                                    columnCount={table.columns.length + 2}
+                                                    height={height}
+                                                    width={width}
+                                                    rowHeight={ROW_HEIGHT}
+                                                    rowCount={(records?.length ?? 0) + 1}
+                                                    onSectionRendered={({
+                                                        rowStartIndex,
+                                                        rowStopIndex,
+                                                    }) => {
+                                                        onRowsRendered({
+                                                            startIndex: rowStartIndex,
+                                                            stopIndex: rowStopIndex,
+                                                        })
+                                                    }}
+                                                />
+                                            </div>
                                         )
                                     }}
                                 </InfiniteLoader>

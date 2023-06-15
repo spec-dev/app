@@ -1156,3 +1156,25 @@ $loaderTime: 2.3s;
         }
     }
 }
+
+
+//######################
+// Waterfall animation
+//######################
+.tables-body__waterfall-animation .tables-body__row-animation {
+    opacity: 0;
+    animation: waterfall 0.5s ease-in-out forwards;
+  }
+  
+  @keyframes waterfall {
+    0% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+}
+
+  
