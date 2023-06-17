@@ -35,6 +35,9 @@ const constants = {
     DEFAULT_DB_PORT: 5432,
     DEFAULT_DB_NAME: 'postgres',
 
+    // Default search params.
+    LIVE_OBJECT_SEARCH_DEFAULT_BATCH_SIZE: 25,
+
     globalStatePath: async () => {
         homeDir = homeDir || await getHomeDir()
         return path.join(

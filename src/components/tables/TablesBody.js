@@ -11,7 +11,7 @@ import { sum } from '../../utils/math'
 import { displayColType, isJSONColumn } from '../../utils/colTypes'
 import { getNewCount, tableCounts } from '../../utils/counts'
 import { stringify } from '../../utils/json'
-import { loadAllLiveObjects } from '../../utils/liveObjects'
+import { loadMatchingLiveObjects } from '../../utils/liveObjects'
 import EditColumnPanel from '../shared/panels/EditColumnPanel'
 import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
@@ -204,7 +204,7 @@ function TablesBody(props, ref) {
     const configureEditColumnPanelArgs = useRef([])
     const transformObjectSliderRef = useRef()
     const hookSliderRef = useRef()
-    const hasEagerLoadedAllLiveObjects = useRef(false)
+    const hasEagerLoadedFirstPageLiveObjects = useRef(false)
     const seedCursor = useRef(props.seedCursor || null)
     const backfillingCallback = useRef(null)
     const backfillingTimer = useRef(null)
@@ -473,9 +473,9 @@ function TablesBody(props, ref) {
             }
             loadPageRecords()
         }
-        if (!hasEagerLoadedAllLiveObjects.current) {
-            hasEagerLoadedAllLiveObjects.current = true
-            loadAllLiveObjects()
+        if (!hasEagerLoadedFirstPageLiveObjects.current) {
+            hasEagerLoadedFirstPageLiveObjects.current = true
+            loadMatchingLiveObjects('', '', 0, constants.LIVE_OBJECT_SEARCH_DEFAULT_BATCH_SIZE)
         }
     }, [table, records, count, loadPageRecords, loadRecordCount])
 
@@ -866,7 +866,10 @@ function TablesBody(props, ref) {
                     tableLiveColumns={liveColumns}
                     referrer={liveDataPanelReferrer}
                     onSave={onSaveLiveColumns}
-                    onCancel={() => newLiveColumnSliderRef.current?.hide()}
+                    onCancel={() => {
+                        newLiveColumnSliderRef.current?.hide()
+                        loadMatchingLiveObjects()
+                    }}
                     addTransform={addTransform}
                     addHook={addHook}
                     refetchTables={refetchTables}
