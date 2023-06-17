@@ -2,11 +2,14 @@ import api from './api'
 import { TIMESTAMP, BOOLEAN, STRING, NUMBER } from './propertyTypes'
 
 export const liveObjects = {
-    all: []
+    all: [],
+    matching: [],
+    prev: []
 }
 
+// Query for all live objects. Store results.
 export async function loadAllLiveObjects() {
-    const { data, ok } = await api.core.liveObjects()
+    const { data, ok } = await api.core.searchLiveObjects()
     if (!ok) {
         // TODO: Show error
         return
@@ -21,7 +24,23 @@ export async function loadAllLiveObjects() {
     })
 }
 
+// Query for matching live objects. Store results.
+export async function loadMatchingLiveObjects(query, filter, offset, limit) {
+    const { data, ok } = await api.core.searchLiveObjects({query: query, filter: filter, offset: offset, limit: limit})
+    if (!ok) {
+        // TODO: Show error
+        return
+    }
+    
+    liveObjects.matching = data || []
+    if (!offset) {
+        liveObjects.prev = data || []
+    }
+}
+
 export const getAllLiveObjects = () => liveObjects.all || []
+export const getMatchingLiveObjects = () => liveObjects.matching || []
+export const getPrevLiveObjects = () => liveObjects.prev || []
 
 export const propertyIsEnum = property => property.options?.length || property.type === BOOLEAN
 
