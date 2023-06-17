@@ -8,16 +8,49 @@ import { noop } from '../../../utils/nodash'
 import { keyCodes } from '../../../utils/keyboard'
 import hEllipsisIcon from '../../../svgs/h-ellipsis'
 import TutorialAnno from '../tutorial/TutorialAnno'
+import { debounce } from 'lodash-es'
+import { getMatchingLiveObjects, loadMatchingLiveObjects } from '../../../utils/liveObjects'
+import { fileURLToPath } from 'url'
+import { chainIds } from '../../../utils/chains'
+import logger from '../../../utils/logger'
 
 const className = 'live-object-search'
 const pcn = getPCN(className)
 
 function LiveObjectSearch(props, ref) {
-    const { liveObjects = [], onSelectLiveObject = noop } = props
-    const lastKeyCode = useRef(null)
-    const searchInputRef = useRef()
+    let { liveObjects = [], prevSearch, usePrevSearch, setUsePrevSearch, onSelectLiveObject = noop } = props
     const [searchResults, setSearchResults] = useState(liveObjects)
     const [showSearchTutorialAnno, setShowSearchTutorialAnno] = useState(false)
+    
+    // Refs
+    const lastKeyCode = useRef(null)
+    const offsetRef = useRef(0)
+    const hasMore = useRef(true)
+    const loading = useRef(false)
+    const observer = useRef()
+    const cursorRef = useRef(0)
+    const activeResultRef = useRef()
+    const scrollPanelRef = useRef()
+    const searchInputRef = useRef(usePrevSearch ? prevSearch.query : null)
+    const filtersRef = useRef(usePrevSearch ? prevSearch.filter : {})
+    
+    // Trigger fetch next page.
+    const lastLiveObjectRef = useCallback(node => {
+        if (loading.current) return
+        if (observer.current) observer.current.disconnect()
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore.current) {
+                offsetRef.current += 25
+                fetchLiveObjectPage()
+            }
+        })
+        if (node) observer.current.observe(node)
+    }, [loading, hasMore])
+
+    // Focus input.
+    const focusInputRef = useCallback(node => {
+        if (node) node.focus()
+    },[])
 
     useImperativeHandle(ref, () => ({
         focusSearchBar: () => {
@@ -25,61 +58,127 @@ function LiveObjectSearch(props, ref) {
         },
     }))
 
-    const renderResults = useCallback(() => searchResults.map((result, i) => (
-        <LiveObjectSearchResult key={i} {...result} onClick={() => onSelectLiveObject(result)}/>
-    )), [searchResults, onSelectLiveObject])
-
-    const onTypeQuery = useCallback((e) => {
-        const value = e.currentTarget.value.toLowerCase().trim()
-
-        const matchingResults = liveObjects.filter(liveObject => {
-            let name = liveObject.displayName
-            if (liveObject.isContractEvent) {
-                name += ' Events'
+    // Render live objects.
+    const renderResults = useCallback(() => {
+        hasMore.current = hasMore && searchResults.length < 25 ? false : true  
+        return searchResults.map((result, i) => {
+            if (i === searchResults.length-5 && hasMore.current) {
+                return <LiveObjectSearchResult 
+                    key={i} 
+                    {...result} 
+                    onClick={() => onSelectLiveObject(result, searchInputRef.current, filtersRef.current)} 
+                    ref={lastLiveObjectRef}
+                />
+            } else if (i === cursorRef.current) {
+                return <LiveObjectSearchResult 
+                    key={i} 
+                    {...result} 
+                    onClick={() => onSelectLiveObject(result, searchInputRef.current, filtersRef.current)} 
+                    ref={(e) => activeResultRef.current = e}
+                />
             }
-            name = name.toLowerCase()
-            const desc = liveObject.desc.toLowerCase()
-            return name.includes(value) || desc.includes(value)
-        }).sort((a, b) => {
-            let aName = a.displayName
-            if (a.isContractEvent) {
-                aName += ' Events'
-            }
-            aName = aName.toLowerCase()
-            const aDesc = a.desc.toLowerCase()
-            const aNameMatches = aName.includes(value)
-            const aDescMatches = aDesc.includes(value)
+            return <LiveObjectSearchResult 
+                key={i} 
+                {...result} 
+                onClick={() => onSelectLiveObject(result, searchInputRef.current, filtersRef.current)}
+            />
+    })}, [searchResults, onSelectLiveObject])
 
-            let bName = b.displayName
-            if (b.isContractEvent) {
-                bName += ' Events'
-            }
-            bName = bName.toLowerCase()
-            const bDesc = b.desc.toLowerCase()
-            const bNameMatches = bName.includes(value)
-            const bDescMatches = bDesc.includes(value)
+    // Fetch live objects. Set state.
+    async function fetchLiveObjectPage () {
+        let activeFilters = Object.keys(filtersRef.current).filter(key => filtersRef.current[key] === true)
+        activeFilters = activeFilters.join(' ')
+
+        await loadMatchingLiveObjects(searchInputRef.current, activeFilters, offsetRef.current)
+        const matchingResults = getMatchingLiveObjects()
+        hasMore.current = matchingResults.length >= 25
+
+        offsetRef.current > 0 ? setSearchResults(searchResults => [...searchResults, ...matchingResults]) : setSearchResults(matchingResults)
+        loading.current = false
+    }
     
-            return (
-                Number(bNameMatches) - Number(aNameMatches) ||
-                Number(bDescMatches) - Number(aDescMatches) ||
-                Number(a.isContractEvent) - Number(b.isContractEvent)
-            )
-        })
+    // Reset scroll.
+    async function resetScroll () {
+        offsetRef.current = 0
+        cursorRef.current = 0
+        if (scrollPanelRef.current) {
+            scrollPanelRef.current.scrollTo(0, 0)
+        }
+    }
 
-        setSearchResults(matchingResults)
+    // Debounce fetch live objects.
+    const debouncedSearch = debounce(fetchLiveObjectPage, 10)
+
+    // Set state for input. Initiate debounced search.
+    const onTypeQuery = useCallback(async (e) => {
+        const value = e.currentTarget.value.toLowerCase().trim()
+        searchInputRef.current = value
+        filtersRef.current = {}
+        setUsePrevSearch(false)
+        await resetScroll()
+        await debouncedSearch()
     }, [liveObjects])
 
+    // Set state for filter. Initiate debounced search.
+    const onClickFilter = useCallback(async (e) => {
+        const node = e.currentTarget
+        const chain = node.getAttribute('value')
+
+        if (chain == 0) {
+            filtersRef.current = {}
+        } else {   
+            filtersRef.current[chain] === true ? delete filtersRef.current[chain] : filtersRef.current[chain] = true
+            filtersRef.current[chain] ? node.classList.remove('activeSearchFilter') : node.classList.add('activeSearchFilter')
+        }
+
+        await resetScroll()
+        await debouncedSearch()
+    }, [liveObjects])
+
+    // Handle key press events.
     const onKeyDown = useCallback(e => {
         lastKeyCode.current = e.which
     }, [])
 
     const onKeyUp = e => {
+        lastKeyCode.current = e.which
+        const activeResult = activeResultRef.current
         switch (lastKeyCode.current) {
         case keyCodes.ENTER:
-            searchResults.length && onSelectLiveObject(searchResults[0])
+            if (cursorRef.current == 0) break
+            searchResults.length && onSelectLiveObject(searchResults[cursorRef.current-1], searchInputRef.current)
+            break
+        case keyCodes.ARROW_UP:
+            if (cursorRef.current > 1) {
+                try {activeResult.previousSibling.focus()}
+                catch (err) {logger.error(err)}
+                activeResultRef.current = activeResult.previousSibling
+                cursorRef.current -= 1
+            }
+            break
+        case keyCodes.ARROW_DOWN:
+            if (cursorRef.current == 0) {
+                try {activeResult.focus()}
+                catch (err) {logger.error(err)}
+                cursorRef.current += 1
+            } else if (cursorRef.current <= searchResults.length - 1) {
+                try {activeResult.nextSibling.focus()}
+                catch (err) {logger.error(err)}
+                activeResultRef.current = activeResult.nextSibling
+                cursorRef.current += 1
+            }
             break
         default:
             break
+        }
+    }
+
+    // Set class for filters.
+    const setClass = (chain) => {
+        if (chain === 'ALL') {
+            return Object.keys(filtersRef.current).length == 0 ? 'activeSearchFilter': ''
+        } else {
+            return Object.keys(filtersRef.current).length == 0 || filtersRef.current[chainIds[chain]] == null  ? '': 'activeSearchFilter'
         }
     }
 
@@ -103,7 +202,7 @@ function LiveObjectSearch(props, ref) {
     ), [showSearchTutorialAnno])
 
     return (
-        <div className={className}>
+        <div className={className} id='searchColumn'>
             { renderSearchTutorialAnno() }
             <div className={pcn('__search')}>
                 <div className={pcn('__search-liner')}>
@@ -115,18 +214,20 @@ function LiveObjectSearch(props, ref) {
                         onChange={onTypeQuery}
                         onKeyUp={onKeyUp}
                         onKeyDown={onKeyDown}
-                        ref={searchInputRef}
+                        defaultValue={searchInputRef.current}
+                        tabIndex="0"
+                        ref={focusInputRef}
                     />
                 </div>
             </div>
             <div className={pcn('__filters')}>
                 <div className={pcn('__filters-liner')}>
                     <div className={pcn('__categories')}>
-                        <span>All</span>
-                        <span>Identity</span>
-                        <span>NFT</span>
-                        <span>DeFi</span>
-                        <span>DAO</span>
+                        <span onClick={onClickFilter} className={setClass('ALL')} value={0}>All</span>
+                        <span onClick={onClickFilter} className={setClass('ETHEREUM')} value={chainIds.ETHEREUM}>Ethereum</span>
+                        <span onClick={onClickFilter} className={setClass('POLYGON')} value={chainIds.POLYGON}>Polygon</span>
+                        <span onClick={onClickFilter} className={setClass('GOERLI')} value={chainIds.GOERLI}>Goerli</span>
+                        <span onClick={onClickFilter} className={setClass('MUMBAI')} value={chainIds.MUMBAI}>Mumbai</span>
                         <div
                             className={pcn('__more-categories-button')}
                             dangerouslySetInnerHTML={{ __html: hEllipsisIcon }}>
@@ -138,7 +239,7 @@ function LiveObjectSearch(props, ref) {
                     </div>
                 </div>
             </div>
-            <div className={pcn('__results')}>
+            <div className={pcn('__results')} ref={scrollPanelRef} onKeyUp={onKeyUp}>
                 <div className={pcn('__results-liner')}>
                     { renderResults() }
                 </div>
