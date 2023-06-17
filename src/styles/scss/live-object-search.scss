@@ -109,11 +109,16 @@
         cursor: pointer;
         margin-right: 13px;
 
-        &:first-child {
+        &:nth-child(n of .activeSearchFilter) {
             background-color: adjust-color($white, $alpha: -0.1);
             color: $backgroundDark;
             font-family: DemiBold;
         }
+
+    &:hover {
+        background-color: adjust-color($backgroundLight, $alpha: -0.2);
+        color: $white;
+    }
     }
 }
 
