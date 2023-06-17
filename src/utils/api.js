@@ -41,7 +41,7 @@ class ApiClient {
     )
 
     urlEncodedRequest = async ( method, path, params, minRespTime ) => await this.makeRequest(
-        `${ path }?${ $.param( this.decamelizeKeys( params || {} ) ) }`,
+        `${ path }?${ $.param( params || {} ) }`,
         { method },
         minRespTime,
     )
@@ -50,7 +50,7 @@ class ApiClient {
         path,
         {
             method,
-            body: stringify( this.decamelizeKeys( params || {} ) ),
+            body: stringify( params || {} ),
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -93,7 +93,7 @@ class CoreApiClient extends ApiClient {
         super(constants.CORE_API_ORIGIN)
     }
 
-    liveObjects = async () => await this.get('/live-objects')
+    searchLiveObjects = async (params) => await this.get('/live-objects/search', params)
 }
 
 const api = {
