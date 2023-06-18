@@ -64,22 +64,25 @@ function LiveObjectSearch(props, ref) {
         return searchResults.map((result, i) => {
             if (i === searchResults.length-5 && hasMore.current) {
                 return <LiveObjectSearchResult 
-                    key={i} 
-                    {...result} 
+                    key={i}
+                    {...result}
                     onClick={() => onSelectLiveObject(result, searchInputRef.current, filtersRef.current)} 
+                    index={i}
                     ref={lastLiveObjectRef}
                 />
-            } else if (i === cursorRef.current) {
+            } else if (i == cursorRef.current) {
                 return <LiveObjectSearchResult 
-                    key={i} 
+                    key={i}
                     {...result} 
                     onClick={() => onSelectLiveObject(result, searchInputRef.current, filtersRef.current)} 
+                    index={i}
                     ref={(e) => activeResultRef.current = e}
                 />
             }
             return <LiveObjectSearchResult 
-                key={i} 
+                key={i}
                 {...result} 
+                index={i}
                 onClick={() => onSelectLiveObject(result, searchInputRef.current, filtersRef.current)}
             />
     })}, [searchResults, onSelectLiveObject])
@@ -142,30 +145,46 @@ function LiveObjectSearch(props, ref) {
 
     const onKeyUp = e => {
         lastKeyCode.current = e.which
-        const activeResult = activeResultRef.current
         switch (lastKeyCode.current) {
         case keyCodes.ENTER:
-            if (cursorRef.current == 0) break
-            searchResults.length && onSelectLiveObject(searchResults[cursorRef.current-1], searchInputRef.current)
+            const index = activeResultRef.current.getAttribute('accessKey')
+            searchResults.length && onSelectLiveObject(searchResults[index], searchInputRef.current, filtersRef.current)
             break
         case keyCodes.ARROW_UP:
-            if (cursorRef.current > 1) {
-                try {activeResult.previousSibling.focus()}
-                catch (err) {logger.error(err)}
-                activeResultRef.current = activeResult.previousSibling
-                cursorRef.current -= 1
+            if (cursorRef.current > 0) {
+                try {
+                    activeResultRef.current.previousSibling.focus()
+                    activeResultRef.current = activeResultRef.current.previousSibling
+                    cursorRef.current = activeResultRef.current.getAttribute('accessKey')
+                } catch (err) {
+                    logger.error(`Error scrolling above range of available search results: ${err}`)
+                }
             }
             break
         case keyCodes.ARROW_DOWN:
             if (cursorRef.current == 0) {
-                try {activeResult.focus()}
-                catch (err) {logger.error(err)}
-                cursorRef.current += 1
+                try {
+                    activeResultRef.current.focus()
+                    cursorRef.current += 1
+                } catch (err) {
+                    logger.error(`Error scrolling below range of available search results: ${err}`)
+                }
+            } else if (cursorRef.current == 1) {
+                try {
+                    activeResultRef.current.nextSibling.focus()
+                    activeResultRef.current = activeResultRef.current.nextSibling
+                    cursorRef.current = activeResultRef.current.getAttribute('accessKey')
+                } catch (err) {
+                    logger.error(`Error scrolling below range of available search results: ${err}`)
+                }
             } else if (cursorRef.current <= searchResults.length - 1) {
-                try {activeResult.nextSibling.focus()}
-                catch (err) {logger.error(err)}
-                activeResultRef.current = activeResult.nextSibling
-                cursorRef.current += 1
+                try {
+                    activeResultRef.current.nextSibling.focus()
+                    activeResultRef.current = activeResultRef.current.nextSibling
+                    cursorRef.current = activeResultRef.current.getAttribute('accessKey')
+                } catch (err) {
+                    logger.error(`Error scrolling below range of available search results: ${err}`)
+                }
             }
             break
         default:
@@ -176,9 +195,9 @@ function LiveObjectSearch(props, ref) {
     // Set class for filters.
     const setClass = (chain) => {
         if (chain === 'ALL') {
-            return Object.keys(filtersRef.current).length == 0 ? 'activeSearchFilter': ''
+            return $.isEmptyObject(filtersRef.current) ? 'activeSearchFilter': ''
         } else {
-            return Object.keys(filtersRef.current).length == 0 || filtersRef.current[chainIds[chain]] == null  ? '': 'activeSearchFilter'
+            return $.isEmptyObject(filtersRef.current) || filtersRef.current[chainIds[chain]] == null  ? '': 'activeSearchFilter'
         }
     }
 
@@ -202,7 +221,7 @@ function LiveObjectSearch(props, ref) {
     ), [showSearchTutorialAnno])
 
     return (
-        <div className={className} id='searchColumn'>
+        <div className={className}>
             { renderSearchTutorialAnno() }
             <div className={pcn('__search')}>
                 <div className={pcn('__search-liner')}>
