@@ -169,14 +169,6 @@ function LiveObjectSearch(props, ref) {
                 } catch (err) {
                     logger.error(`Error scrolling below range of available search results: ${err}`)
                 }
-            } else if (cursorRef.current == 1) {
-                try {
-                    activeResultRef.current.nextSibling.focus()
-                    activeResultRef.current = activeResultRef.current.nextSibling
-                    cursorRef.current = activeResultRef.current.getAttribute('accessKey')
-                } catch (err) {
-                    logger.error(`Error scrolling below range of available search results: ${err}`)
-                }
             } else if (cursorRef.current <= searchResults.length - 1) {
                 try {
                     activeResultRef.current.nextSibling.focus()

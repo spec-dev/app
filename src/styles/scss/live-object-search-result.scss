@@ -11,9 +11,9 @@
         background-color: adjust-color($backgroundLight, $alpha: -0.78);
     }
 
-    &:first-child,
-    &:first-child:hover {
+    &:focus {
         background-color: adjust-color($backgroundLight, $alpha: -0.7);
+        outline: none;
     }
 
     &:after {
