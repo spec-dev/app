@@ -25,8 +25,8 @@ export async function loadAllLiveObjects() {
 }
 
 // Query for matching live objects. Store results.
-export async function loadMatchingLiveObjects(query, filter, offset, limit) {
-    const { data, ok } = await api.core.searchLiveObjects({query: query, filter: filter, offset: offset, limit: limit})
+export async function loadMatchingLiveObjects(query, filters, offset, limit) {
+    const { data, ok } = await api.core.searchLiveObjects({query: query, filters: filters, offset: offset, limit: limit})
     if (!ok) {
         // TODO: Show error
         return

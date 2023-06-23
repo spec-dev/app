@@ -30,9 +30,9 @@ function LiveObjectSearch(props, ref) {
     const observer = useRef()
     const cursorRef = useRef(0)
     const activeResultRef = useRef()
-    const scrollPanelRef = useRef()
+    const searchPanelRef = useRef()
     const searchInputRef = useRef(usePrevSearch ? prevSearch.query : null)
-    const filtersRef = useRef(usePrevSearch ? prevSearch.filter : {})
+    const filtersRef = useRef(usePrevSearch ? prevSearch.filters : {})
     
     // Trigger fetch next page.
     const lastLiveObjectRef = useCallback(node => {
@@ -88,24 +88,20 @@ function LiveObjectSearch(props, ref) {
     })}, [searchResults, onSelectLiveObject])
 
     // Fetch live objects. Set state.
-    async function fetchLiveObjectPage () {
-        let activeFilters = Object.keys(filtersRef.current).filter(key => filtersRef.current[key] === true)
-        activeFilters = activeFilters.join(' ')
-
-        await loadMatchingLiveObjects(searchInputRef.current, activeFilters, offsetRef.current)
+    async function fetchLiveObjectPage() {
+        await loadMatchingLiveObjects(searchInputRef.current, JSON.stringify(filtersRef.current), offsetRef.current)
         const matchingResults = getMatchingLiveObjects()
         hasMore.current = matchingResults.length >= 25
-
         offsetRef.current > 0 ? setSearchResults(searchResults => [...searchResults, ...matchingResults]) : setSearchResults(matchingResults)
         loading.current = false
     }
     
     // Reset scroll.
-    async function resetScroll () {
+    async function resetScroll() {
         offsetRef.current = 0
         cursorRef.current = 0
-        if (scrollPanelRef.current) {
-            scrollPanelRef.current.scrollTo(0, 0)
+        if (searchPanelRef.current) {
+            searchPanelRef.current.scrollTo(0, 0)
         }
     }
 
@@ -122,18 +118,28 @@ function LiveObjectSearch(props, ref) {
         await debouncedSearch()
     }, [liveObjects])
 
-    // Set state for filter. Initiate debounced search.
-    const onClickFilter = useCallback(async (e) => {
+    // Set state for chain filters. Initiate debounced search.
+    const onClickChainFilter = useCallback(async (e) => {
         const node = e.currentTarget
-        const chain = node.getAttribute('value')
-
-        if (chain == 0) {
-            filtersRef.current = {}
-        } else {   
-            filtersRef.current[chain] === true ? delete filtersRef.current[chain] : filtersRef.current[chain] = true
-            filtersRef.current[chain] ? node.classList.remove('activeSearchFilter') : node.classList.add('activeSearchFilter')
+        const chainId = node.getAttribute('value')
+        if ('chainIds' in filtersRef.current) {
+            if (chainId == 0) {
+                delete filtersRef.current.chainIds
+            } else {
+                if (filtersRef.current.chainIds.includes(chainId)) {
+                    filtersRef.current.chainIds = filtersRef.current.chainIds.filter(id => id != chainId)
+                    if ($.isEmptyObject(filtersRef.current.chainIds)) {
+                        delete filtersRef.current.chainIds
+                    }
+                } else {
+                    filtersRef.current.chainIds.push(chainId)
+                }
+            }
+        } else {
+            if (chainId !== 0) {
+                filtersRef.current.chainIds = [chainId]
+            }
         }
-
         await resetScroll()
         await debouncedSearch()
     }, [liveObjects])
@@ -185,11 +191,11 @@ function LiveObjectSearch(props, ref) {
     }
 
     // Set class for filters.
-    const setClass = (chain) => {
-        if (chain === 'ALL') {
-            return $.isEmptyObject(filtersRef.current) ? 'activeSearchFilter': ''
+    const setClass = chainId => {
+        if (chainId == 0) {
+            return 'chainIds' in filtersRef.current ? '' : 'activeChainFilter'
         } else {
-            return $.isEmptyObject(filtersRef.current) || filtersRef.current[chainIds[chain]] == null  ? '': 'activeSearchFilter'
+            return !('chainIds' in filtersRef.current) || !(filtersRef.current.chainIds.includes(chainId)) ? '' : 'activeChainFilter'
         }
     }
 
@@ -234,11 +240,11 @@ function LiveObjectSearch(props, ref) {
             <div className={pcn('__filters')}>
                 <div className={pcn('__filters-liner')}>
                     <div className={pcn('__categories')}>
-                        <span onClick={onClickFilter} className={setClass('ALL')} value={0}>All</span>
-                        <span onClick={onClickFilter} className={setClass('ETHEREUM')} value={chainIds.ETHEREUM}>Ethereum</span>
-                        <span onClick={onClickFilter} className={setClass('POLYGON')} value={chainIds.POLYGON}>Polygon</span>
-                        <span onClick={onClickFilter} className={setClass('GOERLI')} value={chainIds.GOERLI}>Goerli</span>
-                        <span onClick={onClickFilter} className={setClass('MUMBAI')} value={chainIds.MUMBAI}>Mumbai</span>
+                        <span onClick={onClickChainFilter} className={setClass(0)} value={0}>All</span>
+                        <span onClick={onClickChainFilter} className={setClass(chainIds.ETHEREUM)} value={chainIds.ETHEREUM}>Ethereum</span>
+                        <span onClick={onClickChainFilter} className={setClass(chainIds.POLYGON)} value={chainIds.POLYGON}>Polygon</span>
+                        <span onClick={onClickChainFilter} className={setClass(chainIds.GOERLI)} value={chainIds.GOERLI}>Goerli</span>
+                        <span onClick={onClickChainFilter} className={setClass(chainIds.MUMBAI)} value={chainIds.MUMBAI}>Mumbai</span>
                         <div
                             className={pcn('__more-categories-button')}
                             dangerouslySetInnerHTML={{ __html: hEllipsisIcon }}>
@@ -250,7 +256,7 @@ function LiveObjectSearch(props, ref) {
                     </div>
                 </div>
             </div>
-            <div className={pcn('__results')} ref={scrollPanelRef} onKeyUp={onKeyUp}>
+            <div className={pcn('__results')} ref={searchPanelRef} onKeyUp={onKeyUp}>
                 <div className={pcn('__results-liner')}>
                     { renderResults() }
                 </div>

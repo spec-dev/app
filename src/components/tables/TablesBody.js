@@ -475,7 +475,7 @@ function TablesBody(props, ref) {
         }
         if (!hasEagerLoadedFirstPageLiveObjects.current) {
             hasEagerLoadedFirstPageLiveObjects.current = true
-            loadMatchingLiveObjects('', '', 0, constants.LIVE_OBJECT_SEARCH_DEFAULT_BATCH_SIZE)
+            loadMatchingLiveObjects('', JSON.stringify({}), 0, constants.LIVE_OBJECT_SEARCH_DEFAULT_BATCH_SIZE)
         }
     }, [table, records, count, loadPageRecords, loadRecordCount])
 
@@ -868,7 +868,7 @@ function TablesBody(props, ref) {
                     onSave={onSaveLiveColumns}
                     onCancel={() => {
                         newLiveColumnSliderRef.current?.hide()
-                        loadMatchingLiveObjects()
+                        loadMatchingLiveObjects('', JSON.stringify({}), 0, constants.LIVE_OBJECT_SEARCH_DEFAULT_BATCH_SIZE)
                     }}
                     addTransform={addTransform}
                     addHook={addHook}

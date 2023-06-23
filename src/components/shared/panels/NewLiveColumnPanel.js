@@ -120,9 +120,9 @@ function NewLiveColumnPanel(props, ref) {
         setUsePrevSearch(true)
     }, [])
 
-    const onSelectLiveObject = useCallback((liveObject, query, filter) => {
+    const onSelectLiveObject = useCallback((liveObject, query, filters) => {
         setState(prevState => ({ ...prevState, index: 1, liveObject }))
-        setPrevSearch({query: query, filter: filter})
+        setPrevSearch({query: query, filters: filters})
     }, [])
 
     const saveLiveColumns = useCallback(async (payload) => {
