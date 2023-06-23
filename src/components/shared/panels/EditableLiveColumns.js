@@ -191,6 +191,19 @@ function EditableLiveColumns(props, ref) {
         purpose,
         defaultUniqueByProperties,
     ))
+    const sortColumnsByUniqueMappings = (columns) =>{
+      const uniqueMappingColumns = [];
+      const otherColumns = []
+      for (let i = 1; i < columns.length; i++) {
+          const isUniqueMappingCol = columns[i].liveColumn?.onUniqueMapping;
+          if (isUniqueMappingCol) {
+            uniqueMappingColumns.push(columns[i]);
+          } else {
+            otherColumns.push(columns[i]);
+          }
+        }
+      setColumns([columns[0], ...uniqueMappingColumns, ...otherColumns])
+    }  
 
     const uniqueMappingRange = useMemo(() => calculateUniqueMappingRange(columns), [columns])  
 
@@ -390,6 +403,7 @@ function EditableLiveColumns(props, ref) {
             newColumns.push(i === index ? col : column)
         }
         setColumns(newColumns)
+        sortColumnsByUniqueMappings(newColumns)
     }, [columns])
 
     const onEditColumn = useCallback((col, i) => {
@@ -562,11 +576,13 @@ function EditableLiveColumns(props, ref) {
                 </div>
                 { colType }
                 <div style={{ width: 40, display: 'block', height: '100%', flex: 1 }}>
+                {!col.isSerial && (
                     <div
                         className={pcn('__new-col-icon', '__new-col-icon--extra')}
                         onClick={() => onEditColumn(col, i)}
                         dangerouslySetInnerHTML={{ __html: filterControlsIcon }}>
                     </div>
+                )}
                 </div>
                 <div
                     className={pcn('__new-col-icon', '__new-col-icon--remove')}
