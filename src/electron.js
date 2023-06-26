@@ -217,7 +217,7 @@ async function createSpecClient(_, payload) {
         console.info(`Spec client closed for project ${projectId}.`)
     })
     spec.on('error', error => {
-        console.error(`Spec client error ${error}`)
+        mainWindow.webContents.send("sidecar-error", `Spec client error ${error}`)
     })
 }
 
@@ -231,6 +231,7 @@ function createWindow() {
         }
     })
     mainWindow.setWindowButtonVisibility(false)
+    ipcMain.on('sidecar-error', (event, message) => { event.sender.send('sidecar-error', message) })
 
     // Do some env check for local dev and only loadURL in that mode.
     // For prod, most likely load index.html.

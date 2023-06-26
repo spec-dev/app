@@ -1,4 +1,3 @@
-import logger from './utils/logger'
 import { parse, stringify } from './utils/json'
 
 const watchingFiles = new Set()
@@ -36,7 +35,7 @@ export async function createSpecClient(
         if (error) throw error
         return true
     } catch (err) {
-        logger.error(`Error creating Spec client (${projectId}): ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error creating Spec client (${projectId}): ${err}`)
         return false
     }
 }
@@ -45,7 +44,7 @@ export async function killSpecClient() {
     try {
         await window.electronAPI.killSpecClient()
     } catch (err) {
-        logger.error(`Error killing Spec client: ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error killing Spec client: ${err}`)
     }
 }
 
@@ -64,7 +63,7 @@ export async function createDatabasePool(connParams) {
         if (error) throw error
         return true
     } catch (err) {
-        logger.error(`Error creating new DB pool ${connParams}: ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error creating new DB pool ${connParams}: ${err}`)
         return false
     }
 }
@@ -73,7 +72,7 @@ export async function teardownDatabasePool() {
     try {
         await window.electronAPI.teardownPool()
     } catch (err) {
-        logger.error(`Error tearing down DB pool: ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error tearing down DB pool: ${err}`)
     }
 }
 
@@ -99,7 +98,7 @@ export async function subscribeToDatabase(connParams, handleEvents) {
 
         return true
     } catch (err) {
-        logger.error(`Error subscribing to database ${connParams}: ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error subscribing to database ${connParams}: ${err}`)
         return false
     }
 }
@@ -111,7 +110,7 @@ export async function unsubscribeFromDatabase() {
             window.electronAPI.off(events.DATA_CHANGE),
         ])
     } catch (err) {
-        logger.error(`Error unsubscribing from DB: ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error unsubscribing from DB: ${err}`)
     }
 }
 
@@ -122,7 +121,7 @@ export async function query(sql) {
         if (error) throw error
         return { rows: data || [] }
     } catch (err) {
-        logger.error(`Error performing query: ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error performing query: ${err}`)
         return { error: err }
     }
 }
@@ -141,7 +140,7 @@ export async function subscribeToPath(filePath, recursive, onChange) {
             onChange && onChange(payload)
         })
     } catch (err) {
-        logger.error(`Error subscribing to path ${filePath}`, err)
+        await window.electronAPI.send('sidecar-error', `Error subscribing to path ${filePath}: ${err}`)
     }
 }
 
@@ -228,7 +227,7 @@ export async function callRpc(rpcName, ...args) {
         const resp = await window.electronAPI.rpc(rpcName, stringify(args))
         return resp ? parse(resp) : {}
     } catch (err) {
-        logger.error(`Error calling ${rpcName} function: ${err}`)
+        await window.electronAPI.send('sidecar-error', `Error calling ${rpcName} function: ${err}`)
         return { error: err }
     }
 }
