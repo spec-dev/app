@@ -10,7 +10,6 @@ import hEllipsisIcon from '../../../svgs/h-ellipsis'
 import TutorialAnno from '../tutorial/TutorialAnno'
 import { debounce } from 'lodash-es'
 import { getMatchingLiveObjects, loadMatchingLiveObjects } from '../../../utils/liveObjects'
-import { fileURLToPath } from 'url'
 import { chainIds } from '../../../utils/chains'
 import logger from '../../../utils/logger'
 
@@ -89,7 +88,7 @@ function LiveObjectSearch(props, ref) {
 
     // Fetch live objects. Set state.
     async function fetchLiveObjectPage() {
-        await loadMatchingLiveObjects(searchInputRef.current, JSON.stringify(filtersRef.current), offsetRef.current)
+        await loadMatchingLiveObjects(searchInputRef.current, filtersRef.current, offsetRef.current)
         const matchingResults = getMatchingLiveObjects()
         hasMore.current = matchingResults.length >= 25
         offsetRef.current > 0 ? setSearchResults(searchResults => [...searchResults, ...matchingResults]) : setSearchResults(matchingResults)

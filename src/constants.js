@@ -1,5 +1,6 @@
 import path from 'path'
 import { getHomeDir } from './electronClient'
+import { ev } from './utils/env'
 
 let homeDir = null
 
@@ -7,7 +8,7 @@ let homeDir = null
  * Global app constants.
  */
 const constants = {
-    CORE_API_ORIGIN: 'https://api.spec.dev',
+    CORE_API_ORIGIN: ev('REACT_APP_CORE_API_ORIGIN', 'https://api.spec.dev'),
     RECORDS_PER_PAGE: 100,
 
     // Spec project config.

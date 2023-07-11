@@ -93,7 +93,7 @@ class CoreApiClient extends ApiClient {
         super(constants.CORE_API_ORIGIN)
     }
 
-    searchLiveObjects = async (params) => await this.get('/live-objects/search', params)
+    searchLiveObjects = async (params) => await this.post('/live-objects/search', params)
 }
 
 const api = {
