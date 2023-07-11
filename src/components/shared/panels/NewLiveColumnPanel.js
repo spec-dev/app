@@ -5,7 +5,7 @@ import NewLiveColumnSpecs from './NewLiveColumnSpecs'
 import { noop } from '../../../utils/nodash'
 import { toNamespacedVersion } from '../../../utils/formatters'
 import spinner from '../../../svgs/chasing-tail-spinner'
-import { getAllLiveObjects } from '../../../utils/liveObjects'
+import { getFrontPageLiveObjects } from '../../../utils/liveObjects'
 import { pendingSeeds } from '../../../utils/pendingSeeds'
 import { CSSTransition } from 'react-transition-group'
 import createTable from '../../../services/createTable'
@@ -58,7 +58,6 @@ function NewLiveColumnPanel(props, ref) {
         refetchTables = noop,
         editColumn = noop,
     } = props
-    const liveObjects = getAllLiveObjects()
 
     // State.
     const [state, setState] = useState({
@@ -66,6 +65,8 @@ function NewLiveColumnPanel(props, ref) {
         payload: null,
         index: 0,
         liveObject: {},
+        searchParams: {},
+        searchResults: getFrontPageLiveObjects(),
     })
 
     // Refs.
@@ -117,8 +118,8 @@ function NewLiveColumnPanel(props, ref) {
         setState(prevState => ({ ...prevState, index: 0 }))
     }, [])
 
-    const onSelectLiveObject = useCallback(liveObject => {
-        setState(prevState => ({ ...prevState, index: 1, liveObject }))
+    const onSelectLiveObject = useCallback((liveObject, searchParams, searchResults) => {
+        setState(prevState => ({ ...prevState, index: 1, liveObject, searchParams, searchResults }))
     }, [])
 
     const saveLiveColumns = useCallback(async (payload) => {
@@ -362,7 +363,8 @@ function NewLiveColumnPanel(props, ref) {
                 classNames={pcn('__section')}>
                 <div className={pcn('__section', '__section--0')} ref={section0Ref}>
                     <LiveObjectSearch
-                        liveObjects={liveObjects}
+                        searchResults={state.searchResults}
+                        searchParams={state.searchParams}
                         onSelectLiveObject={onSelectLiveObject}
                         ref={liveObjectSearchRef}
                     />

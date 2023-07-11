@@ -11,7 +11,6 @@ import { sum } from '../../utils/math'
 import { displayColType, isJSONColumn } from '../../utils/colTypes'
 import { getNewCount, tableCounts } from '../../utils/counts'
 import { stringify } from '../../utils/json'
-import { loadAllLiveObjects } from '../../utils/liveObjects'
 import EditColumnPanel from '../shared/panels/EditColumnPanel'
 import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
@@ -204,7 +203,6 @@ function TablesBody(props, ref) {
     const configureEditColumnPanelArgs = useRef([])
     const transformObjectSliderRef = useRef()
     const hookSliderRef = useRef()
-    const hasEagerLoadedAllLiveObjects = useRef(false)
     const seedCursor = useRef(props.seedCursor || null)
     const backfillingCallback = useRef(null)
     const backfillingTimer = useRef(null)
@@ -472,10 +470,6 @@ function TablesBody(props, ref) {
                 prevCount.current = count
             }
             loadPageRecords()
-        }
-        if (!hasEagerLoadedAllLiveObjects.current) {
-            hasEagerLoadedAllLiveObjects.current = true
-            loadAllLiveObjects()
         }
     }, [table, records, count, loadPageRecords, loadRecordCount])
 

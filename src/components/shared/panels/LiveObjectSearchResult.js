@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { forwardRef, useMemo } from 'react'
 import { getPCN } from '../../../utils/classes'
 import { noop } from '../../../utils/nodash'
 import { sortInts } from '../../../utils/math'
@@ -7,13 +7,14 @@ import { chainNames } from '../../../utils/chains'
 const className = 'live-object-search-result'
 const pcn = getPCN(className)
 
-function LiveObjectSearchResult(props) {
+function LiveObjectSearchResult(props, ref) {
     const { 
         desc,
         icon,
         isContractEvent,
         latestVersion = {},
         onClick = noop,
+        index
     } = props
 
     const supportedChainIds = useMemo(() => sortInts(
@@ -34,7 +35,7 @@ function LiveObjectSearchResult(props) {
     }
     
     return (
-        <div className={className} onClick={onClick}>
+        <div className={className} accessKey={index} onClick={onClick} tabIndex="0" ref={ref}>
             <div className={pcn('__liner')}>
                 <div className={pcn('__left')}>
                     <img
@@ -70,5 +71,5 @@ function LiveObjectSearchResult(props) {
         </div>
     )
 }
-
+LiveObjectSearchResult = forwardRef(LiveObjectSearchResult)
 export default LiveObjectSearchResult

@@ -89,34 +89,6 @@
     width: 100%;
 }
 
-.live-object-search__categories {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-    width: 100%;
-
-    span {
-        display: inline-block;
-        text-align: center;
-        min-width: 60px;
-        border-radius: 13px;
-        padding: 6px 12px 4px;
-        background-color: adjust-color($backgroundLight, $alpha: -0.58);
-        color: adjust-color($lightGray, $alpha: -0.2);
-        font-size: 12px;
-        font-family: Medium;
-        cursor: pointer;
-        margin-right: 13px;
-
-        &:first-child {
-            background-color: adjust-color($white, $alpha: -0.1);
-            color: $backgroundDark;
-            font-family: DemiBold;
-        }
-    }
-}
-
 .live-object-search__more-categories-button {
     display: inline-flex;
     flex-direction: row;
