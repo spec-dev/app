@@ -80,6 +80,13 @@ function EditColumnPanel(props, ref) {
         setColumn(newColumn)
     }, [column])
 
+    const toggleIsUniqueOneToOne = useCallback(()=>{
+        const newColumn = { ...column }
+        newColumn.liveColumn.onUniqueMapping = !newColumn.liveColumn.onUniqueMapping
+        setColumn(newColumn)
+
+    }, [column])
+
     const setForeignKeyRelationship = useCallback((targetColPath) => {
         const newColumn = { ...column }
 
@@ -257,15 +264,42 @@ function EditColumnPanel(props, ref) {
         )
     }, [column, toggleIsRequired])
 
+    const renderIsUniqueOneToOneSection = useCallback(() => {
+        return (
+            <div className={pcn('__section')}>
+                <div className={pcn('__section-title')}>
+                    <span
+                        className={pcn('__section-icon', column.liveColumn?.onUniqueMapping ? '__section-icon--bright' : '')}
+                        dangerouslySetInnerHTML={{ __html: keyIcon }}>
+                    </span>
+                    <span>Is Unique?</span>
+                </div>
+                <div className={pcn('__section-body')}>
+                    <div className={pcn('__qa')}>
+                        <span>Select <span className='--code'>{column.name}</span> as unique in the one-to-one mapping?</span>
+                        <div className={pcn('__section-toggle')}>
+                            <button
+                                className={cn('toggle-button', column.liveColumn?.onUniqueMapping ? `toggle-button--true` : '')}
+                                onClick={toggleIsUniqueOneToOne}>
+                                <span></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
+    }, [column, toggleIsUniqueOneToOne])
+
     const renderBody = useCallback(() => (
         <div className={pcn('__body')}>
             <div className={pcn('__body-liner')}>
                 { renderPrimaryKeySection() }
                 { renderForeignKeySection() }
                 { renderIsRequiredSection() }
+                { renderIsUniqueOneToOneSection() }
             </div>
         </div>
-    ), [renderPrimaryKeySection, renderForeignKeySection, renderIsRequiredSection])
+    ), [renderPrimaryKeySection, renderForeignKeySection, renderIsRequiredSection, renderIsUniqueOneToOneSection])
 
     const renderFooter= useCallback(() => (
         <div className={pcn('__footer')}>

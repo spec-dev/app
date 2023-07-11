@@ -12,4 +12,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
     killSpecClient: () => ipcRenderer.invoke('killSpecClient'),
     on: (...args) => ipcRenderer.on(...args),
     off: (...args) => ipcRenderer.removeAllListeners(...args),
+    send: (...args) => ipcRenderer.send(...args),
 })
