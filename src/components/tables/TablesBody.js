@@ -11,7 +11,6 @@ import { sum } from '../../utils/math'
 import { displayColType, isJSONColumn } from '../../utils/colTypes'
 import { getNewCount, tableCounts } from '../../utils/counts'
 import { stringify } from '../../utils/json'
-import { loadMatchingLiveObjects } from '../../utils/liveObjects'
 import EditColumnPanel from '../shared/panels/EditColumnPanel'
 import { getLiveColumnsForTable, getLiveColumnLinksOnTable } from '../../utils/config'
 import {
@@ -204,7 +203,6 @@ function TablesBody(props, ref) {
     const configureEditColumnPanelArgs = useRef([])
     const transformObjectSliderRef = useRef()
     const hookSliderRef = useRef()
-    const hasEagerLoadedFirstPageLiveObjects = useRef(false)
     const seedCursor = useRef(props.seedCursor || null)
     const backfillingCallback = useRef(null)
     const backfillingTimer = useRef(null)
@@ -472,10 +470,6 @@ function TablesBody(props, ref) {
                 prevCount.current = count
             }
             loadPageRecords()
-        }
-        if (!hasEagerLoadedFirstPageLiveObjects.current) {
-            hasEagerLoadedFirstPageLiveObjects.current = true
-            loadMatchingLiveObjects('', JSON.stringify({}), 0, constants.LIVE_OBJECT_SEARCH_DEFAULT_BATCH_SIZE)
         }
     }, [table, records, count, loadPageRecords, loadRecordCount])
 
@@ -866,10 +860,7 @@ function TablesBody(props, ref) {
                     tableLiveColumns={liveColumns}
                     referrer={liveDataPanelReferrer}
                     onSave={onSaveLiveColumns}
-                    onCancel={() => {
-                        newLiveColumnSliderRef.current?.hide()
-                        loadMatchingLiveObjects('', JSON.stringify({}), 0, constants.LIVE_OBJECT_SEARCH_DEFAULT_BATCH_SIZE)
-                    }}
+                    onCancel={() => newLiveColumnSliderRef.current?.hide()}
                     addTransform={addTransform}
                     addHook={addHook}
                     refetchTables={refetchTables}

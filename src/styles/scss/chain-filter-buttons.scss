@@ -1,0 +1,32 @@
+.chain-filter-buttons {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+.chain-filter-buttons__button {
+    display: inline-block;
+    text-align: center;
+    min-width: 60px;
+    border-radius: 13px;
+    padding: 6px 12px 4px;
+    background-color: adjust-color($backgroundLight, $alpha: -0.58);
+    color: adjust-color($lightGray, $alpha: -0.2);
+    font-size: 12px;
+    font-family: Medium;
+    cursor: pointer;
+    margin-right: 13px;
+
+    &.chain-filter-buttons__button--selected {
+        background-color: adjust-color($white, $alpha: -0.1);
+        color: $backgroundDark;
+        font-family: DemiBold;
+    }
+
+    &:not(.chain-filter-buttons__button--selected):hover {
+        background-color: adjust-color($backgroundLight, $alpha: -0.2);
+        color: $white;
+    }
+}

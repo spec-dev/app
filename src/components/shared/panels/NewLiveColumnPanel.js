@@ -5,7 +5,7 @@ import NewLiveColumnSpecs from './NewLiveColumnSpecs'
 import { noop } from '../../../utils/nodash'
 import { toNamespacedVersion } from '../../../utils/formatters'
 import spinner from '../../../svgs/chasing-tail-spinner'
-import { getMatchingLiveObjects, getPrevLiveObjects } from '../../../utils/liveObjects'
+import { getFrontPageLiveObjects } from '../../../utils/liveObjects'
 import { pendingSeeds } from '../../../utils/pendingSeeds'
 import { CSSTransition } from 'react-transition-group'
 import createTable from '../../../services/createTable'
@@ -65,10 +65,9 @@ function NewLiveColumnPanel(props, ref) {
         payload: null,
         index: 0,
         liveObject: {},
+        searchParams: {},
+        searchResults: getFrontPageLiveObjects(),
     })
-    const [prevSearch, setPrevSearch] = useState({})
-    const [usePrevSearch, setUsePrevSearch] = useState(false)
-    const liveObjects = usePrevSearch ? getPrevLiveObjects() : getMatchingLiveObjects()
 
     // Refs.
     const liveObjectSearchRef = useRef()
@@ -117,12 +116,10 @@ function NewLiveColumnPanel(props, ref) {
 
     const onClickBack = useCallback(() => {
         setState(prevState => ({ ...prevState, index: 0 }))
-        setUsePrevSearch(true)
     }, [])
 
-    const onSelectLiveObject = useCallback((liveObject, query, filters) => {
-        setState(prevState => ({ ...prevState, index: 1, liveObject }))
-        setPrevSearch({query: query, filters: filters})
+    const onSelectLiveObject = useCallback((liveObject, searchParams, searchResults) => {
+        setState(prevState => ({ ...prevState, index: 1, liveObject, searchParams, searchResults }))
     }, [])
 
     const saveLiveColumns = useCallback(async (payload) => {
@@ -366,10 +363,8 @@ function NewLiveColumnPanel(props, ref) {
                 classNames={pcn('__section')}>
                 <div className={pcn('__section', '__section--0')} ref={section0Ref}>
                     <LiveObjectSearch
-                        liveObjects={liveObjects}
-                        prevSearch={prevSearch}
-                        usePrevSearch={usePrevSearch}
-                        setUsePrevSearch={setUsePrevSearch}
+                        searchResults={state.searchResults}
+                        searchParams={state.searchParams}
                         onSelectLiveObject={onSelectLiveObject}
                         ref={liveObjectSearchRef}
                     />
