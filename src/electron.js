@@ -4,7 +4,6 @@ const fs = require('fs')
 const os = require('os')
 const { spawn } = require('child_process')
 const appRootDir = require('app-root-dir')
-const fsWatcher = require('chokidar')
 const { 
     getProjectApiKey,
     getProjectConfig,
@@ -22,7 +21,6 @@ const {
     performQuery,
 } = require('@spec.dev/app-db')
 const url = require('url')
-const isDev = require('electron-is-dev')
 
 const { stringify, parse } = JSON
 
@@ -162,6 +160,11 @@ async function query(_, sql) {
 }
 
 async function subscribeToPath(_, filePath, recursive) {
+    if (app.isPackaged) {
+      return stringify({})
+    }
+
+    const fsWatcher = require('chokidar')
     if (watchingFiles.has(filePath)) return
     watchingFiles.add(filePath)
 
@@ -237,13 +240,13 @@ function createWindow() {
 
     // Do some env check for local dev and only loadURL in that mode.
     // For prod, load index.html.
-    const startURL = isDev
-    ? "http://localhost:3000"
-    : url.format({
+    const startURL = app.isPackaged
+      ? url.format({
         pathname: path.join(__dirname, "../build/index.html"),
         protocol: "file",
         slashes: true,
       })
+      : "http://localhost:3000"
     mainWindow.loadURL(startURL)
 }
 
