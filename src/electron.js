@@ -21,6 +21,8 @@ const {
     getPoolConnection,
     performQuery,
 } = require('@spec.dev/app-db')
+const url = require('url')
+const isDev = require('electron-is-dev')
 
 const { stringify, parse } = JSON
 
@@ -234,8 +236,15 @@ function createWindow() {
     ipcMain.on('sidecar-error', (event, message) => { event.sender.send('sidecar-error', message) })
 
     // Do some env check for local dev and only loadURL in that mode.
-    // For prod, most likely load index.html.
-    mainWindow.loadURL('http://localhost:3000')
+    // For prod, load index.html.
+    const startURL = isDev
+    ? "http://localhost:3000"
+    : url.format({
+        pathname: path.join(__dirname, "../build/index.html"),
+        protocol: "file",
+        slashes: true,
+      })
+    mainWindow.loadURL(startURL)
 }
 
 app.whenReady().then(() => {
