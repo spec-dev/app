@@ -61,7 +61,11 @@ Copy the following contents into your new `bin/pkg` file:
 npm run build
 pkg .
 mkdir -p ../app/sidecars/bin/mac
+mkdir -p ../app/sidecars/bin/linux
+mkdir -p ../app/sidecars/bin/win
 cp build/spec-macos ../app/sidecars/bin/mac/spec
+cp build/spec-linux ../app/sidecars/bin/linux/spec
+cp build/spec-win.exe ../app/sidecars/bin/win/spec
 ```
 
 Package the Spec client into a sidecar:
