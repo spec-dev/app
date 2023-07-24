@@ -42,7 +42,7 @@ const platform = (() => {
 
 const binDir = process.env.ENV === 'local' 
     ? path.join(process.cwd(), 'sidecars', 'bin', platform)
-    : path.join(appRootDir.get(), 'bin')
+    : path.join(appRootDir.get(), 'sidecars', 'bin', platform)
 
 const specClientPath = path.join(binDir, 'spec')
 
