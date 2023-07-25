@@ -227,7 +227,7 @@ export async function callRpc(rpcName, ...args) {
         const resp = await window.electronAPI.rpc(rpcName, stringify(args))
         return resp ? parse(resp) : {}
     } catch (err) {
-        await window.electronAPI.send('sidecar-error', `Error calling ${rpcName} function: ${err}`)
+        await window.electronAPI?.send('sidecar-error', `Error calling ${rpcName} function: ${err}`)
         return { error: err }
     }
 }
