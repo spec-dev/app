@@ -160,10 +160,6 @@ async function query(_, sql) {
 }
 
 async function subscribeToPath(_, filePath, recursive) {
-    if (app.isPackaged) {
-      return stringify({})
-    }
-
     const fsWatcher = require('chokidar')
     if (watchingFiles.has(filePath)) return
     watchingFiles.add(filePath)
