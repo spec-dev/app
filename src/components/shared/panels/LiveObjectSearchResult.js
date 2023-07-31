@@ -14,7 +14,8 @@ function LiveObjectSearchResult(props, ref) {
         isContractEvent,
         latestVersion = {},
         onClick = noop,
-        index
+        index,
+        style,
     } = props
 
     const supportedChainIds = useMemo(() => sortInts(
@@ -35,7 +36,7 @@ function LiveObjectSearchResult(props, ref) {
     }
     
     return (
-        <div className={className} accessKey={index} onClick={onClick} tabIndex="0" ref={ref}>
+        <div className={className} accessKey={index} onClick={onClick} tabIndex="0" ref={ref} style={style}>
             <div className={pcn('__liner')}>
                 <div className={pcn('__left')}>
                     <img
