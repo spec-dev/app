@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { getPCN } from '../../../utils/classes'
-import $ from 'jquery'
 import searchIcon from '../../../svgs/search'
 import LiveObjectSearchResult from './LiveObjectSearchResult'
 import { noop } from '../../../utils/nodash'
@@ -10,12 +9,12 @@ import { debounce } from 'lodash-es'
 import { loadMatchingLiveObjects } from '../../../utils/liveObjects'
 import logger from '../../../utils/logger'
 import ChainFilterButtons from '../filters/ChainFilterButtons'
+import { AutoSizer, List, InfiniteLoader } from 'react-virtualized'
 
 const className = 'live-object-search'
 const pcn = getPCN(className)
 
 const PAGE_SIZE = 25
-const INFINITE_SCROLL_TRAILING_OFFSET = 5
 
 function LiveObjectSearch(props, ref) {
     const { onSelectLiveObject = noop } = props
@@ -27,22 +26,9 @@ function LiveObjectSearch(props, ref) {
     const lastKeyCode = useRef(null)
     const offsetRef = useRef(0)
     const hasMore = useRef(true)
-    const observer = useRef()
     const cursorRef = useRef(0)
     const activeResultRef = useRef()
     const searchPanelRef = useRef()
-
-    // Trigger fetch next page.
-    const lastLiveObjectRef = useCallback(node => {
-        observer.current?.disconnect()
-        observer.current = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting && hasMore.current) {
-                offsetRef.current += PAGE_SIZE
-                fetchLiveObjectPage(searchParams.query, searchParams.filters)
-            }
-        })
-        node && observer.current.observe(node)
-    }, [searchParams])
 
     // Focus input.
     const focusInputRef = useCallback(node => node?.focus(), [])
@@ -59,26 +45,23 @@ function LiveObjectSearch(props, ref) {
         await debouncedSearch(searchParams.query, filters)
     }, [searchParams])
 
-    // Render live objects.
-    const renderResults = useCallback(() => {
-        hasMore.current = hasMore && searchResults.length < PAGE_SIZE ? false : true  
-        return searchResults.map((result, i) => {
-            let ref = null
-            if (i === searchResults.length - INFINITE_SCROLL_TRAILING_OFFSET && hasMore.current) {
-                ref = lastLiveObjectRef
-            } else if (i == cursorRef.current) {
-                ref = (e) => activeResultRef.current = e
-            }
-            return (
-                <LiveObjectSearchResult 
-                    key={i}
-                    index={i}
-                    onClick={() => onSelectLiveObject(result, searchParams, searchResults)}
-                    ref={ref}
-                    {...result} 
-                />
-            )
-    })}, [searchResults, searchParams, onSelectLiveObject])
+    const rowRenderer = useCallback(({index, key, style}) => {
+        const result = searchResults[index];
+        let ref = null;
+        if (index == cursorRef.current) {
+            ref = (e) => activeResultRef.current = e
+        }
+        return (
+            <LiveObjectSearchResult 
+                key={key}
+                ref={ref}
+                index={index}
+                style={style}
+                onClick={() => onSelectLiveObject(result, searchParams, searchResults)}
+                {...result} 
+            />
+        )
+    }, [searchResults, searchParams, onSelectLiveObject])
 
     // Fetch live objects. Set state.
     const fetchLiveObjectPage = useCallback(async (query, filters) => {
@@ -88,6 +71,15 @@ function LiveObjectSearch(props, ref) {
             ? setSearchResults(searchResults => [...searchResults, ...matchingResults]) 
             : setSearchResults(matchingResults)
     }, [])
+
+    const fetchNextPage = useCallback(async ({startIndex, stopIndex}) => {
+        if (!hasMore.current) {
+            return false;
+        }
+        const matchingResults = await loadMatchingLiveObjects(searchParams.query, searchParams.filters, startIndex);
+        hasMore.current = matchingResults.length > 0 ? true : false;
+        setSearchResults(searchResults => [...searchResults, ...matchingResults]);
+    }, [searchParams])
     
     // Reset scroll.
     const resetScroll = useCallback(() => {
@@ -200,9 +192,27 @@ function LiveObjectSearch(props, ref) {
                 </div>
             </div>
             <div className={pcn('__results')} ref={searchPanelRef} onKeyUp={onKeyUp}>
-                <div className={pcn('__results-liner')}>
-                    { renderResults() }
-                </div>
+                <AutoSizer>
+                    {({width, height}) => (
+                        <InfiniteLoader
+                        isRowLoaded={({index}) => index < (searchResults.length - 1)}
+                        loadMoreRows={fetchNextPage}
+                        threshold={5}
+                        rowCount={searchResults.length}
+                        >
+                            {({onRowsRendered, registerChild}) => (
+                            <List
+                            ref={registerChild}
+                            height={height}
+                            rowCount={searchResults.length}
+                            rowHeight={100}
+                            onRowsRendered={onRowsRendered}
+                            rowRenderer={rowRenderer}
+                            width={width}
+                        />)}
+                        </InfiniteLoader>
+                    )}
+                </AutoSizer>
             </div>
         </div>
     )
