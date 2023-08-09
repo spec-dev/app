@@ -116,6 +116,7 @@ function LiveObjectSearch(props, ref) {
         lastKeyCode.current = e.which
         switch (lastKeyCode.current) {
         case keyCodes.ENTER:
+            if (!activeResultRef.current) break
             const index = activeResultRef.current.getAttribute('accessKey')
             searchResults.length && onSelectLiveObject(searchResults[index], searchParams, searchResults)
             break
