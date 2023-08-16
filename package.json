@@ -1,81 +1,91 @@
 {
-    "name": "app",
-    "version": "0.0.1",
-    "private": true,
-    "main": "src/electron.js",
-    "scripts": {
-        "clean": "rimraf build",
-        "build": "run-s clean build:main",
-        "start": "react-scripts start",
-        "build:main": "react-scripts build",
-        "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
-        "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css",
-        "electron": "electron ."
-    },
-    "dependencies": {
-        "@ltd/j-toml": "^1.30.0",
-        "@monaco-editor/react": "^4.4.5",
-        "@spec.dev/app-db": "^0.0.1",
-        "@spec.dev/pm": "^0.0.1",
-        "app-root-dir": "^1.0.2",
-        "chokidar": "^3.5.3",
-        "highlight.js": "^11.6.0",
-        "humps": "^2.0.1",
-        "jquery": "^3.6.0",
-        "lodash-es": "^4.17.21",
-        "monaco-editor": "^0.33.0",
-        "path-browserify": "^1.0.1",
-        "pg-format": "^1.0.4",
-        "pluralize": "^8.0.0",
-        "react": "^17.0.2",
-        "react-animate-height": "^3.1.1",
-        "react-countup": "^6.2.0",
-        "react-dom": "^17.0.2",
-        "react-router": "^5.2.0",
-        "react-router-dom": "^5.2.0",
-        "react-scripts": "4.0.3",
-        "react-select": "^5.3.2",
-        "react-spring": "^9.2.4",
-        "react-transition-group": "^4.4.5",
-        "react-use-measure": "^2.1.1",
-        "sha.js": "^2.4.11",
-        "short-uuid": "^4.2.0",
-        "typewriter-effect": "^2.18.0"
-    },
-    "resolutions": {
-        "react-error-overlay": "6.0.9"
-    },
-    "devDependencies": {
-        "electron": "^24.3.0",
-        "npm-run-all": "^4.1.5",
-        "react-error-overlay": "6.0.9",
-        "rimraf": "^3.0.2"
-    },
-    "eslintConfig": {
-        "extends": [
-            "react-app",
-            "react-app/jest"
-        ]
-    },
-    "browserslist": {
-        "production": [
-            ">0.2%",
-            "not dead",
-            "not op_mini all"
-        ],
-        "development": [
-            "last 1 chrome version",
-            "last 1 firefox version",
-            "last 1 safari version"
-        ]
-    },
-    "build": {
-        "extraFiles": [
-            {
-                "from": "resources/mac",
-                "to": "Resources/bin",
-                "filter": ["**/*"]
-            }
-        ]
-    }
+  "name": "spec",
+  "version": "0.0.1",
+  "private": true,
+  "main": "src/electron.js",
+  "homepage": "./",
+  "scripts": {
+    "clean": "rimraf build",
+    "build": "run-s clean build:main",
+    "start": "react-scripts start",
+    "build:sidecars": "cd ../spec; bin/pkg",
+    "build:main": "react-scripts build",
+    "sass": "sass --watch src/styles/scss/index.scss:src/styles/css/index.css",
+    "sass:build": "sass src/styles/scss/index.scss:src/styles/css/index.css",
+    "electron": "WEB_URL=http://localhost:3000 electron .",
+    "electron-prd": "electron .",
+    "electron-forge": "WEB_URL=http://localhost:3000 electron-forge start",
+    "electron-forge-prd": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "build-macos-intel": "npm run build:main; npm run make -- --platform=darwin --arch=x64",
+    "build-macos-arm64": "npm run build:main; npm run make -- --platform=darwin --arch=arm64",
+    "build-linux": "npm run build:main; npm run make -- --platform=linux",
+    "build-all": "npm run build:sidecars; npm run build:main; npm run make -- --platform=darwin --arch=x64; npm run make -- --platform=darwin --arch=arm64; npm run make -- --platform=linux"
+  },
+  "postinstall": "electron-builder install-app-deps",
+  "dependencies": {
+    "@ltd/j-toml": "^1.30.0",
+    "@monaco-editor/react": "4.4.6",
+    "@spec.dev/app-db": "^0.0.1",
+    "@spec.dev/pm": "^0.0.1",
+    "app-root-dir": "^1.0.2",
+    "chokidar": "^3.5.3",
+    "highlight.js": "^11.6.0",
+    "humps": "^2.0.1",
+    "jquery": "^3.6.0",
+    "lodash-es": "^4.17.21",
+    "monaco-editor": "^0.33.0",
+    "path-browserify": "^1.0.1",
+    "pg-format": "^1.0.4",
+    "pluralize": "^8.0.0",
+    "react": "^17.0.2",
+    "react-animate-height": "3.2.0",
+    "react-countup": "^6.2.0",
+    "react-dom": "^17.0.2",
+    "react-router": "^5.2.0",
+    "react-router-dom": "^5.2.0",
+    "react-select": "^5.3.2",
+    "react-spring": "9.6.1",
+    "react-transition-group": "^4.4.5",
+    "react-use-measure": "^2.1.1",
+    "sha.js": "^2.4.11",
+    "short-uuid": "^4.2.0",
+    "typewriter-effect": "^2.18.0"
+  },
+  "resolutions": {
+    "react-error-overlay": "6.0.9"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@electron-forge/cli": "^6.1.1",
+    "@electron-forge/maker-deb": "^6.1.1",
+    "@electron-forge/maker-dmg": "^6.2.1",
+    "electron": "^25.3.1",
+    "electron-notarize": "^1.2.2",
+    "electron-osx-sign": "^0.6.0",
+    "electron-packager": "^17.1.1",
+    "npm-run-all": "^4.1.5",
+    "react-error-overlay": "6.0.9",
+    "react-scripts": "4.0.3",
+    "rimraf": "^3.0.2"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }

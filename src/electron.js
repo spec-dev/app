@@ -4,7 +4,6 @@ const fs = require('fs')
 const os = require('os')
 const { spawn } = require('child_process')
 const appRootDir = require('app-root-dir')
-const fsWatcher = require('chokidar')
 const { 
     getProjectApiKey,
     getProjectConfig,
@@ -21,6 +20,7 @@ const {
     getPoolConnection,
     performQuery,
 } = require('@spec.dev/app-db')
+const url = require('url')
 
 const { stringify, parse } = JSON
 
@@ -40,9 +40,7 @@ const platform = (() => {
     }
 })()
 
-const binDir = process.env.ENV === 'local' 
-    ? path.join(process.cwd(), 'sidecars', 'bin', platform)
-    : path.join(appRootDir.get(), 'bin')
+const binDir = path.join(appRootDir.get(), 'sidecars', 'bin', platform)
 
 const specClientPath = path.join(binDir, 'spec')
 
@@ -102,6 +100,8 @@ async function unsubscribeFromDatabase() {
 }
 
 function killSpecClient() {
+    console.info(`Killing spec client.`);
+
     spec && spec.kill()
     spec = null
 }
@@ -160,6 +160,7 @@ async function query(_, sql) {
 }
 
 async function subscribeToPath(_, filePath, recursive) {
+    const fsWatcher = require('chokidar')
     if (watchingFiles.has(filePath)) return
     watchingFiles.add(filePath)
 
@@ -177,6 +178,8 @@ async function subscribeToPath(_, filePath, recursive) {
 }
 
 async function createSpecClient(_, payload) {
+    console.info(`createSpecClient called with payload: ${payload}`);
+
     killSpecClient()
 
     let parsed
@@ -208,15 +211,18 @@ async function createSpecClient(_, payload) {
     }
 
     try {
-        spec = spawn(specClientPath, [], { env: { ...process.env, ...envs }, stdio: 'ignore' })
+        spec = spawn(specClientPath, [], { env: { ...process.env, ...envs }, stdio: 'pipe' })
     } catch (err) {
+        console.info(`Spec client error ${err}.`)
         return stringify({ error: `Error spawning Spec client: ${err}` })
     }
 
-    spec.on('close', () => {
-        console.info(`Spec client closed for project ${projectId}.`)
+    spec.on('close', (code) => {
+        console.info(`Spec client closed for project ${projectId} with code ${code}.`)
     })
+
     spec.on('error', error => {
+        console.info(`Spec client error ${error}.`)
         mainWindow.webContents.send("sidecar-error", `Spec client error ${error}`)
     })
 }
@@ -234,8 +240,15 @@ function createWindow() {
     ipcMain.on('sidecar-error', (event, message) => { event.sender.send('sidecar-error', message) })
 
     // Do some env check for local dev and only loadURL in that mode.
-    // For prod, most likely load index.html.
-    mainWindow.loadURL('http://localhost:3000')
+    // For prod, load index.html.
+    const startURL = app.isPackaged
+      ? url.format({
+        pathname: path.join(__dirname, "../build/index.html"),
+        protocol: "file",
+        slashes: true,
+      })
+      : "http://localhost:3000"
+    mainWindow.loadURL(startURL)
 }
 
 app.whenReady().then(() => {

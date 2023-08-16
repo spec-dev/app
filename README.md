@@ -61,7 +61,11 @@ Copy the following contents into your new `bin/pkg` file:
 npm run build
 pkg .
 mkdir -p ../app/sidecars/bin/mac
+mkdir -p ../app/sidecars/bin/linux
+mkdir -p ../app/sidecars/bin/win
 cp build/spec-macos ../app/sidecars/bin/mac/spec
+cp build/spec-linux ../app/sidecars/bin/linux/spec
+cp build/spec-win.exe ../app/sidecars/bin/win/spec
 ```
 
 Package the Spec client into a sidecar:
@@ -178,3 +182,13 @@ $ npm run electron
 ```
 
 Once the Electron tab is running, the desktop app should open and show you your (presumably empty) database.
+
+## Distribution
+
+First, make sure to run `xcrun notarytool store-credentials`
+name your keychain `spec`
+then add your apple id, your app specific password, and set the team id to: `57XXZJ46MB`
+
+Then run `npm run build-all`
+
+All the distributions will be in `out/make` 
