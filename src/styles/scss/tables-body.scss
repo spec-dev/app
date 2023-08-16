@@ -845,6 +845,9 @@ $loaderTime: 2.3s;
 }
 
 .tables-body__empty-liner {
+    // HACK
+    transform: scale(1.1);
+
     display: flex;
     align-items: center;
     justify-content: center;

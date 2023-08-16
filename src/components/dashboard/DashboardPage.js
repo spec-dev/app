@@ -188,11 +188,8 @@ function DashboardPage(props) {
                 <div>
                     <span>{'{}'}</span>
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: terminalIcon }}></div>
-                <div dangerouslySetInnerHTML={{ __html: dbIcon }}></div>
                 <span></span>
                 <div dangerouslySetInnerHTML={{ __html: blistIcon }}></div>
-                <div dangerouslySetInnerHTML={{ __html: barChartIcon }}></div>
                 <div dangerouslySetInnerHTML={{ __html: documentIcon }}></div>
                 <div dangerouslySetInnerHTML={{ __html: gearIcon }}></div>
                 <div dangerouslySetInnerHTML={{ __html: userIcon }}></div>
@@ -253,9 +250,9 @@ function DashboardPage(props) {
 
     const renderHeaderProjectPath = useCallback(() => project?.org && project?.name ? (
         <div className={pcn('__project-path')}>
-            <span>{ project.org }</span>
+            <span>{ 'my' || project.org }</span>
             <span>/</span>
-            <span>{ project.name }</span>
+            <span>{ 'project' || project.name }</span>
         </div>
     ) : null, [project])
 

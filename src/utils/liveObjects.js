@@ -17,6 +17,26 @@ export async function loadMatchingLiveObjects(query, filters, offset, limit) {
         // TODO: Show error
         return []
     }
+
+    console.log(data)
+
+    const filtered = []
+    for (const entry of data) {
+        if (entry.displayName.toLowerCase().includes('lens')) continue
+        if (entry.name === 'LatestInteraction') continue
+        if (entry.name === 'Contract') continue
+
+        if (entry.name === 'NFTBalance' || entry.name === 'ERC20Balance') {
+            entry.latestVersion.config.chains = { '1': {}, '5': {}, '137': {} }
+        }
+        if (entry.name === 'TokenTransfer') {
+            entry.desc = 'Native, ERC-20, and NFT token transfers.'
+        }
+
+        filtered.push(entry)
+    }
+    return filtered
+    
     return data
 }
 
