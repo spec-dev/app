@@ -273,3 +273,9 @@ app.on('activate', () => {
 })
 
 app.on('will-quit', killSpecClient)
+
+app.on("before-quit", () => {
+    if (!mainWindow.isDestroyed()) {
+        mainWindow.setBrowserView(null)
+    }
+})
