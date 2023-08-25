@@ -1,4 +1,4 @@
-import { ident } from 'pg-format'
+import { ident } from '@scaleleap/pg-format'
 import { newConstraintName, sqlStatementsAsTx } from './helpers'
 
 function buildCreateIndexMigration(

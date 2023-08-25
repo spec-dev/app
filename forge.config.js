@@ -31,6 +31,7 @@ module.exports = {
       keychainProfile: "spec",
     },
   },
+  derefSymlinks: true,
   rebuildConfig: {},
   makers: [
     {

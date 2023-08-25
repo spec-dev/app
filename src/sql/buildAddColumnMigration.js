@@ -1,5 +1,5 @@
 import buildCreateTableColumn from './buildCreateTableColumn'
-import { ident } from 'pg-format'
+import { ident } from '@scaleleap/pg-format'
 import { sqlStatementsAsTx } from './helpers'
 
 function buildAddColumnMigration(

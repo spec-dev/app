@@ -1,4 +1,4 @@
-import { literal } from 'pg-format'
+import { literal } from '@scaleleap/pg-format'
 import selectTables from './selectTables'
 import selectTableColumns from './selectTableColumns'
 import selectPrimaryKeys from './selectPrimaryKeys'
