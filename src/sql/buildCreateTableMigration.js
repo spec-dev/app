@@ -1,4 +1,4 @@
-import { ident, literal } from 'pg-format'
+import { ident, literal } from '@scaleleap/pg-format'
 import { sqlStatementsAsTx } from './helpers'
 import buildCreateTableColumn from './buildCreateTableColumn'
 
