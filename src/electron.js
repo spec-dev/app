@@ -243,7 +243,7 @@ function createWindow() {
     // For prod, load index.html.
     const startURL = app.isPackaged
       ? url.format({
-        pathname: path.join(__dirname, "../build/index.html"),
+        pathname: path.join(__dirname, "../dist/index.html"),
         protocol: "file",
         slashes: true,
       })

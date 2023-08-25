@@ -10,6 +10,8 @@
 .pnp.js
 bin
 bin/*
+.parcel-cache/
+dist/
 
 # testing
 /coverage

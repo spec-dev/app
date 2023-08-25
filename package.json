@@ -3,9 +3,16 @@
   "version": "0.0.1",
   "private": true,
   "main": "src/electron.js",
+  "targets": {
+    "main": false,
+    "module": false
+  },
   "homepage": "./",
+  "source": "src/index.html",
   "scripts": {
     "clean": "rimraf build",
+    "parcel-start": "parcel -p 3000",
+    "start": "concurrently \"cross-env BROWSER=none npm run parcel-start\" \"wait-on http://localhost:3000 && electron . \"",
     "build": "run-s clean build:main",
     "start": "react-scripts start",
     "build:sidecars": "cd ../spec; bin/pkg",
@@ -18,19 +25,22 @@
     "electron-forge-prd": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
-    "build-macos-intel": "npm run build:main; npm run make -- --platform=darwin --arch=x64",
-    "build-macos-arm64": "npm run build:main; npm run make -- --platform=darwin --arch=arm64",
-    "build-linux": "npm run build:main; npm run make -- --platform=linux",
-    "build-all": "npm run build:sidecars; npm run build:main; npm run make -- --platform=darwin --arch=x64; npm run make -- --platform=darwin --arch=arm64; npm run make -- --platform=linux"
+  "extends": "@parcel/config-electron",
+  "alias": {
+    "react": "react",
+    "react-router-dom": "react-router-dom"
   },
   "postinstall": "electron-builder install-app-deps",
   "dependencies": {
     "@ltd/j-toml": "^1.30.0",
     "@monaco-editor/react": "4.4.6",
+    "@scaleleap/pg-format": "^1.0.0",
     "@spec.dev/app-db": "^0.0.1",
     "@spec.dev/pm": "^0.0.1",
+    "@swc/helpers": "^0.5.1",
     "app-root-dir": "^1.0.2",
     "chokidar": "^3.5.3",
+    "cross-env": "^7.0.3",
     "highlight.js": "^11.6.0",
     "humps": "^2.0.1",
     "jquery": "^3.6.0",
@@ -51,7 +61,8 @@
     "react-use-measure": "^2.1.1",
     "sha.js": "^2.4.11",
     "short-uuid": "^4.2.0",
-    "typewriter-effect": "^2.18.0"
+    "typewriter-effect": "^2.18.0",
+    "ui": "file:../ui/dist"
   },
   "resolutions": {
     "react-error-overlay": "6.0.9"
@@ -61,14 +72,28 @@
     "@electron-forge/cli": "^6.1.1",
     "@electron-forge/maker-deb": "^6.1.1",
     "@electron-forge/maker-dmg": "^6.2.1",
+    "@parcel/packager-raw-url": "^2.9.3",
+    "@parcel/transformer-sass": "^2.9.3",
+    "@parcel/transformer-webmanifest": "^2.9.3",
+    "@parcel/watcher": "^2.3.0",
+    "assert": "^2.0.0",
+    "concurrently": "^8.2.1",
+    "crypto-browserify": "^3.12.0",
     "electron": "^25.3.1",
     "electron-notarize": "^1.2.2",
     "electron-osx-sign": "^0.6.0",
     "electron-packager": "^17.1.1",
+    "events": "^3.3.0",
     "npm-run-all": "^4.1.5",
+    "os-browserify": "^0.3.0",
+    "parcel": "^2.9.3",
+    "process": "^0.11.10",
     "react-error-overlay": "6.0.9",
-    "react-scripts": "4.0.3",
-    "rimraf": "^3.0.2"
+    "rimraf": "^3.0.2",
+    "stream-browserify": "^3.0.0",
+    "url": "^0.11.1",
+    "util": "^0.12.5",
+    "wait-on": "^7.0.1"
   },
   "eslintConfig": {
     "extends": [
