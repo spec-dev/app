@@ -3,7 +3,7 @@ import { getPCN, cn } from '../../../utils/classes'
 import { helpIcon, checkIcon, closeIcon, openArrowIcon } from '../../../svgs/icons'
 import { noop } from '../../../utils/nodash'
 import { camelToSnake } from '../../../utils/formatters'
-import TextInput from '../inputs/TextInput'
+import { TextInput } from 'ui'
 import SelectInput from '../inputs/SelectInput'
 import spinner from '../../../svgs/chasing-tail-spinner'
 

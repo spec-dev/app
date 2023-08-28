@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useCallback, useState, forwardRef, useImperativeHandle } from 'react'
 import { cn, getPCN } from '../../../utils/classes'
-import TextInput from '../../shared/inputs/TextInput'
+import { TextInput } from 'ui'
 import SelectInput from '../../shared/inputs/SelectInput'
 import { noop } from '../../../utils/nodash'
 import { camelToSnake, snakeToCamel, unique } from '../../../utils/formatters'
