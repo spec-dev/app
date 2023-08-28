@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { cn, getPCN } from '../../../utils/classes'
-import SelectInput from './SelectInput'
+import { SelectInput } from 'ui'
 import {
     INT2,
     INT4,

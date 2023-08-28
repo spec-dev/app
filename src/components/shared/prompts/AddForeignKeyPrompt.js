@@ -4,7 +4,7 @@ import { helpIcon, checkIcon, closeIcon, openArrowIcon } from '../../../svgs/ico
 import { noop } from '../../../utils/nodash'
 import { camelToSnake } from '../../../utils/formatters'
 import { TextInput } from 'ui'
-import SelectInput from '../inputs/SelectInput'
+import { SelectInput } from 'ui'
 import spinner from '../../../svgs/chasing-tail-spinner'
 
 const className = 'add-foreign-key-prompt'
