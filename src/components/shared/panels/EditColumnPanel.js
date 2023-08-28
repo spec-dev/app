@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo, useRef, forwardRef, useImperativeHandle } from 'react'
 import { getPCN, cn } from '../../../utils/classes'
-import SelectInput from '../inputs/SelectInput'
+import { SelectInput } from 'ui'
 import { noop } from '../../../utils/nodash'
 import { keyIcon, modelRelationshipIcon, requiredIcon } from '../../../svgs/icons'
 import { cloneDeep } from 'lodash-es'

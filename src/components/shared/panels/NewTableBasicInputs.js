@@ -1,6 +1,6 @@
 import React, { useState, useImperativeHandle, forwardRef } from 'react'
 import { getPCN } from '../../../utils/classes'
-import TextInput from '../../shared/inputs/TextInput'
+import { TextInput } from 'ui'
 import { noop } from '../../../utils/nodash'
 
 const className = 'new-table-basic-inputs'

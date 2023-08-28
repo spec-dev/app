@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useCallback, useState, forwardRef, useImperativeHandle, useEffect } from 'react'
 import { getPCN, cn } from '../../../utils/classes'
 import $ from 'jquery'
-import SelectInput from '../../shared/inputs/SelectInput'
+import { SelectInput } from 'ui'
 import { columnOps, filterOptions, filterOps, multiValueOps } from '../../../utils/filters'
 import { propertyIsEnum, formatPropertyOptionsForSelection, resolvedPropertyType } from '../../../utils/liveObjects'
 import closeIcon from '../../../svgs/close'
