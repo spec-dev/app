@@ -24,10 +24,10 @@ function SidecarErrorToastContainer() {
       addNotification(msg);
     };
 
-    window.electronAPI.on('sidecar-error', eventHandler);
+    window.electronAPI?.on('sidecar-error', eventHandler);
 
     return () => {
-      window.electronAPI.off('sidecar-error', eventHandler);
+      window.electronAPI?.off('sidecar-error', eventHandler);
     };
   }, []);
 

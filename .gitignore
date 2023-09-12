@@ -5,6 +5,7 @@
 
 # dependencies
 /node_modules
+/out
 /.pnp
 .pnp.js
 bin

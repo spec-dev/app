@@ -29,6 +29,7 @@ function LiveObjectSearch(props, ref) {
     const cursorRef = useRef(0)
     const activeResultRef = useRef()
     const searchPanelRef = useRef()
+    const searchResultsScroll = useRef()
 
     // Focus input.
     const focusInputRef = useCallback(node => node?.focus(), [])
@@ -86,6 +87,7 @@ function LiveObjectSearch(props, ref) {
         offsetRef.current = 0
         cursorRef.current = 0
         searchPanelRef.current?.scrollTo(0, 0)
+        searchResultsScroll.current.scrollToRow(0);
     }, [])
 
     // Debounce fetch live objects.
@@ -102,12 +104,14 @@ function LiveObjectSearch(props, ref) {
     // Handle key press events.
     const onKeyDown = useCallback(e => {
         lastKeyCode.current = e.which
+        searchResultsScroll.current.scrollToRow(0);
     }, [])
 
     const onKeyUp = useCallback(e => {
         lastKeyCode.current = e.which
         switch (lastKeyCode.current) {
         case keyCodes.ENTER:
+            if (!activeResultRef.current) break
             const index = activeResultRef.current.getAttribute('accessKey')
             searchResults.length && onSelectLiveObject(searchResults[index], searchParams, searchResults)
             break
@@ -202,7 +206,10 @@ function LiveObjectSearch(props, ref) {
                         >
                             {({onRowsRendered, registerChild}) => (
                             <List
-                            ref={registerChild}
+                            ref={(el) => {
+                                registerChild.current = el;
+                                searchResultsScroll.current = el;            
+                            }}
                             height={height}
                             rowCount={searchResults.length}
                             rowHeight={100}

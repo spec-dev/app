@@ -47,6 +47,7 @@ function ChainFilterButtons(props) {
         const showAsSelected = (isAllButton && !hasAtLeastOneChainSelected) || value && selectedChainIds.includes(value)
         return (
             <span
+                key={title}
                 className={pcn('__button', showAsSelected ? '__button--selected' : '')}
                 onClick={() => onClickButton(value)}>
                 { title }

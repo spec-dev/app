@@ -176,16 +176,20 @@ function DashboardPage(props) {
     const renderSideNav = useCallback(() => (
         <div className={pcn('__side-nav')}>
             <div className={pcn('__side-nav-liner')}>
-                <div dangerouslySetInnerHTML={{ __html: specIcon }}></div>
-                <div dangerouslySetInnerHTML={{ __html: homeIcon }}></div>
+                <div
+                    style={{ marginBottom: 1 }}
+                    dangerouslySetInnerHTML={{ __html: specIcon }}>
+                </div>
+                {/* <div dangerouslySetInnerHTML={{ __html: homeIcon }}></div> */}
                 <span></span>
                 <Link
+                    style={{ marginTop: 14 }}
                     className={ currentSection === sections.TABLES ? '--selected' : '' } 
                     dangerouslySetInnerHTML={{ __html: tableEditorIcon }}
                     // TODO: This needs to be set to the last visited table
                     to={paths.tables}>
                 </Link>
-                <div>
+                {/* <div>
                     <span>{'{}'}</span>
                 </div>
                 <div dangerouslySetInnerHTML={{ __html: terminalIcon }}></div>
@@ -195,7 +199,7 @@ function DashboardPage(props) {
                 <div dangerouslySetInnerHTML={{ __html: barChartIcon }}></div>
                 <div dangerouslySetInnerHTML={{ __html: documentIcon }}></div>
                 <div dangerouslySetInnerHTML={{ __html: gearIcon }}></div>
-                <div dangerouslySetInnerHTML={{ __html: userIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: userIcon }}></div> */}
             </div>
         </div>
     ), [currentSection])
