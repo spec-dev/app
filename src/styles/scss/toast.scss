@@ -12,17 +12,18 @@
     position: relative;
     top: 20px;
     right: 20px;
-    background-color: red;
+    background-color: #2D152C;
     color: #fff;
-    padding: 10px 20px 10px 30px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    padding: 12px 20px 12px 32px;
+    border-radius: 8px;
+    box-shadow: 0 0 32px adjust-color(#0B0B20, $alpha: -0);
     max-width: 400px;
     margin-bottom: 10px;
 }
 
 .toast-message {
-    font-size: 14px;
+    font-size: 13.5px;
+    line-height: 24px;
 }
 
 .toast-close-button {
@@ -42,6 +43,7 @@
 .toast-close-icon {
     height: 18px;
     width: 18px;
+    border-radius: 50%;
     background-color: transparent;
     padding: 0 !important;
     align-items: center;
@@ -49,10 +51,11 @@
     margin-left: 1px;
     background-color: transparent;
     color: white;
+    transition: all 0.06s ease;
 
     &:hover {
-        background-color: adjust-color(lighten(red, 10%), $alpha: -0) !important;
-        color: $white !important;
+        background-color: adjust-color(#fff, $alpha: -0.95);
+        color: #FF689C !important;
     }
 
     svg {
@@ -61,5 +64,6 @@
         fill: currentColor;
         position: relative;
         top: 1px;
+        transition: all 0.06s ease;
     }
 }
