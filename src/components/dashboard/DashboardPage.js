@@ -189,6 +189,7 @@ function DashboardPage(props) {
                     // TODO: This needs to be set to the last visited table
                     to={paths.tables}>
                 </Link>
+                <div dangerouslySetInnerHTML={{ __html: userIcon }}></div>
                 {/* <div>
                     <span>{'{}'}</span>
                 </div>
