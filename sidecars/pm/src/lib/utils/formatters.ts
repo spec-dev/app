@@ -47,3 +47,23 @@ export const fromNamespacedVersion = (
 export function unique(arr: any[]): any[] {
     return Array.from(new Set(arr))
 }
+
+export const capitalize = (val: string): string => {
+    if (!val) return ''
+    return val.charAt(0).toUpperCase() + val.slice(1)
+}
+
+export const nspToCamel = (nsp: string): string => {
+    if (!nsp) return ''
+    let comps = nsp.split('.')
+
+    // Regular top-level namespace.
+    if (comps.length === 1) return capitalize(nsp)
+
+    // Contract namespace.
+    comps = comps.filter((val, i) => i !== 1)
+
+    const [chain, customerNsp, contractGroup] = comps
+
+    return `${capitalize(chain)}${capitalize(customerNsp)}${contractGroup}`
+}

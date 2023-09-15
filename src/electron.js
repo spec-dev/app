@@ -100,10 +100,11 @@ async function unsubscribeFromDatabase() {
 }
 
 function killSpecClient() {
-    console.info(`Killing spec client.`);
-
-    spec && spec.kill()
-    spec = null
+    if (spec) {
+        console.info(`Killing spec client.`)
+        spec.kill()
+        spec = null
+    }
 }
 
 async function createNewPool(_, payload) {

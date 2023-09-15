@@ -11,7 +11,7 @@ import {
     numericFilterOps,
     NewLiveColumnsPayload,
 } from '../types'
-import { fromNamespacedVersion } from '../utils/formatters'
+import { fromNamespacedVersion, nspToCamel } from '../utils/formatters'
 import { Section, inline } from '@ltd/j-toml'
 import { couldBeColPath, couldBeNumber, isNonEmptyString } from '../utils/validators'
 import { readProjectConfigFile, saveProjectConfigFile } from '../file'
@@ -44,28 +44,61 @@ function upsertLiveColumns(projectPath: string, data: NewLiveColumnsPayload) {
  * [object.LiveObject]
  * id = 'nsp.name@0.0.1'
  */
-export function upsertLiveObjectVersionInConfig(config: StringKeyMap, liveObjectVersionId: string) {
+export function upsertLiveObjectVersionInConfig(
+    config: StringKeyMap,
+    liveObjectVersionId: string
+): string {
     config.objects = config.objects || {}
 
-    const { nsp, name } = fromNamespacedVersion(liveObjectVersionId)
+    const { nsp, name, version } = fromNamespacedVersion(liveObjectVersionId)
     if (!name) throw `Malformed live object version id: ${liveObjectVersionId}`
 
-    let objectName = name
-    let addNewSection = true
-    if (config.objects[objectName]) {
-        const id = config.objects[objectName].id
-        const existingNsp = fromNamespacedVersion(id).nsp
-        if (existingNsp === nsp) {
-            config.objects[objectName].id = liveObjectVersionId
-            addNewSection = false
-        } else {
-            objectName = nsp + name
+    let referenceName = name
+
+    const nspWithName = nspToCamel(nsp) + name
+    const versionSuffix = version.replace(/\./g, '').slice(0, 10)
+    const fullName = nspWithName + versionSuffix
+
+    // Using complete full name - exact match.
+    if (config.objects[fullName]) {
+        return fullName
+    }
+
+    // Match by nsp + name (no version)
+    if (config.objects[nspWithName]) {
+        const listedId = config.objects[nspWithName].id
+
+        // Full match - no new section needed.
+        if (listedId === liveObjectVersionId) {
+            return nspWithName
+        }
+
+        // nsp + name are same so use version to differ.
+        referenceName = fullName
+    }
+    // Match just by name.
+    else if (config.objects[name]) {
+        const listedId = config.objects[name].id
+
+        // Full match - no new section needed.
+        if (listedId === liveObjectVersionId) {
+            return name
+        }
+
+        const { nsp: listedNsp } = fromNamespacedVersion(listedId)
+
+        // Namespaces are the same so use version to differ.
+        if (listedNsp === nsp) {
+            referenceName = name + versionSuffix
+        }
+        // Versions are the same so use namespace to differ.
+        else {
+            referenceName = nspWithName
         }
     }
-    if (!addNewSection) return objectName
 
-    config.objects[objectName] = Section({ id: liveObjectVersionId })
-    return objectName
+    config.objects[referenceName] = Section({ id: liveObjectVersionId })
+    return referenceName
 }
 
 /**

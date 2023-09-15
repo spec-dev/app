@@ -28,7 +28,7 @@
     "@ltd/j-toml": "^1.30.0",
     "@monaco-editor/react": "4.4.6",
     "@spec.dev/app-db": "^0.0.1",
-    "@spec.dev/pm": "^0.0.1",
+    "@spec.dev/pm": "^0.0.2",
     "app-root-dir": "^1.0.2",
     "chokidar": "^3.5.3",
     "highlight.js": "^11.6.0",
