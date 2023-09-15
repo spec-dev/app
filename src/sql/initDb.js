@@ -129,6 +129,10 @@ BEGIN
     INTO block_number
     USING rec;
 
+    IF block_number IS NULL THEN
+        RETURN rec;
+    END IF;
+
     IF default_chain_id != '' THEN
         chain_id = default_chain_id;
     ELSE
@@ -180,6 +184,16 @@ create table if not exists spec.live_columns (
 comment on table spec.live_columns is 'Spec: Stores the current live columns.';
 alter table spec.live_columns owner to spec;
 
+create table if not exists spec.links (
+    table_path character varying not null,
+    live_object_id character varying not null,
+    unique_by character varying not null,
+    filter_by character varying,
+    constraint links_pkey primary key (table_path, live_object_id)
+);
+comment on table spec.links is 'Spec: Stores unique and filter by information.';
+alter table spec.links owner to spec;
+
 create table if not exists spec.table_sub_cursors (
     table_path character varying not null,
     "timestamp" timestamp with time zone not null,
@@ -218,7 +232,7 @@ create table if not exists spec.ops (
     "before" json,
     "after" json,
     block_number bigint not null,
-    chain_id text not null,
+    chain_id varchar not null,
     ts timestamp with time zone not null default(now() at time zone 'utc')
 );
 comment on table spec.ops is 'Spec: Stores before & after snapshots of records at specific block numbers.';
