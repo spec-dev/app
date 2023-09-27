@@ -11,6 +11,7 @@ const orderedChainIds = [
     chainIds.POLYGON,
     chainIds.GOERLI,
     chainIds.MUMBAI,
+    chainIds.BASE,
 ]
 
 const options = [

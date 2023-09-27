@@ -3,6 +3,7 @@ export const chainIds = {
     GOERLI: '5',
     POLYGON: '137',
     MUMBAI: '80001',
+    BASE: '8453',
 }
 
 export const chainNames = {
@@ -10,4 +11,5 @@ export const chainNames = {
     [chainIds.GOERLI]: 'Goerli',
     [chainIds.POLYGON]: 'Polygon',
     [chainIds.MUMBAI]: 'Mumbai',
+    [chainIds.BASE]: 'Base',
 }

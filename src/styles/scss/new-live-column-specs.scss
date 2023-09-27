@@ -168,7 +168,8 @@ $newLiveColumnPrimaryDetailsLinksOffsetLeft: 20px;
     }
 
     &.new-live-column-specs__primary-details-chain--ethereum,
-    &.new-live-column-specs__primary-details-chain--goerli {
+    &.new-live-column-specs__primary-details-chain--goerli,
+    &.new-live-column-specs__primary-details-chain--base {
         color: $blueAccent;
         background-color: adjust-color($blueAccent, $alpha: -0.95);
     }

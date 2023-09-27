@@ -109,7 +109,7 @@ async function createTable(newTable) {
 
         // Build new versioned migration.
         const migration = newMigration(
-            `create_${tableName}_table`,
+            `create_${tableName}`,
             sqlStatementsAsTx(upStatements),
             sqlStatementsAsTx(downStatements)
         )

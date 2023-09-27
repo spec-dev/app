@@ -99,7 +99,8 @@
     }
 
     &.live-object-search-result__chain--ethereum,
-    &.live-object-search-result__chain--goerli {
+    &.live-object-search-result__chain--goerli,
+    &.live-object-search-result__chain--base {
         color: $blueAccent;
         background-color: adjust-color($blueAccent, $alpha: -0.9);
     }
