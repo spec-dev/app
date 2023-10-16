@@ -6,7 +6,7 @@ import NewLiveColumnPanel, { referrers } from '../shared/panels/NewLiveColumnPan
 import CountUp from 'react-countup'
 import NewColumnDropdown from '../shared/dropdowns/NewColumnDropdown'
 import pm from '../../managers/project/projectManager'
-import { selectTableRecords, selectTableCount } from '../../sql'
+import { selectTableRecords, selectTableCount, selectSeedCursor } from '../../sql'
 import { sum } from '../../utils/math'
 import { displayColType, isJSONColumn } from '../../utils/colTypes'
 import { getNewCount, tableCounts } from '../../utils/counts'
@@ -29,6 +29,7 @@ import constants from '../../constants'
 import { noop } from '../../utils/nodash'
 import { hasTableBeenSeeded, markTableAsSeeded } from '../../utils/cache'
 import logger from '../../utils/logger'
+import editSeedCursorStatus from "../../sql/updateSeedCursorStatus";
 
 const className = 'tables-body'
 const pcn = getPCN(className)
@@ -154,6 +155,7 @@ function TablesBody(props, ref) {
     const { schema, config = {}, tablesLoaded, refetchTables = noop } = props
 
     // State.
+    const [isPaused, setIsPaused] = useState(false);
     const [table, setTable] = useState(props.table || {})
     const [status, setStatus] = useState(props.status || defaultInitialStatus(props.seedCursor, schema, table?.name))
     const [records, setRecords] = useState(props.records || null)
@@ -463,6 +465,17 @@ function TablesBody(props, ref) {
     }, [schema, table, props.table, props.seedCursor, primaryKeyColNames, mainWidth])
 
     useEffect(() => {
+        const setPausedStatus = async () => {
+        if (props.seedCursor && props.seedCursor.id) {
+          const result = await pm.query(selectSeedCursor(props.seedCursor.id))
+          const seedCursorIsPaused = result.rows && result.rows[0] && result.rows[0].status === "paused"
+          setIsPaused(seedCursorIsPaused)
+       }
+      }
+       setPausedStatus()
+    },[props.seedCursor, isPaused])
+
+    useEffect(() => {
         if (table?.name && records === null) {
             if (count === null) {
                 loadRecordCount()
@@ -627,6 +640,26 @@ function TablesBody(props, ref) {
             </span>
         </div>
     ), [showLiveDataPanel])
+
+    const renderPauseSeedingButton = useCallback(() => {
+        if (
+          status !== tableStatus.BACKFILLING.id &&
+          status !== tableStatus.POPULATING.id
+        ) {
+          return null;
+        }
+        return (
+          <div className={pcn("__pause_resume_button")}>
+            <span onClick={async () => {
+              await pm.query(editSeedCursorStatus(props.seedCursor.id, !isPaused))
+              setIsPaused(!isPaused)
+            }}>
+              {isPaused ? "Resume" : "Pause"}
+            </span>
+          </div>
+        );
+      }, [isPaused, props.seedCursor, status]);
+
 
     const renderHistoryButton = useCallback(() => (
         <div className={pcn('__history-button')}>
@@ -831,6 +864,7 @@ function TablesBody(props, ref) {
                                 { renderFilterButton() }
                                 { renderSortButton() }
                                 { renderLinkObjectButton() }
+                                { renderPauseSeedingButton() }
                             </div>
                         </div>
                     </div>

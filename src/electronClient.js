@@ -92,7 +92,6 @@ export async function subscribeToDatabase(connParams, handleEvents) {
 
         window.electronAPI.on(events.DATA_CHANGE, (_, message) => {
             const payload = parse(message)
-            console.log('got message', payload)
             handleEvents && handleEvents(payload?.events || [])
         })
 
