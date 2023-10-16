@@ -11,6 +11,7 @@ import selectFullSchema from './selectFullSchema'
 import selectNonUniqueIndexes from './selectNonUniqueIndexes'
 import selectPrimaryKeys from './selectPrimaryKeys'
 import selectRelationships from './selectRelationships'
+import selectSeedCursor from "./selectSeedCursor"
 import selectSeedCursors from './selectSeedCursors'
 import selectSpecSchema from './selectSpecSchema'
 import selectSpecUser from './selectSpecUser'
@@ -35,6 +36,7 @@ export {
     selectNonUniqueIndexes,
     selectPrimaryKeys,
     selectRelationships,
+    selectSeedCursor,
     selectSeedCursors,
     selectSpecSchema,
     selectSpecUser,

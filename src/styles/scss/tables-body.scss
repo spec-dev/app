@@ -342,6 +342,49 @@ $loaderTime: 2.3s;
     }
 }
 
+.tables-body__pause_resume_button {
+    height: 27px;
+    border: 1px solid adjust-color($white, $alpha: -0.78);
+    border-radius: 13.5px;
+    color: adjust-color($white, $alpha: -0.1);
+    background-color: transparent;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    position: relative;
+    font-size: 12px;
+    margin-left: 8px;
+
+    &:hover {
+        background-color: $backgroundMedium;
+        color: $white;
+    }
+
+    &>span:first-child {
+        padding-left: 10px;
+        padding-right: 12px;
+        height: 100%;
+        display: inline-flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        span {
+            position: relative;
+            top: -0.5px;
+        }
+
+        span:first-child {
+            font-size: 14px;
+        }
+
+        span:nth-child(2) {
+            font-size: 11px;
+            margin-left: 7px;
+            letter-spacing: 0.2px;
+        }
+    }
+}
+
 .tables-body__header-new-col-button {
     height: 27px;
     border: 1px solid adjust-color($white, $alpha: -0.78);
