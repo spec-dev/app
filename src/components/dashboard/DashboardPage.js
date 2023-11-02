@@ -27,6 +27,7 @@ import {
 } from '../../svgs/icons'
 import useCurrentProject from '../../hooks/useCurrentProject'
 import logger from '../../utils/logger'
+import SelectInput from '../shared/inputs/SelectInput'
 
 const className = 'dashboard'
 const pcn = getPCN(className)
@@ -54,6 +55,30 @@ function DashboardPage(props) {
     const [seedCursors, setSeedCursors] = useState([])
     const [currentSchemaName, _] = useState(DEFAULT_SCHEMA_NAME)
     const [tables, setTables] = useState(null)
+    const [projects, setProjects] = useState([])
+    const [databaseEnvironments, setDatabaseEnvironments] = useState([])
+    const [currentProjectEnv, setCurrentProjectEnv] = useState({
+        project: null,
+        env: null,
+    })
+
+    const getProjects = async () => {
+        const currEnv = await window.electronAPI.showEnv()
+        const currProject = await window.electronAPI.showProject()
+        const projects = await window.electronAPI.getUserProjects()
+        const newDatabaseEnvironments = await window.electronAPI.getCurrentProjectEnvs(currProject)
+
+        setDatabaseEnvironments(newDatabaseEnvironments)
+        setProjects(projects)
+        setCurrentProjectEnv({
+            project: currProject,
+            env: currEnv,
+        })
+    }
+
+    useEffect(() => {
+        getProjects()
+    }, [])
 
     const tableNames = useMemo(() => tables?.map(t => t.name) || null, [tables])
     const tablesBodyRef = useRef()
@@ -269,7 +294,36 @@ function DashboardPage(props) {
             <div className={pcn('__content-liner')}>
                 <div className={pcn('__content-header')}>
                     <div className={pcn('__content-header-left')}>
-                        { renderHeaderProjectPath() }
+                        <SelectInput
+                            options={projects.map(p => ({ value: p, label: p }))}
+                            classNamePrefix='spec'
+                            isRequired={true}
+                            updateFromAbove={true}
+                            className={pcn('__col-input-field')}
+                            placeholder={`${project?.org || 'org'}/${project?.name || 'project'}`}
+                            onChange={async (val) => {
+                                await window.electronAPI.useProject(val)
+                                getProjects()
+                            }}
+                            value={currentProjectEnv.project ? currentProjectEnv.project : "Select a project..."}
+                        />
+                        <SelectInput
+                            options={databaseEnvironments.map(p => ({ value: p, label: p }))}
+                            classNamePrefix='spec'
+                            isRequired={true}
+                            updateFromAbove={true}
+                            className={pcn('__col-input-field')}
+                            placeholder={`${currentProjectEnv.env || 'local'}`}
+                            onChange={async (val) => {
+                                window.electronAPI.useEnv(val)
+                                setCurrentProjectEnv({
+                                ...currentProjectEnv,
+                                env: val,
+                            })}}
+                            value={currentProjectEnv.env ? currentProjectEnv.env : "Select a database environment..."}
+                        />
+                    </div>
+                    <div>
                     </div>
                     <div className={pcn('__content-header-right')}>
                         <div className={pcn('__header-buttons')}>
@@ -289,7 +343,7 @@ function DashboardPage(props) {
                 </div>
             </div>
         </div>
-    ), [currentTable, renderHeaderProjectPath, renderContentBodyComp])
+    ), [currentTable, renderHeaderProjectPath, renderContentBodyComp, currentProjectEnv, projects, databaseEnvironments])
 
     return (
         <div className={className}>

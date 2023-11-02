@@ -21,6 +21,8 @@ const {
     performQuery,
 } = require('@spec.dev/app-db')
 const url = require('url')
+const { useProject, getUserProjects, getCurrentProjectEnvs, useEnv, showEnv, showProject } = require('./services/crudEnv/projectAndEnv')
+
 
 const { stringify, parse } = JSON
 
@@ -262,6 +264,13 @@ app.whenReady().then(() => {
     ipcMain.handle('query', query)
     ipcMain.handle('createSpecClient', createSpecClient)
     ipcMain.handle('killSpecClient', killSpecClient)
+    ipcMain.handle('useProject', useProject)
+    ipcMain.handle('getProjects', getProjects)
+    ipcMain.handle('getUserProjects', getUserProjects)
+    ipcMain.handle('getCurrentProjectEnvs', getCurrentProjectEnvs)
+    ipcMain.handle('useEnv', useEnv)
+    ipcMain.handle('showProject', showProject)
+    ipcMain.handle('showEnv', showEnv)
     createWindow()
 })
 
