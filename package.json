@@ -36,6 +36,7 @@
     "jquery": "^3.6.0",
     "lodash-es": "^4.17.21",
     "monaco-editor": "^0.33.0",
+    "netrc": "^0.1.4",
     "path-browserify": "^1.0.1",
     "pg-format": "^1.0.4",
     "pluralize": "^8.0.0",

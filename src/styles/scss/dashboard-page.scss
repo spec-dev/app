@@ -219,6 +219,24 @@
 
 .dashboard__content-header-left {
     display: inline-block;
+    padding-top: 12px;
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.dashboard__content-header-select {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    padding-right: 4px;
+}
+
+.dashboard__col-input-field {
+    width: 144px;
+    height: 35px;
 }
 
 .dashboard__content-header-right {
