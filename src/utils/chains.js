@@ -9,6 +9,7 @@ export const chainIds = {
     PGN: '424',
     CELO: '42220',
     LINEA: '59144',
+    SEPOLIA: '11155111',
 }
 
 export const chainNames = {
@@ -22,4 +23,5 @@ export const chainNames = {
     [chainIds.PGN]: 'PGN',
     [chainIds.CELO]: 'Celo',
     [chainIds.LINEA]: 'Linea',
+    [chainIds.SEPOLIA]: 'Sepolia',
 }

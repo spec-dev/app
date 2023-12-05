@@ -702,7 +702,8 @@ function LiveColumnFilters(props, ref) {
             foreignTablePkColPath = m
             mod = n
             if (i === k && j === l && filter.value) {
-                promptAboutForeignKey = true
+                // HACK
+                // promptAboutForeignKey = true
             }
         }
 

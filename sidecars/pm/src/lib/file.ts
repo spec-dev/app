@@ -152,10 +152,10 @@ export function saveGlobalProjectsFile(table: any) {
 // ============================================
 
 const comments = {
-    LIVE_OBJECTS_SECTION: '# = Live Objects (Sources) ------------------------------',
-    LIVE_COLUMNS_SECTION: '# = Live Columns (Outputs) ------------------------------',
-    LINKS_SECTION: '# = Links & Filters --------------------------------------',
-    DEFAULTS_SECTION: '# = Defaults --------------------------------------------',
+    DATA_SOURCES_SECTION: '# = Data Sources -----------------------------',
+    LIVE_TABLES_SECTION: '# = Live Tables ------------------------------',
+    LINKS_SECTION: '# = Links & Filters --------------------------',
+    DEFAULTS_SECTION: '# = Defaults ---------------------------------',
 }
 
 export function readProjectConfigFile(projectPath: string): StringKeyMap {
@@ -217,9 +217,9 @@ export function saveProjectConfigFile(projectPath: string, config: any): StringK
         }
 
         const newContents = [
-            comments.LIVE_OBJECTS_SECTION,
+            comments.DATA_SOURCES_SECTION,
             ...(objectSections.length ? objectSections.map((section) => '\n' + section) : ['']),
-            '\n' + comments.LIVE_COLUMNS_SECTION,
+            '\n' + comments.LIVE_TABLES_SECTION,
             ...(liveColumnSections.length
                 ? liveColumnSections.map((section) => '\n' + section)
                 : ['']),

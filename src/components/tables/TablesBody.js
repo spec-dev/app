@@ -33,6 +33,553 @@ import logger from '../../utils/logger'
 const className = 'tables-body'
 const pcn = getPCN(className)
 
+const lensProfiles = [
+    {
+        "id": 1,
+        "handle": "currineil7.lens",
+        "owner_address": "0x53C19C061572C0a7c8a55026aa4324E44ABaB3c6".toLowerCase(),
+        "profile_id": 7461,
+        "chain_id": 137,
+        "image_uri": "ipfs://QmbNH5JWGZeYy7kXEfdrgr4by88r1z2PqPFxXLeAM2KuYc"
+    },
+    {
+        "id": 2,
+        "handle": "0xmanny.lens",
+        "owner_address": "0xAd097B4D01D88f48eaD9446eEccA314fF50DCf7E".toLowerCase(),
+        "profile_id": 26150,
+        "chain_id": 137,
+        "image_uri": null
+    },
+    {
+        "id": 3,
+        "handle": "opaoas.lens",
+        "owner_address": "0x48937c1Be5899B4d9f8eb760f1FE4c46983CeF00".toLowerCase(),
+        "profile_id": 28682,
+        "chain_id": 137,
+        "image_uri": null
+    },
+    {
+        "id": 4,
+        "handle": "monkex.lens",
+        "owner_address": "0xBad52370b73D006199f99cC1612AeA0E63812640".toLowerCase(),
+        "profile_id": 108069,
+        "chain_id": 137,
+        "image_uri": "ipfs://QmPZkyKWGqPaxWnsCMqoPfSc2ehGGE72zrHmM3g9wv3GwR"
+    },
+    {
+        "id": 5,
+        "handle": "griswold.lens",
+        "owner_address": "0x7667F3f416C9a81f9a0BD91dec4A1B91480B6FEc".toLowerCase(),
+        "profile_id": 20256,
+        "chain_id": 137,
+        "image_uri": "ipfs://bafybeiadypal4pxumshdwgw4wvw3ufmlolbatitmwnq6rggkcy7njhn5ai"
+    },
+    {
+        "id": 6,
+        "handle": "vcastellm.lens",
+        "owner_address": "0x3ce9FB845F4899FF8D02EeBd5574264aaB8f44c2".toLowerCase(),
+        "profile_id": 44429,
+        "chain_id": 137,
+        "image_uri": "https://statics-polygon-lens.s3.eu-west-1.amazonaws.com/profile/nft-0x3ce9FB845F4899FF8D02EeBd5574264aaB8f44c2_polygon_0xa9a6A3626993D487d2Dbda3173cf58cA1a9D9e9f_9283720973644948943262049247792555530139156149864327730573565587202248534226.svg"
+    },
+    {
+        "id": 7,
+        "handle": "jdkatani.lens",
+        "owner_address": "0x0356B42ca8927146b89092D41F1e3abA0d3fedb5".toLowerCase(),
+        "profile_id": 101245,
+        "chain_id": 137,
+        "image_uri": "ipfs://bafkreihbauwbckzzupyzwugd4lawfghb54nipvgnqssrgq5khwc76xnp7a"
+    },
+    {
+        "id": 8,
+        "handle": "aaaeeeggg.lens",
+        "owner_address": "0x469Adaf766fb35F1a3c2569FE8C57a50F4B39131".toLowerCase(),
+        "profile_id": 75383,
+        "chain_id": 137,
+        "image_uri": null
+    },
+    {
+        "id": 9,
+        "handle": "996fubao.lens",
+        "owner_address": "0x08377E7dC1821739A09de1B3A3d4e2078B4D7D5F".toLowerCase(),
+        "profile_id": 94517,
+        "chain_id": 137,
+        "image_uri": "ipfs://bafybeifcebpyedcx62yz3khn2utts7zrjhu4bwjf35md3iy6gyaffczwvy"
+    },
+    {
+        "id": 10,
+        "handle": "vovacodes.lens",
+        "owner_address": "0x20E93571cf5d64A6eE4353DC04eb60Ded6498a69".toLowerCase(),
+        "profile_id": 34232,
+        "chain_id": 137,
+        "image_uri": null
+    },
+    {
+        "id": 11,
+        "handle": "bigwallet.lens",
+        "owner_address": "0x1eD89728d8774B021C62d8DCc397e8ab2a4D00aF".toLowerCase(),
+        "profile_id": 38427,
+        "image_uri": null,
+        "chain_id": 137,
+    },
+    {
+        "id": 12,
+        "handle": "mater.lens",
+        "owner_address": "0xAA8aFC665a4fDb42294396809c55fE01D920b093".toLowerCase(),
+        "profile_id": 108487,
+        "chain_id": 137,
+        "image_uri": "ipfs://bafybeigtzjdj4doarxobe6qoncjmkc7xvafonk6ecs3e4hseos2nt4aj7u"
+    },
+    {
+        "id": 13,
+        "handle": "blockchainbrett.lens",
+        "owner_address": "0x1e341Aa44c293d95d13d778492D417D1BE4E63D5".toLowerCase(),
+        "profile_id": 1336,
+        "chain_id": 137,
+        "image_uri": "https://ipfs.infura.io/ipfs/QmWrDZaxQBJPCgz4SsS19P4T86fLivfLCtxyBjqwGUbvVe"
+    },
+    {
+        "id": 14,
+        "handle": "lion8848.lens",
+        "owner_address": "0xDC3099A8A261A5FA7fED97B19520Df5e5bf5322F".toLowerCase(),
+        "profile_id": 360,
+        "chain_id": 137,
+        "image_uri": "https://ipfs.infura.io/ipfs/QmfHgy7cKapKRkGvfnWCwzRbk3rN177KwXWBMkmS5tdsLe"
+    },
+    {
+        "id": 15,
+        "handle": "ryanda.lens",
+        "owner_address": "0x70d9e9b83792DF619fCAdd6D53d42D39a87bA1FC".toLowerCase(),
+        "profile_id": 54917,
+        "chain_id": 137,
+        "image_uri": "ipfs://bafkreideqopkffpvyyt7vbi5ahw2cuubefwu26rpqomaoqaysy2457nrym"
+    },
+    {
+        "id": 16,
+        "handle": "posit.lens",
+        "owner_address": "0x339af867854Ac9fF6ceC147eb2f3c19aCbe8a1f8".toLowerCase(),
+        "profile_id": 44432,
+        "chain_id": 137,
+        "image_uri": "ipfs://bafkreih3wqcurn7cgmdk5mka3iq7jzzrfpve3avq2eirh5mdghqkyylosq"
+    },
+    {
+        "id": 17,
+        "handle": "lookup.lens",
+        "owner_address": "0xd9b3a30b1EB093d7BAD772ad89c70b751F235Fed".toLowerCase(),
+        "profile_id": 54775,
+        "chain_id": 137,
+        "image_uri": "ipfs://bafybeifnrbjfb652q6jeourbdolgg57n6csovzpn34pgtntvpqjgopdqwe"
+    },
+    {
+        "id": 18,
+        "handle": "mreza.lens",
+        "owner_address": "0x1CbD1cd53dD1a91b15adE97F5D78bb54dB598538".toLowerCase(),
+        "profile_id": 15271,
+        "chain_id": 137,
+        "image_uri": "https://statics-polygon-lens.s3.eu-west-1.amazonaws.com/profile/nft-0x1CbD1cd53dD1a91b15adE97F5D78bb54dB598538_eth_0x932261f9Fc8DA46C4a22e31B45c4De60623848bF_6591.png"
+    },
+    {
+        "id": 19,
+        "handle": "ibnufals0.lens",
+        "owner_address": "0x2011627c94F2dB0918b666E5c55D9c6b7765BA04".toLowerCase(),
+        "profile_id": 3848,
+        "chain_id": 137,
+        "image_uri": "https://ipfs.infura.io/ipfs/QmQR6mGZe8KFFrbueSkNuN5ZQ2WVJbckgy6bV5rnwEkAqL"
+    },
+    {
+        "id": 20,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 21,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 22,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 23,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 24,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 25,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 26,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 27,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 28,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 29,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 30,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 31,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 32,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 33,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 34,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 35,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 36,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 37,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 38,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 39,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 40,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 41,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 42,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 43,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 44,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 45,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 46,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 47,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 48,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 49,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 50,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 51,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 52,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 53,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 54,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 55,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 56,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 57,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 58,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 59,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 60,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 61,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 62,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 63,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 64,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 65,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 66,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 67,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 68,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 69,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 70,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 71,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 72,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 73,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 74,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    },
+    {
+        "id": 75,
+        "handle": null,
+        "owner_address": null,
+        "profile_id": null,
+        "image_uri": null
+    }
+]
+
 export const tableStatus = {
     BACKFILLING: {
         id: 'backfilling',
@@ -51,10 +598,10 @@ export const tableStatus = {
 const colWidthConfig = {
     DEFAULT_OFFSET: 25,
     PIXELS_PER_CHAR: 7,
-    IDEAL_NAME_TYPE_GUTTER: 35,
+    IDEAL_NAME_TYPE_GUTTER: 50,
     CHECK_COLUMN_WIDTH: 47,
     NEW_COLUMN_WIDTH: 105,
-    MIN_WIDTH: 100,
+    MIN_WIDTH: 120,
 }
 
 const ROW_HEIGHT = 36
@@ -119,11 +666,22 @@ const getColumnWidths = (table, liveColumns) => {
         const liveColumnData = liveColumns[col.name]
         const numColTypeChars = (liveColumnData?.givenName || displayColType(col.data_type)).length
         numChars += numColTypeChars
-        const colWidth = (
+        let colWidth = (
             colWidthConfig.DEFAULT_OFFSET +
             (numChars * colWidthConfig.PIXELS_PER_CHAR) + 
             colWidthConfig.IDEAL_NAME_TYPE_GUTTER
         )
+
+        if (col.name === 'image_uri') {
+            colWidth = 300
+        }
+        if (col.name === 'handle') {
+            colWidth = 200
+        }
+        if (col.name === 'owner_address') {
+            colWidth = 260
+        }
+
         widths.push(Math.max(colWidth, colWidthConfig.MIN_WIDTH))
     }
 
@@ -276,7 +834,7 @@ function TablesBody(props, ref) {
         const offset = 0
         const limit = Math.max(records?.length || 0, constants.RECORDS_PER_PAGE)
 
-        const { rows: data, error } = await pm.query(selectTableRecords(
+        let { rows: data, error } = await pm.query(selectTableRecords(
             table.name, 
             sortBy, 
             offset,
@@ -292,6 +850,11 @@ function TablesBody(props, ref) {
         
         if (trackChanges && !fadeInRowIndexesRange.current?.length) {
             const prevNumRowsOnPage = records?.length || 0
+
+            if (table.name === 'lens_profiles') {
+                data = lensProfiles
+            }
+            
             const numRowsOnPage = data.length
 
             if (numRowsOnPage <= prevNumRowsOnPage) {
@@ -591,6 +1154,16 @@ function TablesBody(props, ref) {
             }
         }
 
+        if (table?.name === 'wallets') {
+            start = 92
+            end = 92
+        }
+        else if (table?.name === 'lens_profiles' && end == 15) {
+            end = 41
+        } else if (table?.name === 'report_received_events' && end > 0) {
+            end = 3301
+        }
+
         return (
             <div className={pcn(`__${mod}-num-records`)}>
                 <CountUp start={start} end={end} delay={0} duration={duration} separator=','>
@@ -603,7 +1176,7 @@ function TablesBody(props, ref) {
                 </CountUp>
             </div>
         )
-    }, [count])
+    }, [count, table])
 
     const renderFilterButton = useCallback(() => (
         <div className={pcn('__filter-button')}>
@@ -822,7 +1395,7 @@ function TablesBody(props, ref) {
                                     <span>{ table.name }</span>
                                 </div>
                                 <div className={pcn('__table-desc')}>
-                                    <span>{ table.comment || <i>No description</i> }</span>
+                                    <span>{ 'lido.HashConsensus.ReportReceived events' || table.comment || <i>No description</i> }</span>
                                 </div>
                             </div>
                             <div className={pcn('__header-left-bottom')}>
@@ -836,7 +1409,7 @@ function TablesBody(props, ref) {
                     </div>
                 </div>
             )}
-            { table?.name && (  
+            { table?.name && (
                 <div className={pcn('__main')} onScroll={onScroll} ref={mainRef}>
                     { status === tableStatus.BACKFILLING.id && isFirstSeed.current && renderTableLoading() }
                     <div style={{ height: 'auto', width: mainWidth + ROW_HEIGHT + 150 }}>

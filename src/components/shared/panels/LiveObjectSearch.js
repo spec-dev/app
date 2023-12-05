@@ -66,6 +66,9 @@ function LiveObjectSearch(props, ref) {
 
     // Fetch live objects. Set state.
     const fetchLiveObjectPage = useCallback(async (query, filters) => {
+
+        if (query.length < 4) return
+        
         const matchingResults = await loadMatchingLiveObjects(query, filters, offsetRef.current)
         hasMore.current = matchingResults.length >= PAGE_SIZE
         offsetRef.current > 0 

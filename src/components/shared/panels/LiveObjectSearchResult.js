@@ -34,6 +34,16 @@ function LiveObjectSearchResult(props, ref) {
         nsp = [splitNsp[0], splitNsp[1]].join('.')
         name = `${name} Events`
     }
+
+    if (nsp === 'polygon.contracts') {
+        nsp = 'lens'
+    }
+    if (nsp === 'eth.contracts') {
+        nsp = 'lido'
+    }
+    if (supportedChainNames[0] === 'Ethereum' && supportedChainNames.length === 1) {
+        supportedChainNames.push('Goerli')
+    }
     
     return (
         <div className={className} accessKey={index} onClick={onClick} tabIndex="0" ref={ref} style={style}>

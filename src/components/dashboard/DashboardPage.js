@@ -180,7 +180,7 @@ function DashboardPage(props) {
                     style={{ marginBottom: 1 }}
                     dangerouslySetInnerHTML={{ __html: specIcon }}>
                 </div>
-                {/* <div dangerouslySetInnerHTML={{ __html: homeIcon }}></div> */}
+                <div dangerouslySetInnerHTML={{ __html: homeIcon }}></div>
                 <span></span>
                 <Link
                     style={{ marginTop: 14 }}
@@ -189,18 +189,18 @@ function DashboardPage(props) {
                     // TODO: This needs to be set to the last visited table
                     to={paths.tables}>
                 </Link>
-                <div dangerouslySetInnerHTML={{ __html: userIcon }}></div>
-                {/* <div>
+                {/* <div dangerouslySetInnerHTML={{ __html: userIcon }}></div> */}
+                <div>
                     <span>{'{}'}</span>
                 </div>
-                <div dangerouslySetInnerHTML={{ __html: terminalIcon }}></div>
-                <div dangerouslySetInnerHTML={{ __html: dbIcon }}></div>
+                {/* <div dangerouslySetInnerHTML={{ __html: terminalIcon }}></div>
+                <div dangerouslySetInnerHTML={{ __html: dbIcon }}></div> */}
                 <span></span>
                 <div dangerouslySetInnerHTML={{ __html: blistIcon }}></div>
-                <div dangerouslySetInnerHTML={{ __html: barChartIcon }}></div>
+                {/* <div dangerouslySetInnerHTML={{ __html: barChartIcon }}></div> */}
                 <div dangerouslySetInnerHTML={{ __html: documentIcon }}></div>
                 <div dangerouslySetInnerHTML={{ __html: gearIcon }}></div>
-                <div dangerouslySetInnerHTML={{ __html: userIcon }}></div> */}
+                {/* <div dangerouslySetInnerHTML={{ __html: userIcon }}></div> */}
             </div>
         </div>
     ), [currentSection])
@@ -258,9 +258,9 @@ function DashboardPage(props) {
 
     const renderHeaderProjectPath = useCallback(() => project?.org && project?.name ? (
         <div className={pcn('__project-path')}>
-            <span>{ project.org }</span>
+            <span>{ 'my' }</span>
             <span>/</span>
-            <span>{ project.name }</span>
+            <span>{ 'project' }</span>
         </div>
     ) : null, [project])
 

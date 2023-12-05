@@ -21,7 +21,7 @@ export async function loadMatchingLiveObjects(query, filters, offset, limit) {
 }
 
 ;(async () => {
-    liveObjects.frontPage = await loadMatchingLiveObjects()
+    liveObjects.frontPage = await loadMatchingLiveObjects('lens')
 })()
 
 export const getFrontPageLiveObjects = () => liveObjects.frontPage || []

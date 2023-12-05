@@ -1,6 +1,6 @@
 {
     "name": "@spec.dev/pm",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "author": "Spec",
     "files": [
         "dist",

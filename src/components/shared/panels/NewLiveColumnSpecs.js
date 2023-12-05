@@ -114,9 +114,10 @@ function NewLiveColumnSpecs(props, ref) {
     const interfaceCode = useMemo(() => liveObjectVersion ? buildInterfaceCode(liveObjectVersion) : '', [liveObjectVersion])
     const exampleObjectCode = useMemo(() => liveObjectVersion ? buildExampleObjectCode(liveObjectVersion) : '', [liveObjectVersion])
     const propertyNames = useMemo(() => liveObjectVersion?.properties?.map(p => p.name) || [], [liveObjectVersion])
-    const supportedChainIds = useMemo(() => sortInts(
-        Object.keys(liveObjectVersion?.config?.chains || {}).map(v => parseInt(v))
-    ).map(v => v.toString()), [liveObjectVersion])
+    // const supportedChainIds = useMemo(() => sortInts(
+    //     Object.keys(liveObjectVersion?.config?.chains || {}).map(v => parseInt(v))
+    // ).map(v => v.toString()), [liveObjectVersion])
+    const supportedChainIds = [1, 5]
     const supportedChainNames = useMemo(() => supportedChainIds.map(chainId => chainNames[chainId]).filter(v => !!v), [supportedChainIds])
     const collapsedHeight = useMemo(() => Math.min(
         (
@@ -251,7 +252,7 @@ function NewLiveColumnSpecs(props, ref) {
                             }
                         </div>
                         <div className={pcn('__primary-details-desc')}>
-                            <span>{liveObject.desc}</span>
+                            <span>{'lido.HashConsensus.ReportReceived events' || liveObject.desc}</span>
                         </div>    
                     </div>
                     <div className={pcn('__primary-details-links')}>
@@ -262,7 +263,8 @@ function NewLiveColumnSpecs(props, ref) {
                             dangerouslySetInnerHTML={{ __html: githubIcon }}>
                         </a>
                         <span className={pcn('__primary-details-link', '__primary-details-link--nsp')}>
-                            {`@${nsp}`}
+                            {/* {`@${nsp}`} */}
+                            @lido
                         </span>
                     </div>
                 </div>
@@ -393,7 +395,7 @@ function NewLiveColumnSpecs(props, ref) {
                     <NewTableBasicInputs
                         values={{
                             name: initialTableName,
-                            desc: liveObject.desc,
+                            desc: 'lido.HashConsensus.ReportReceived events' || liveObject.desc,
                         }}
                         onNameChange={val => editableLiveColumnsRef.current?.updateTableName(val)}
                         ref={newTableDetailsRef}
