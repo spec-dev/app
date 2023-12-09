@@ -143,9 +143,7 @@ function DashboardPage(props) {
 
     useEffect(() => {
         pm.onDataChange = events => {
-            console.log('events', events)
             if (!events.length) return
-            console.log('Received', events[0].table, events.length)
             const isSeedCursorEvents = events[0].table === specTableNames.SEED_CURSORS
             isSeedCursorEvents ? onSeedCursorsChange(events) : onTableDataChange(events)
         }
@@ -246,7 +244,7 @@ function DashboardPage(props) {
                         config={config}
                         refetchTables={refetchTables}
                         seedCursor={(seedCursors || []).find(sc => (
-                            sc.spec.table_path === `${currentSchemaName}.${currentTable?.name}`
+                            sc.spec.tablePath === `${currentSchemaName}.${currentTable?.name}`
                         ))}
                         ref={tablesBodyRef}
                     />
@@ -258,9 +256,9 @@ function DashboardPage(props) {
 
     const renderHeaderProjectPath = useCallback(() => project?.org && project?.name ? (
         <div className={pcn('__project-path')}>
-            <span>{ 'my' }</span>
+            <span>{ project.org }</span>
             <span>/</span>
-            <span>{ 'project' }</span>
+            <span>{ project.name }</span>
         </div>
     ) : null, [project])
 

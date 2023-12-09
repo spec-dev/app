@@ -625,13 +625,13 @@ $loaderTime: 2.3s;
     }
 }
 
-.tables-body__col-header.tables-body__col-header--primary,
-.tables-body__cell.tables-body__cell--primary {
-    z-index: 2;
-    position: sticky;
-    left: 47px;
-    border-right: 2px solid adjust-color($gray, $alpha: -0.92);
-}
+// .tables-body__col-header.tables-body__col-header--primary,
+// .tables-body__cell.tables-body__cell--primary {
+//     z-index: 2;
+//     position: sticky;
+//     left: 47px;
+//     border-right: 2px solid adjust-color($gray, $alpha: -0.92);
+// }
 
 .tables-body__cell.tables-body__cell--check-col,
 .tables-body__cell.tables-body__cell--primary {
@@ -735,8 +735,8 @@ $loaderTime: 2.3s;
 
     // Primary Key
     &.tables-body__col-header-type-icon--key {
-        opacity: 0.75;
-        color: $lightGray;
+        // opacity: 0.75;
+        color: $tealAccent;
 
         svg {
             width: 13px;

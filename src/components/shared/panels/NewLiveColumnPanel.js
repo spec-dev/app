@@ -34,7 +34,7 @@ const timing = {
 const getHeaderTitle = (index, referrer) => {
     switch (index) {
         case 0:
-            return 'Choose a live data source'
+            return 'Select a Live Table'
         case 1:
             return {
                 [referrers.ADD_LIVE_DATA]: 'Create Live Columns',

@@ -11,7 +11,7 @@ import { caretDownIcon, filterIcon, githubIcon, tableEditorIcon } from '../../..
 import hljs from 'highlight.js/lib/core'
 import { formatExistingFiltersForEdit } from '../../../utils/config'
 import typescript from 'highlight.js/lib/languages/typescript'
-import { camelToSnake, toPlural } from '../../../utils/formatters'
+import { camelToSnake } from '../../../utils/formatters'
 import { sortInts } from '../../../utils/math'
 import { chainNames } from '../../../utils/chains'
 import Snippet from '../snippets/InterfaceExampleSnippet'
@@ -94,7 +94,14 @@ const getLiveColumnsSectionSubtitle = (purpose, liveObjectVersion, isContractEve
 
 function NewLiveColumnSpecs(props, ref) {
     // Props
-    const { liveObject, table, config, schema, purpose, editColumn = noop } = props
+    const {
+        liveObject,
+        table,
+        config,
+        schema,
+        purpose,
+        editColumn = noop 
+    } = props
 
     // State
     const [docsExpanded, setDocsExpanded] = useState(false)
@@ -114,10 +121,9 @@ function NewLiveColumnSpecs(props, ref) {
     const interfaceCode = useMemo(() => liveObjectVersion ? buildInterfaceCode(liveObjectVersion) : '', [liveObjectVersion])
     const exampleObjectCode = useMemo(() => liveObjectVersion ? buildExampleObjectCode(liveObjectVersion) : '', [liveObjectVersion])
     const propertyNames = useMemo(() => liveObjectVersion?.properties?.map(p => p.name) || [], [liveObjectVersion])
-    // const supportedChainIds = useMemo(() => sortInts(
-    //     Object.keys(liveObjectVersion?.config?.chains || {}).map(v => parseInt(v))
-    // ).map(v => v.toString()), [liveObjectVersion])
-    const supportedChainIds = [1, 5]
+    const supportedChainIds = useMemo(() => sortInts(
+        Object.keys(liveObjectVersion?.config?.chains || {}).map(v => parseInt(v))
+    ).map(v => v.toString()), [liveObjectVersion])
     const supportedChainNames = useMemo(() => supportedChainIds.map(chainId => chainNames[chainId]).filter(v => !!v), [supportedChainIds])
     const collapsedHeight = useMemo(() => Math.min(
         (
@@ -252,7 +258,7 @@ function NewLiveColumnSpecs(props, ref) {
                             }
                         </div>
                         <div className={pcn('__primary-details-desc')}>
-                            <span>{'lido.HashConsensus.ReportReceived events' || liveObject.desc}</span>
+                            <span>{liveObject.desc}</span>
                         </div>    
                     </div>
                     <div className={pcn('__primary-details-links')}>
@@ -263,8 +269,7 @@ function NewLiveColumnSpecs(props, ref) {
                             dangerouslySetInnerHTML={{ __html: githubIcon }}>
                         </a>
                         <span className={pcn('__primary-details-link', '__primary-details-link--nsp')}>
-                            {/* {`@${nsp}`} */}
-                            @lido
+                            {`@${nsp}`}
                         </span>
                     </div>
                 </div>
@@ -295,6 +300,7 @@ function NewLiveColumnSpecs(props, ref) {
     ), [liveObjectVersion, docsExpanded, renderDocsSection, renderInterfaceSection, collapsedHeight])
 
     const renderFiltersSection = useCallback(() => {
+        if (liveObject.isContractEvent) return null
         let name = liveObject.displayName
         if (liveObject.isContractEvent) {
             name = `${name} events`
@@ -344,11 +350,10 @@ function NewLiveColumnSpecs(props, ref) {
     const renderLiveColumnsSection = useCallback(() => {
         let initialTableName = liveObjectVersion.config?.tableName
         if (!initialTableName) {
-            initialTableName = toPlural(camelToSnake(
+            initialTableName = camelToSnake(
                 liveObject.isContractEvent ? `${liveObject.displayName}Event` : liveObjectVersion.name
-            ))
+            )
         }
-
         return (
             <div className={pcn('__section', '__section--live-columns')}>
                 <div className={pcn('__section-title')}>
@@ -375,11 +380,10 @@ function NewLiveColumnSpecs(props, ref) {
     const renderTableInfoSection = useCallback(() => {
         let initialTableName = liveObjectVersion.config?.tableName
         if (!initialTableName) {
-            initialTableName = toPlural(camelToSnake(
+            initialTableName = camelToSnake(
                 liveObject.isContractEvent ? `${liveObject.displayName}Event` : liveObjectVersion.name
-            ))
+            )
         }
-
         return (
             <div className={pcn('__section', '__section--table-info')}>
                 <div className={pcn('__section-title')}>
@@ -395,7 +399,7 @@ function NewLiveColumnSpecs(props, ref) {
                     <NewTableBasicInputs
                         values={{
                             name: initialTableName,
-                            desc: 'lido.HashConsensus.ReportReceived events' || liveObject.desc,
+                            desc: liveObject.desc,
                         }}
                         onNameChange={val => editableLiveColumnsRef.current?.updateTableName(val)}
                         ref={newTableDetailsRef}

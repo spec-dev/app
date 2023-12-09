@@ -20,7 +20,13 @@ import {
     STRING,
     BOOLEAN,
     TIMESTAMP,
-    CHAIN_ID
+    CHAIN_ID,
+    BLOCK_HASH,
+    BLOCK_NUMBER,
+    TRANSACTION_HASH,
+    ADDRESS,
+    BIGINT,
+    BIGFLOAT,
 } from '../../../utils/propertyTypes'
 import AddForeignKeyPrompt from '../prompts/AddForeignKeyPrompt'
 
@@ -32,6 +38,13 @@ const filterablePropertyTypes = new Set([
     STRING,
     BOOLEAN,
     TIMESTAMP,
+    CHAIN_ID,
+    BLOCK_HASH,
+    BLOCK_NUMBER,
+    TRANSACTION_HASH,
+    ADDRESS,
+    BIGINT,
+    BIGFLOAT,
     'enum'
 ])
 
@@ -430,7 +443,8 @@ function LiveColumnFilters(props, ref) {
                 { ...innerProps }
                 ref={innerRef}>
                 <span>{data.label}</span>
-                <span>{data.type || ''}</span>
+                {/* <span>{data.type || ''}</span> */}
+                <span></span>
             </span>
         )
     }, [])

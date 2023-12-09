@@ -1,5 +1,5 @@
 import api from './api'
-import { TIMESTAMP, BOOLEAN, STRING, NUMBER } from './propertyTypes'
+import { TIMESTAMP, BOOLEAN, STRING, NUMBER, BLOCK_HASH, TRANSACTION_HASH, BLOCK_NUMBER, ADDRESS, BIGINT, BIGFLOAT } from './propertyTypes'
 
 export const liveObjects = {
     frontPage: [],
@@ -21,7 +21,7 @@ export async function loadMatchingLiveObjects(query, filters, offset, limit) {
 }
 
 ;(async () => {
-    liveObjects.frontPage = await loadMatchingLiveObjects('lens')
+    liveObjects.frontPage = await loadMatchingLiveObjects()
 })()
 
 export const getFrontPageLiveObjects = () => liveObjects.frontPage || []
@@ -56,6 +56,14 @@ export const resolvedPropertyType = (property, exampleValue = null) => {
 
     if (property.options?.length) {
         return 'enum'
+    }
+
+    if ([BLOCK_HASH, TRANSACTION_HASH, ADDRESS, BIGFLOAT, BIGINT].includes(property.type)) {
+        return STRING
+    }
+
+    if (property.type === BLOCK_NUMBER) {
+        return NUMBER
     }
 
     if (primitiveTypes.has(property.type) || property.type?.toLowerCase() === TIMESTAMP.toLowerCase()) {

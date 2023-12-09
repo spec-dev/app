@@ -210,7 +210,7 @@ function resolveTableConstraints(uniqueBy, columns) {
     }
 
     // Filter out the unique contraint if it's exactly the same as the primary key.
-    const primaryKeyId = primaryKey.sort().join(':')
+    const primaryKeyId = [...primaryKey].sort().join(':')
     const finalUniqueConstraints = []
     for (const colNames of uniqueConstraints) {
         const id = colNames.sort().join(':')

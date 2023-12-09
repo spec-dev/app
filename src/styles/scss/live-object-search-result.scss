@@ -110,6 +110,16 @@
         color: $purpleAccent;
         background-color: adjust-color($purpleAccent, $alpha: -0.9);
     }
+
+    &.live-object-search-result__chain--optimism {
+        color: $pinkAccent;
+        background-color: adjust-color($pinkAccent, $alpha: -0.9);
+    }
+
+    &.live-object-search-result__chain--arbitrum {
+        color: $arbitrumAccent;
+        background-color: adjust-color($arbitrumAccent, $alpha: -0.9);
+    }
 }
 
 .live-object-search-result__desc {
@@ -146,12 +156,27 @@
     align-items: center;
     justify-content: flex-end;
     padding-right: 1px;
+    padding-top: 1px;
 
     span:first-child {
-        font-size: 12px;
+        font-size: 12.5px;
         letter-spacing: 0.1px;
         display: inline-block;
         color: $gray;
-        opacity: 0.6;
+        opacity: 0.7;
+        max-width: 140px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: left;
+    }
+
+    &.live-object-search-result__nsp--event-version {
+        span:first-child {
+            font-family: CodeRegular;
+            letter-spacing: 0;
+            font-size: 11px;
+            max-width: 90px;
+        }
     }
 }

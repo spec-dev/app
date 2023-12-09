@@ -22,39 +22,26 @@ const pcn = getPCN(className)
 
 const formatNewTableInitialColumns = (liveObjectVersion, defaultUniqueByProperties = []) => {
     const properties = cloneDeep(liveObjectVersion.properties || [])
-    const propertyColumns = properties
+    return properties
         .sort((a, b) => (
             Number(defaultUniqueByProperties.includes(b.name)) - Number(defaultUniqueByProperties.includes(a.name))
         ))
         .map((property, i)=> {
             const colName = camelToSnake(property.name)
             const colType = guessColTypeFromProperty(property)
-
             return {
                 id: short.generate(),
                 isNew: true,
-                ordinal_position: i + 2,
+                ordinal_position: i + 1,
                 name: colName,
                 data_type: colType,
+                isPrimaryKey: defaultUniqueByProperties.includes(property.name),
                 liveColumn: {
                     property: property.name,
                     onUniqueMapping: defaultUniqueByProperties.includes(property.name),
                 },
             }
         })
-
-    return [
-        {
-            isNew: true,
-            id: short.generate(),
-            ordinal_position: 1,
-            name: 'id',
-            data_type: INTEGER,
-            isPrimaryKey: true,
-            isSerial: true,
-        },
-        ...propertyColumns,
-    ]
 }
 
 const formatInitialColumns = (
@@ -191,6 +178,7 @@ function EditableLiveColumns(props, ref) {
         purpose,
         defaultUniqueByProperties,
     ))
+
     const sortColumnsByUniqueMappings = (columns) =>{
       const uniqueMappingColumns = [];
       const otherColumns = []
@@ -283,7 +271,7 @@ function EditableLiveColumns(props, ref) {
                     }
                 }
 
-                if (col.liveColumn?.onUniqueMapping) {
+                if (col.isPrimaryKey) {
                     uniqueByProperties.push(col.liveColumn.property)
                 }
             }
@@ -313,6 +301,7 @@ function EditableLiveColumns(props, ref) {
                 console.warn(`Couldn't find meta info for column ${targetColPath}.`)
                 return
             }
+            
             const targetColType = displayColType(targetColumn.data_type)
     
             let colAlreadyExisted = false

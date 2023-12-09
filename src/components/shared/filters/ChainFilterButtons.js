@@ -10,7 +10,6 @@ const orderedChainIds = [
     chainIds.ETHEREUM,
     chainIds.POLYGON,
     chainIds.GOERLI,
-    chainIds.MUMBAI,
     chainIds.BASE,
 ]
 

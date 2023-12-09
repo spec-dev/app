@@ -65,10 +65,7 @@ function LiveObjectSearch(props, ref) {
     }, [searchResults, searchParams, onSelectLiveObject])
 
     // Fetch live objects. Set state.
-    const fetchLiveObjectPage = useCallback(async (query, filters) => {
-
-        if (query.length < 4) return
-        
+    const fetchLiveObjectPage = useCallback(async (query, filters) => {        
         const matchingResults = await loadMatchingLiveObjects(query, filters, offsetRef.current)
         hasMore.current = matchingResults.length >= PAGE_SIZE
         offsetRef.current > 0 
@@ -179,7 +176,7 @@ function LiveObjectSearch(props, ref) {
                     <span dangerouslySetInnerHTML={{ __html: searchIcon }}></span>
                     <input
                         type='text'
-                        placeholder='What data do you need?'
+                        placeholder='Search the Spec ecosystem...'
                         spellCheck={false}
                         onChange={onTypeQuery}
                         onKeyUp={onKeyUp}

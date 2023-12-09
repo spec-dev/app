@@ -35,16 +35,6 @@ function LiveObjectSearchResult(props, ref) {
         name = `${name} Events`
     }
 
-    if (nsp === 'polygon.contracts') {
-        nsp = 'lens'
-    }
-    if (nsp === 'eth.contracts') {
-        nsp = 'lido'
-    }
-    if (supportedChainNames[0] === 'Ethereum' && supportedChainNames.length === 1) {
-        supportedChainNames.push('Goerli')
-    }
-    
     return (
         <div className={className} accessKey={index} onClick={onClick} tabIndex="0" ref={ref} style={style}>
             <div className={pcn('__liner')}>
@@ -74,8 +64,8 @@ function LiveObjectSearchResult(props, ref) {
                             </div>
                         ))}
                     </div>
-                    <div className={pcn('__nsp')}>
-                        <span>@{ nsp }</span>
+                    <div className={pcn('__nsp', isContractEvent ? '__nsp--event-version' : '')}>
+                        <span>{ isContractEvent ? latestVersion.version : `@${nsp}` }</span>
                     </div>
                 </div>
             </div>
