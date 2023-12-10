@@ -1,4 +1,9 @@
 import { parse, stringify } from './utils/json'
+import {
+    getCurrentMigrationVersion,
+    insertFirstMigration,
+    updateLatestMigration
+} from './sql'
 
 const watchingFiles = new Set()
 
@@ -218,6 +223,17 @@ export async function upsertLiveColumns(projectPath, data) {
         projectPath, 
         data,
     )
+    return error || null
+}
+
+export async function markMigrationAsPerformed(version) {
+    let { rows, error } = await query(getCurrentMigrationVersion())
+    if (error) return error
+
+    ;({ error } = rows.length 
+        ? await query(updateLatestMigration(version))
+        : await query(insertFirstMigration(version)))
+
     return error || null
 }
 

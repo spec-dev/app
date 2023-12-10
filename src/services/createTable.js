@@ -1,5 +1,5 @@
 import logger from '../utils/logger'
-import { saveLatestMigration } from '../electronClient'
+import { saveLatestMigration, markMigrationAsPerformed } from '../electronClient'
 import { unique, sqlStatementsAsTx, toSingular } from '../utils/formatters'
 import { newMigration } from '../utils/migrations'
 import { pascalize } from 'humps'
@@ -125,6 +125,7 @@ async function createTable(newTable) {
             migration.up,
             migration.down,
         )
+        error = error || await markMigrationAsPerformed(migration.version)
     } catch (err) {
         error = err
     }

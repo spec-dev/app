@@ -20,6 +20,9 @@ import selectTableRecords from './selectTableRecords'
 import selectTables from './selectTables'
 import selectUniqueConstraints from './selectUniqueConstraints'
 import selectUniqueIndexes from './selectUniqueIndexes'
+import getCurrentMigrationVersion from './getCurrentMigrationVersion'
+import insertFirstMigration from './insertFirstMigration'
+import updateLatestMigration from './updateLatestMigration'
 
 export {
     buildAddColumnMigration,
@@ -44,4 +47,7 @@ export {
     selectTables,
     selectUniqueConstraints,
     selectUniqueIndexes,
+    getCurrentMigrationVersion,
+    insertFirstMigration,
+    updateLatestMigration,
 }

@@ -23,11 +23,11 @@ class ProjectManager {
         this.unsubscribeFromProjectFileChanges = null
         this.initialized = false
         this.onDataChange = null
-        this.loadProjectsPromise = getProjects()
-        this.loadStatePromise = getState()
     }
 
     async init() {
+        this.loadProjectsPromise = getProjects()
+        this.loadStatePromise = getState()
         logger.info(`Initializing project manager...`)
 
         // Load all projects and the current state from global config files.
