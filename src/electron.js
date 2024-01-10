@@ -1,10 +1,13 @@
-const { app, BrowserWindow, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain, shell } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const os = require('os')
 const { spawn } = require('child_process')
 const appRootDir = require('app-root-dir')
 const { 
+    getAuthedUser,
+    saveAuthedUser,
+    deleteAuthedUser,
     getProjectApiKey,
     getProjectConfig,
     getProjectEnvs,
@@ -54,6 +57,9 @@ const events = {
 }
 
 const rpcNames = {
+    GET_AUTHED_USER: 'getAuthedUser',
+    SAVE_AUTHED_USER: 'saveAuthedUser',
+    DELETE_AUTHED_USER: 'deleteAuthedUser',
     GET_PROJECT_API_KEY: 'getProjectApiKey',
     GET_PROJECT_CONFIG: 'getProjectConfig',
     GET_PROJECT_ENVS: 'getProjectEnvs',
@@ -65,6 +71,9 @@ const rpcNames = {
 }
 
 const rpcs = {
+    [rpcNames.GET_AUTHED_USER]: getAuthedUser,
+    [rpcNames.SAVE_AUTHED_USER]: saveAuthedUser,
+    [rpcNames.DELETE_AUTHED_USER]: deleteAuthedUser,
     [rpcNames.GET_PROJECT_API_KEY]: getProjectApiKey,
     [rpcNames.GET_PROJECT_CONFIG]: getProjectConfig,
     [rpcNames.GET_PROJECT_ENVS]: getProjectEnvs,
@@ -249,6 +258,12 @@ function createWindow() {
         slashes: true,
       })
       : "http://localhost:3000"
+
+    mainWindow.webContents.setWindowOpenHandler((details) => {
+        shell.openExternal(details.url); // Open URL in user's browser.
+        return { action: "deny" }; // Prevent the app from opening the URL.
+    })
+
     mainWindow.loadURL(startURL)
 }
 

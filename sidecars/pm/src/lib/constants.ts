@@ -3,6 +3,8 @@ import path from 'path'
 import os from 'os'
 
 const constants: StringKeyMap = {
+    SPEC_API_ORIGIN: 'https://api.spec.dev',
+
     // Spec project config.
     SPEC_CONFIG_DIR_NAME: '.spec',
     CONNECTION_CONFIG_FILE_NAME: 'connect.toml',

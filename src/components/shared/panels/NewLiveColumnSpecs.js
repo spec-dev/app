@@ -251,7 +251,7 @@ function NewLiveColumnSpecs(props, ref) {
                                             '__primary-details-chain', 
                                             `__primary-details-chain--${chain.toLowerCase()}`
                                         )}>
-                                            <span>{chain}</span>
+                                            <span>{chain[0]}</span>
                                         </div>
                                     ))}
                                 </div>

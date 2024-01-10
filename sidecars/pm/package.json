@@ -19,7 +19,8 @@
         "types-generate": "dts-gen -m '@spec.dev/pm' -s"
     },
     "dependencies": {
-        "@ltd/j-toml": "^1.38.0"
+        "@ltd/j-toml": "^1.38.0",
+        "netrc": "^0.1.4"
     },
     "devDependencies": {
         "@types/node": "^18.0.3",

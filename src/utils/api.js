@@ -93,6 +93,8 @@ class CoreApiClient extends ApiClient {
         super(constants.CORE_API_ORIGIN)
     }
 
+    login = async (params) => await this.post('/user/login', params, 1000)
+
     searchLiveObjects = async (params) => await this.post('/live-objects/search', params)
 }
 

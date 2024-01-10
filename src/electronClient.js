@@ -13,6 +13,10 @@ const events = {
 }
 
 const pmFunctions = {
+    GET_AUTHED_USER: 'getAuthedUser',
+    SAVE_AUTHED_USER: 'saveAuthedUser',
+    DELETE_AUTHED_USER: 'deleteAuthedUser',
+    GET_USER: 'getUser',
     GET_PROJECT_API_KEY: 'getProjectApiKey',
     GET_PROJECT_CONFIG: 'getProjectConfig',
     GET_PROJECT_ENVS: 'getProjectEnvs',
@@ -146,6 +150,20 @@ export async function subscribeToPath(filePath, recursive, onChange) {
     } catch (err) {
         await window.electronAPI.send('sidecar-error', `Error subscribing to path ${filePath}: ${err}`)
     }
+}
+
+export async function getAuthedUser() {
+    const { data, error } = await callRpc(pmFunctions.GET_AUTHED_USER)
+    if (error) {
+        // TODO
+        return {}
+    }
+    return data || {}
+}
+
+export async function saveAuthedUser(email, token) {
+    const { error } = await callRpc(pmFunctions.SAVE_AUTHED_USER, email, token)
+    return error || null
 }
 
 export async function getProjects() {
