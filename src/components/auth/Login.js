@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { getPCN } from '../../utils/classes'
-import { links, paths } from '../../utils/nav'
+import { links } from '../../utils/nav'
 import specLogo from '../../svgs/spec-logo'
-import { useHistory } from 'react-router-dom'
 import TextInput from '../shared/inputs/TextInput'
 import { isEmail } from '../../utils/validators'
 import { noop } from '../../utils/nodash'
@@ -15,6 +14,7 @@ import constants from '../../constants'
 import spinner from '../../svgs/chasing-tail-spinner'
 import loginBlur from '../../svgs/login-blur'
 import arrowLong from '../../svgs/arrow-long'
+import LoginAnimation from './LoginAnimation'
 
 const className = 'login'
 const pcn = getPCN(className)
@@ -171,7 +171,9 @@ function Login(props) {
     ), [onSignIn, status])
 
     const renderAnimation = useCallback(() => (
-        <div className={pcn('__animation')}></div>
+        <div className={pcn('__animation')}>
+            <LoginAnimation/>
+        </div>
     ), [])
 
     const renderHeaderIconLinks = useCallback(() => (

@@ -1,3 +1,5 @@
+$loginPanelWidth: 630px;
+
 .login {
     display: block;
     height: 100%;
@@ -20,7 +22,7 @@
     position: absolute;
     top: -135px;
     left: -10px;
-    width: 630px;
+    width: $loginPanelWidth;
     height: 331px;
     opacity: 0.28;
     z-index: 0;
@@ -29,7 +31,7 @@
 .login__auth-panel {
     display: flex;
     height: 100%;
-    width: 630px;
+    width: $loginPanelWidth;
     background: adjust-color($backgroundMedium, $alpha: -0.53);
     position: relative;
     flex-direction: row;
@@ -111,7 +113,7 @@
         align-items: center;
         justify-content: center;
         border-radius: 12px;
-        background: adjust-color($tealAccent, $alpha: -0.97);
+        background: adjust-color($tealAccent, $alpha: -0.96);
         border: 1px solid adjust-color($tealAccent, $alpha: -0.89);
         position: relative;
         top: -0.5px;
@@ -194,7 +196,7 @@
         font-size: 11px;
         letter-spacing: 0.2px;
         color: adjust-color($lightGray, $alpha: -0.3);
-        transition: color 0.15s ease;
+        transition: color 0.2s ease;
     }
 
     input {
@@ -210,7 +212,7 @@
         padding-right: 14px;
         font-size: 13px;
         letter-spacing: 0.1px;
-        transition: background-color 0.15s ease, color 0.15s ease;
+        transition: background-color 0.2s ease, color 0.2s ease;
 
         &:hover {
             background-color: adjust-color($backgroundLight, $alpha: -0.66);
@@ -280,7 +282,7 @@
             content: 'Authentication failed';
             font-size: 12px;
             letter-spacing: 0.1px;
-            color: adjust-color(#FF416F, $alpha: -0.2);
+            color: adjust-color(#FF416F, $alpha: -0);
             text-align: center;
             width: 100%;
             position: absolute;
@@ -357,7 +359,13 @@
 }
 
 .login__animation {
-
+    width: calc(100% - #{$loginPanelWidth});
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0;
+    margin-top: 0px;
 }
 
 .login__header-icon-links {
@@ -395,7 +403,7 @@
         svg {
             height: auto;
             width: 18px;
-            fill: adjust-color($gray, $alpha: -0.6);
+            fill: adjust-color($gray, $alpha: -0.4);
             transition: fill 0.15s ease;
             cursor: pointer;
         }

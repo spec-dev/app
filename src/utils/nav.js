@@ -21,6 +21,10 @@ export const links = {
     DISCORD: 'https://discord.gg/5sqH6eBgH9',
 }
 
+export const s3 = filePath => (
+    `https://dbjzhg7yxqn0y.cloudfront.net/v1/${filePath}`
+)
+
 export {
     paths,
     sections,
